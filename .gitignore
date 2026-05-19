@@ -30,7 +30,8 @@ lerna-debug.log*
 
 # ─── Testes / cobertura ─────────────────────────────────────────────────────
 coverage/
-.nyc_output/image.png
+.nyc_output/
+.vercel/
 
 # ─── TypeScript ─────────────────────────────────────────────────────────────
 *.tsbuildinfo

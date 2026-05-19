@@ -42,13 +42,13 @@ Status possíveis da inscrição: `pendente`, `em_analise`, `aprovado`, `reprova
 | Framework UI | React 19 |
 | Roteamento / SSR | TanStack Router + TanStack Start |
 | Build | Vite 7 |
-| Runtime servidor | Cloudflare Workers (`nodejs_compat`), entrada customizada em `src/server.ts` |
+| Runtime servidor | Nitro (Vercel Functions em produção), entrada em `src/server.ts` |
 | Estilo | Tailwind CSS 4 (`@tailwindcss/vite`), componentes Radix UI |
 | Backend de dados | Supabase (Postgres + Row Level Security) |
 | Validação | Zod |
 | Notificações | Sonner |
 
-Integração Cloudflare via **`@cloudflare/vite-plugin`** e **`wrangler.jsonc`**.
+Deploy recomendado: **Vercel** (plugin **`nitro/vite`**). Opcional: Cloudflare via `wrangler.jsonc`.
 
 ---
 
@@ -171,14 +171,26 @@ src/
 
 ## Build e deploy
 
-- **`npm run build`** gera saída em `dist/client` e `dist/server` conforme integração Cloudflare + TanStack Start.
-- **`wrangler.jsonc`** define `main: src/server.ts`, `compatibility_flags: ["nodejs_compat"]`.
-- Em **produção**, configure os mesmos nomes de variável como **secrets / vars** no painel Cloudflare ou via `wrangler secret put`. O `.env` local não é enviado automaticamente ao deploy.
+### Vercel (recomendado)
 
-Documentação oficial útil:
+1. Conecte o repositório em [vercel.com](https://vercel.com).
+2. **Build Command:** `npm run build` (padrão).
+3. **Variáveis de ambiente:** copie de `.env.example` (Supabase, Discord, `ACCESS_KEY`, webhooks).
+4. **Discord OAuth:** `DISCORD_REDIRECT_URI` = `https://SEU-DOMINIO.vercel.app/auth/discord/callback` (e cadastre a mesma URL no Discord Developer Portal).
+5. Deploy — o preset Nitro `vercel` é aplicado automaticamente quando `VERCEL=1` no build.
 
-- [TanStack Start](https://tanstack.com/start)
-- [Cloudflare Workers + TanStack](https://developers.cloudflare.com/workers/framework-guides/web-apps/tanstack/)
+Documentação: [TanStack Start on Vercel](https://vercel.com/docs/frameworks/full-stack/tanstack-start)
+
+### Cloudflare Workers (opcional)
+
+- `wrangler.jsonc` + `wrangler deploy` (requer reativar `@cloudflare/vite-plugin` no `vite.config.ts`).
+
+### Local
+
+- **`npm run build`** → saída em `.output/`
+- **`npm run preview`** → preview do build Nitro
+
+Documentação: [TanStack Start](https://tanstack.com/start)
 
 ---
 
