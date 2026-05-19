@@ -18,6 +18,7 @@ import { useRouterState } from "@tanstack/react-router";
 import { MilitarySoundProvider } from "@/components/MilitarySoundProvider";
 
 import appCss from "../styles.css?url";
+import favicon from "../assets/cmf-logo.png?url";
 
 function NotFoundComponent() {
   return (
@@ -69,6 +70,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary" },
     ],
     links: [
+      { rel: "icon", type: "image/png", href: favicon },
+      { rel: "apple-touch-icon", href: favicon },
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "" },
