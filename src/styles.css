@@ -1,0 +1,485 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-olive: var(--olive);
+  --color-olive-deep: var(--olive-deep);
+  --color-olive-bright: var(--olive-bright);
+  --color-khaki: var(--khaki);
+  --color-stencil: var(--stencil);
+  --color-gold: var(--gold);
+  --font-display: "Oswald", "Impact", sans-serif;
+  --font-body: "Roboto Condensed", "Arial Narrow", sans-serif;
+  --font-mono: "Courier Prime", "Courier New", monospace;
+  --font-stamp: "Black Ops One", "Stardos Stencil", "Oswald", sans-serif;
+}
+
+:root {
+  --radius: 0.25rem;
+
+  /* Vivid Brazilian Army green palette */
+  --background: oklch(0.96 0.012 110);
+  --foreground: oklch(0.20 0.03 130);
+
+  --olive-bright: oklch(0.52 0.09 135);         /* military field green */
+  --olive: oklch(0.40 0.07 132);                /* main olive */
+  --olive-deep: oklch(0.24 0.04 130);           /* deep field olive */
+  --khaki: oklch(0.86 0.04 95);                 /* khaki canvas */
+  --stencil: oklch(0.28 0.03 120);
+  --gold: oklch(0.72 0.12 85);                  /* brass accent */
+
+  --card: oklch(0.93 0.018 100);
+  --card-foreground: oklch(0.20 0.03 130);
+  --popover: oklch(0.96 0.012 110);
+  --popover-foreground: oklch(0.20 0.03 130);
+
+  --primary: var(--olive);
+  --primary-foreground: oklch(0.98 0.012 95);
+  --secondary: var(--khaki);
+  --secondary-foreground: oklch(0.20 0.03 130);
+  --muted: oklch(0.88 0.018 100);
+  --muted-foreground: oklch(0.38 0.03 120);
+  --accent: var(--olive-bright);
+  --accent-foreground: oklch(0.14 0.02 120);
+  --destructive: oklch(0.48 0.18 30);
+  --destructive-foreground: oklch(0.97 0.01 90);
+  --border: oklch(0.42 0.05 130 / 30%);
+  --input: oklch(0.42 0.05 130 / 35%);
+  --ring: var(--olive-bright);
+}
+
+.dark {
+  --background: oklch(0.18 0.02 110);
+  --foreground: oklch(0.92 0.02 90);
+  --card: oklch(0.22 0.025 110);
+  --card-foreground: oklch(0.92 0.02 90);
+  --popover: oklch(0.22 0.025 110);
+  --popover-foreground: oklch(0.92 0.02 90);
+  --primary: oklch(0.62 0.16 135);
+  --primary-foreground: oklch(0.12 0.015 110);
+  --secondary: oklch(0.30 0.04 110);
+  --secondary-foreground: oklch(0.92 0.02 90);
+  --muted: oklch(0.26 0.03 110);
+  --muted-foreground: oklch(0.70 0.02 90);
+  --accent: oklch(0.78 0.14 85);
+  --accent-foreground: oklch(0.12 0.015 110);
+  --border: oklch(0.92 0.02 90 / 15%);
+  --input: oklch(0.92 0.02 90 / 20%);
+  --ring: oklch(0.62 0.16 135);
+}
+
+@layer base {
+  * { border-color: var(--color-border); }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-body);
+    background-image:
+      repeating-linear-gradient(0deg, rgba(60,90,40,0.035) 0 1px, transparent 1px 6px),
+      repeating-linear-gradient(90deg, rgba(60,90,40,0.035) 0 1px, transparent 1px 6px);
+  }
+  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: 0.04em; text-transform: uppercase; }
+}
+
+@layer components {
+  .stencil {
+    font-family: var(--font-display);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-stencil);
+  }
+  .field-paper {
+    background:
+      linear-gradient(180deg, oklch(0.96 0.012 110) 0%, oklch(0.91 0.022 100) 100%);
+    border: 1px solid var(--color-border);
+    box-shadow: 0 1px 0 oklch(1 0 0 / 60%) inset, 0 8px 24px -12px rgba(0,0,0,0.35);
+  }
+  .tag-rank {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.25rem 0.6rem;
+    background: var(--color-olive-deep);
+    color: oklch(0.96 0.015 90);
+    font-family: var(--font-display);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+  }
+  .btn-olive {
+    background: linear-gradient(180deg, var(--color-olive-bright), var(--color-olive));
+    color: oklch(0.99 0.012 90);
+    border: 1px solid var(--color-olive-deep);
+    font-family: var(--font-display);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 0.7rem 1.4rem;
+    transition: transform .15s ease, filter .2s ease, box-shadow .2s ease;
+    box-shadow: 0 2px 0 var(--color-olive-deep), 0 10px 26px -10px rgba(40,70,20,0.6);
+  }
+  .btn-olive:hover { filter: brightness(1.08); transform: translateY(-1px); }
+  .btn-olive:active { transform: translateY(1px); box-shadow: 0 0 0 var(--color-olive-deep); }
+  .btn-ghost-olive {
+    background: transparent;
+    color: var(--color-olive-deep);
+    border: 1px solid var(--color-olive-deep);
+    font-family: var(--font-display);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 0.6rem 1.2rem;
+    transition: background .2s ease, color .2s ease;
+  }
+  .btn-ghost-olive:hover { background: var(--color-olive-deep); color: oklch(0.96 0.015 90); }
+
+  /* Identidade militar digital — carteira */
+  .id-militar-card {
+    perspective: 800px;
+    filter: drop-shadow(0 12px 28px oklch(0.2 0.04 130 / 35%));
+  }
+  .id-militar-holo {
+    pointer-events: none;
+    position: absolute;
+    inset: -2px;
+    border-radius: 6px;
+    background: linear-gradient(
+      125deg,
+      transparent 30%,
+      oklch(0.85 0.08 95 / 0.35) 45%,
+      transparent 55%,
+      oklch(0.55 0.1 145 / 0.2) 70%,
+      transparent 80%
+    );
+    opacity: 0.55;
+    z-index: 2;
+  }
+  .id-militar-inner {
+    position: relative;
+    z-index: 1;
+    border: 2px solid var(--color-olive-deep);
+    border-radius: 4px;
+    overflow: hidden;
+    background: linear-gradient(
+      165deg,
+      oklch(0.94 0.02 100) 0%,
+      oklch(0.88 0.035 95) 50%,
+      oklch(0.9 0.03 110) 100%
+    );
+    box-shadow:
+      inset 0 0 0 1px oklch(1 0 0 / 40%),
+      inset 0 -20px 40px -20px oklch(0.35 0.05 130 / 15%);
+  }
+  .id-militar-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 8px 12px;
+    background: linear-gradient(180deg, var(--color-olive-deep), var(--color-olive));
+    color: oklch(0.92 0.03 95);
+    text-align: center;
+  }
+  .id-militar-body {
+    display: flex;
+    gap: 10px;
+    padding: 12px;
+    align-items: flex-start;
+  }
+  .id-militar-photo {
+    width: 72px;
+    height: 92px;
+    border: 2px solid var(--color-olive-deep);
+    background: oklch(0.82 0.02 95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .id-militar-footer {
+    padding: 6px 12px 8px;
+    border-top: 1px dashed oklch(0.4 0.05 130 / 40%);
+    background: oklch(0.9 0.02 100 / 60%);
+  }
+
+  .discord-role-tag {
+    display: inline-block;
+    max-width: 100%;
+    padding: 0.1rem 0.45rem;
+    font-size: 9px;
+    font-family: var(--font-display);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border: 1px solid oklch(0.4 0.05 130 / 50%);
+    border-radius: 2px;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .discord-role-tag--patente {
+    box-shadow: 0 0 0 1px oklch(0.35 0.06 130 / 35%);
+    font-weight: 700;
+  }
+
+  .stamp {
+    display: inline-block;
+    border: 3px double currentColor;
+    padding: 0.35rem 0.9rem;
+    font-family: var(--font-display);
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    transform: rotate(-6deg);
+    opacity: 0.85;
+  }
+  .stamp-cmf {
+    display: inline-block;
+    border: 4px solid #0a0a0a;
+    padding: 0.4rem 1.4rem;
+    font-family: var(--font-stamp);
+    letter-spacing: 0.32em;
+    color: #0a0a0a;
+    font-size: 2rem;
+    transform: rotate(-8deg);
+    opacity: 0.92;
+    text-shadow: 0 0 1px rgba(0,0,0,0.4);
+    box-shadow: inset 0 0 0 2px transparent;
+  }
+  .divider-tape {
+    height: 14px;
+    background:
+      repeating-linear-gradient(45deg, var(--color-olive-deep) 0 10px, var(--color-olive-bright) 10px 20px);
+    border-top: 1px solid rgba(0,0,0,0.15);
+    border-bottom: 1px solid rgba(0,0,0,0.15);
+  }
+
+  /* Section gradient backgrounds — sutis, sempre garantindo contraste */
+  .grad-1 {
+    background: linear-gradient(180deg, oklch(0.96 0.012 110) 0%, oklch(0.90 0.025 110) 100%);
+  }
+  .grad-2 {
+    background: linear-gradient(180deg, oklch(0.90 0.025 110) 0%, oklch(0.84 0.035 115) 100%);
+  }
+  .grad-3 {
+    background: linear-gradient(180deg, oklch(0.30 0.05 130) 0%, oklch(0.22 0.04 130) 100%);
+  }
+  .grad-4 {
+    background: linear-gradient(180deg, oklch(0.22 0.04 130) 0%, oklch(0.14 0.025 130) 100%);
+  }
+
+  @keyframes blink-cursor { 50% { opacity: 0; } }
+  .cursor-blink::after { content: "▍"; margin-left: 2px; animation: blink-cursor 1s steps(1) infinite; }
+
+  @keyframes scan-line {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+  }
+  .scan::before {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent, rgba(120,180,60,0.18), transparent);
+    animation: scan-line 6s linear infinite;
+    pointer-events: none;
+  }
+
+  @keyframes fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .reveal { animation: fade-up .7s ease-out both; }
+
+  /* ─── HUD militar — painel /ADMCMF ─────────────────────────── */
+  .hud-border {
+    border: 1px solid oklch(0.30 0.08 140 / 60%);
+    position: relative;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  }
+  .hud-border::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(135deg, oklch(0.38 0.14 140 / 20%) 0 12px, transparent 12px),
+      linear-gradient(315deg, oklch(0.38 0.14 140 / 20%) 0 12px, transparent 12px);
+  }
+
+  .hud-btn {
+    background: transparent;
+    border: 1px solid oklch(0.38 0.10 140 / 50%);
+    color: oklch(0.65 0.10 140);
+    font-family: var(--font-display);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 0.4rem 0.9rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  .hud-btn:hover {
+    background: oklch(0.20 0.06 140 / 60%);
+    border-color: oklch(0.55 0.14 140);
+    color: oklch(0.80 0.12 140);
+  }
+
+  /* Scanline overlay for /ADMCMF terminal aesthetic */
+  .scanlines-overlay {
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.10) 0px,
+      rgba(0, 0, 0, 0.10) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    pointer-events: none;
+  }
+
+  .terminal-text {
+    font-family: var(--font-mono);
+    letter-spacing: 0.05em;
+  }
+
+  @keyframes terminal-flash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .terminal-flash { animation: terminal-flash 2s ease infinite; }
+
+  /* Sidebar colapsada — ícones centralizados sem corte (/ADMCMF) */
+  .admcmf-shell .group[data-collapsible="icon"] [data-sidebar="sidebar"] {
+    overflow: visible;
+  }
+  .admcmf-shell .group[data-collapsible="icon"] [data-sidebar="content"] {
+    overflow: visible;
+  }
+  .admcmf-shell .group[data-collapsible="icon"] [data-sidebar="group"] {
+    align-items: center;
+  }
+  .admcmf-shell .group[data-collapsible="icon"] [data-sidebar="menu"] {
+    align-items: center;
+    width: 100%;
+  }
+  .admcmf-shell .group[data-collapsible="icon"] [data-sidebar="menu-item"] {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+  .admcmf-shell .group[data-collapsible="icon"] [data-sidebar="menu-button"] {
+    justify-content: center;
+    align-items: center;
+    width: 2.25rem !important;
+    min-width: 2.25rem !important;
+    height: 2.25rem !important;
+    padding: 0 !important;
+    margin-inline: auto;
+  }
+  .admcmf-shell .group[data-collapsible="icon"] [data-sidebar="menu-button"] > span {
+    display: none;
+  }
+  .admcmf-shell .group[data-collapsible="icon"] [data-sidebar="group-label"] {
+    display: none;
+  }
+
+  /* Sidebar militar expansível */
+  .adm-nav-sidebar [data-sidebar="content"] {
+    scrollbar-width: thin;
+  }
+  .adm-nav-scroll {
+    overflow-y: auto;
+  }
+  .adm-nav-btn:hover:not([data-active="true"]) {
+    box-shadow: 0 0 12px oklch(0.45 0.06 132 / 0.25);
+  }
+  .adm-nav-active {
+    box-shadow: 0 0 14px oklch(0.35 0.07 132 / 0.35);
+    position: relative;
+  }
+  .adm-nav-active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 20%;
+    bottom: 20%;
+    width: 3px;
+    background: var(--color-khaki);
+    border-radius: 0 2px 2px 0;
+  }
+  .adm-nav-war {
+    background: linear-gradient(
+      90deg,
+      oklch(0.48 0.18 30 / 0.12),
+      transparent
+    ) !important;
+    color: oklch(0.42 0.16 30) !important;
+    font-weight: 600;
+  }
+  .adm-nav-war:hover {
+    box-shadow: 0 0 16px oklch(0.48 0.18 30 / 0.35);
+  }
+  .adm-nav-sep {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      oklch(0.4 0.07 132 / 0.45),
+      transparent
+    );
+  }
+  .adm-nav-sub-active {
+    color: var(--color-olive-deep) !important;
+    background: oklch(0.45 0.06 132 / 0.12) !important;
+    font-weight: 600;
+  }
+  .adm-nav-tree {
+    opacity: 0.45;
+    margin-right: 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 10px;
+  }
+  .adm-nav-status {
+    border-top: 1px solid oklch(0.4 0.07 132 / 0.2);
+    padding-top: 0.5rem;
+  }
+
+  /* Central de guerra — radar */
+  @keyframes guerra-sweep {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  .guerra-radar-sweep {
+    position: absolute;
+    inset: 8%;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      oklch(0.5 0.13 145 / 0.35) 40deg,
+      transparent 80deg
+    );
+    animation: guerra-sweep 4s linear infinite;
+  }
+}

@@ -1,0 +1,1 @@
+-- Use supabase/schema.sql — schema completo (40+ tabelas da sidebar ADMCMF).
