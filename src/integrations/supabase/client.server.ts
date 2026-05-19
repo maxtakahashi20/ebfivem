@@ -15,7 +15,7 @@ function createSupabaseAdminClient() {
       ...(!SUPABASE_URL ? ['SUPABASE_URL'] : []),
       ...(!SUPABASE_SERVICE_ROLE_KEY ? ['SUPABASE_SERVICE_ROLE_KEY'] : []),
     ];
-    const message = `Missing Supabase environment variable(s): ${missing.join(', ')}. Configure no .env na raiz (veja .env.example).`;
+    const message = `Missing Supabase environment variable(s): ${missing.join(', ')}. Local: .env na raiz. Produção (Vercel): Settings → Environment Variables.`;
     console.error(`[Supabase] ${message}`);
     throw new Error(message);
   }

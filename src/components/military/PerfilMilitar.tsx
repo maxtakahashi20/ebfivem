@@ -9,6 +9,7 @@ import { IdentidadeDiscordQr } from "@/components/military/IdentidadeDiscordQr";
 import { buscarInscricaoPorDiscord } from "@/lib/discord-auth.functions";
 import { patenteFromDiscordRoles } from "@/lib/militar-identidade";
 import { PENDING_VIEW_KEY } from "@/lib/painel-nav";
+import { getPanelAccessKey } from "@/lib/painel-auth-storage";
 
 type Inscricao = {
   protocolo: string;
@@ -36,7 +37,7 @@ export function PerfilMilitar({ variant = "public", onOpenDocumentos }: Props) {
     if (
       session &&
       typeof window !== "undefined" &&
-      sessionStorage.getItem("eb_cmd_key")
+      getPanelAccessKey()
     ) {
       void navigate({ to: "/ADMCMF" });
     }

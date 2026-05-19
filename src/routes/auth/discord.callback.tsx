@@ -5,12 +5,11 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { DISCORD_OAUTH_STATE_KEY, DISCORD_SESSION_KEY } from "@/lib/discord-oauth";
 import { PENDING_VIEW_KEY } from "@/lib/painel-nav";
+import { setPanelAccessKey } from "@/lib/painel-auth-storage";
 import {
   completarDiscordOAuth,
   liberarAcessoPainelDiscord,
 } from "@/lib/discord-auth.functions";
-
-const KEY_STORAGE = "eb_cmd_key";
 
 const searchSchema = z.object({
   code: z.string().optional(),
@@ -58,7 +57,7 @@ function DiscordCallbackPage() {
         localStorage.setItem(DISCORD_SESSION_KEY, session);
 
         const { accessKey } = await liberarPainel({ data: { session } });
-        sessionStorage.setItem(KEY_STORAGE, accessKey);
+        setPanelAccessKey(accessKey);
         sessionStorage.removeItem(DISCORD_OAUTH_STATE_KEY);
         sessionStorage.setItem(PENDING_VIEW_KEY, "perfil");
 

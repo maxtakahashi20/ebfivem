@@ -18,6 +18,12 @@ import { PENDING_VIEW_KEY } from "@/lib/painel-nav";
 import { useDiscordSession } from "@/hooks/useDiscordSession";
 import { liberarAcessoPainelDiscord } from "@/lib/discord-auth.functions";
 import { DISCORD_SESSION_KEY } from "@/lib/discord-oauth";
+import {
+  clearPanelAccessKey,
+  getPanelAccessKey,
+  isDiscordSessionInvalidError,
+  setPanelAccessKey,
+} from "@/lib/painel-auth-storage";
 import { type AdminView, getViewLabel } from "@/config/admin-nav";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -72,8 +78,6 @@ type Stats = {
   aprovadosHoje: number;
 };
 
-const KEY_STORAGE = "eb_cmd_key";
-
 const STATUS_META: Record<Status, { label: string; color: string; symbol: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   pendente:   { label: "Pendente",   color: "oklch(0.72 0.13 80)",   symbol: "⏳", variant: "outline" },
   em_analise: { label: "Em análise", color: "oklch(0.55 0.12 230)",  symbol: "🔍", variant: "secondary" },
@@ -101,29 +105,48 @@ function Comando() {
   };
 
   useEffect(() => {
-    const k = sessionStorage.getItem(KEY_STORAGE);
-    if (k) {
-      setAccessKey(k);
+    const discordTok = localStorage.getItem(DISCORD_SESSION_KEY);
+    const cachedKey = getPanelAccessKey();
+
+    if (discordTok && cachedKey) {
+      setAccessKey(cachedKey);
       setAuthed(true);
       setCheckingDiscord(false);
+      liberarPainel({ data: { session: discordTok } })
+        .then(({ accessKey: key }) => {
+          setPanelAccessKey(key);
+          setAccessKey(key);
+        })
+        .catch((e) => {
+          const msg = e instanceof Error ? e.message : "";
+          if (!isDiscordSessionInvalidError(msg)) return;
+          localStorage.removeItem(DISCORD_SESSION_KEY);
+          clearPanelAccessKey();
+          setAuthed(false);
+          setAccessKey("");
+          setAuthError("Sessão Discord expirada. Entre novamente.");
+        });
       return;
     }
-    const discordTok = localStorage.getItem(DISCORD_SESSION_KEY);
+
     if (!discordTok) {
       setCheckingDiscord(false);
       return;
     }
+
     liberarPainel({ data: { session: discordTok } })
       .then(({ accessKey: key }) => {
-        sessionStorage.setItem(KEY_STORAGE, key);
+        setPanelAccessKey(key);
         setAccessKey(key);
         setAuthed(true);
       })
       .catch((e) => {
-        localStorage.removeItem(DISCORD_SESSION_KEY);
-        setAuthError(
-          e instanceof Error ? e.message : "Sessão Discord inválida. Entre novamente.",
-        );
+        const msg = e instanceof Error ? e.message : "Sessão Discord inválida. Entre novamente.";
+        if (isDiscordSessionInvalidError(msg)) {
+          localStorage.removeItem(DISCORD_SESSION_KEY);
+          clearPanelAccessKey();
+        }
+        setAuthError(msg);
       })
       .finally(() => setCheckingDiscord(false));
   }, [liberarPainel]);
@@ -158,7 +181,7 @@ function Comando() {
       accessKey={accessKey}
       onLogout={() => {
         redirecting.current = false;
-        sessionStorage.removeItem(KEY_STORAGE);
+        clearPanelAccessKey();
         localStorage.removeItem(DISCORD_SESSION_KEY);
         setAccessKey("");
         setAuthError(null);

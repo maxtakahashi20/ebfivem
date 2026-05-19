@@ -10,6 +10,7 @@ import {
   obterUrlDiscordOAuth,
   validarSessaoDiscord,
 } from "@/lib/discord-auth.functions";
+import { isDiscordSessionInvalidError } from "@/lib/painel-auth-storage";
 
 export function useDiscordSession() {
   const [profile, setProfile] = useState<DiscordProfile | null>(null);
@@ -36,10 +37,13 @@ export function useDiscordSession() {
         setProfile(p);
         setSession(nextSession);
         localStorage.setItem(DISCORD_SESSION_KEY, nextSession);
-      } catch {
-        localStorage.removeItem(DISCORD_SESSION_KEY);
-        setProfile(null);
-        setSession(null);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "";
+        if (!msg || isDiscordSessionInvalidError(msg)) {
+          localStorage.removeItem(DISCORD_SESSION_KEY);
+          setProfile(null);
+          setSession(null);
+        }
       } finally {
         setLoading(false);
       }
