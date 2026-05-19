@@ -212,3 +212,36 @@ export const atualizarInscricao = createServerFn({ method: "POST" })
 
     return { ok: true };
   });
+
+export const excluirInscricao = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        accessKey: z.string(),
+        id: z.string().uuid(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    if (data.accessKey !== ACCESS_KEY()) {
+      throw new Error("Chave de acesso inválida");
+    }
+
+    const { data: row, error: fetchErr } = await supabaseAdmin
+      .from("inscricoes")
+      .select("protocolo, nome, sobrenome")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (fetchErr) throw new Error(fetchErr.message);
+    if (!row) throw new Error("Inscrição não encontrada.");
+
+    const { error } = await supabaseAdmin.from("inscricoes").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+
+    enviarLogOperacional({
+      acao: "EXCLUSAO",
+      descricao: `Inscrição ${row.protocolo} (${row.nome} ${row.sobrenome}) removida do sistema`,
+    }).catch(() => {});
+
+    return { ok: true };
+  });

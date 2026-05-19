@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import {
   listarInscricoes,
   atualizarInscricao,
+  excluirInscricao,
   obterEstatisticas,
 } from "@/lib/inscricoes.functions";
 import { enviarComunicadoDiscord } from "@/lib/discord.functions";
@@ -409,6 +410,7 @@ function GestaoInscricoes({
 }) {
   const listar = useServerFn(listarInscricoes);
   const atualizar = useServerFn(atualizarInscricao);
+  const excluir = useServerFn(excluirInscricao);
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState<Status | "todos">(initialStatus);
@@ -450,6 +452,21 @@ function GestaoInscricoes({
       setRows((rs) => rs.map((r) => r.id === row.id ? { ...r, status, observacoes_instrutor: obs } : r));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao atualizar");
+    }
+  }
+
+  async function remove(row: Row) {
+    const ok = window.confirm(
+      `Excluir permanentemente a inscrição ${row.protocolo} (${row.nome} ${row.sobrenome})?\n\nEsta ação não pode ser desfeita.`,
+    );
+    if (!ok) return;
+    try {
+      await excluir({ data: { accessKey, id: row.id } });
+      toast.success(`Inscrição ${row.protocolo} excluída`);
+      setRows((rs) => rs.filter((r) => r.id !== row.id));
+      setExpanded((id) => (id === row.id ? null : id));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao excluir");
     }
   }
 
@@ -547,7 +564,7 @@ function GestaoInscricoes({
                 <span className="text-(--color-stencil) text-xs">{open ? "▲" : "▼"}</span>
               </button>
 
-              {open && <InscricaoEditor row={r} onSave={update} />}
+              {open && <InscricaoEditor row={r} onSave={update} onDelete={remove} />}
             </div>
           );
         })}
@@ -562,10 +579,19 @@ function GestaoInscricoes({
   );
 }
 
-function InscricaoEditor({ row, onSave }: { row: Row; onSave: (r: Row, s: Status, obs: string) => Promise<void> }) {
+function InscricaoEditor({
+  row,
+  onSave,
+  onDelete,
+}: {
+  row: Row;
+  onSave: (r: Row, s: Status, obs: string) => Promise<void>;
+  onDelete: (r: Row) => Promise<void>;
+}) {
   const [status, setStatus] = useState<Status>(row.status);
   const [obs, setObs] = useState(row.observacoes_instrutor ?? "");
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   return (
     <div className="border-t border-(--color-border) p-5 grid md:grid-cols-[1fr_300px] gap-5 reveal">
@@ -621,7 +647,7 @@ function InscricaoEditor({ row, onSave }: { row: Row; onSave: (r: Row, s: Status
         </div>
 
         <Button
-          disabled={saving}
+          disabled={saving || deleting}
           onClick={async () => { setSaving(true); await onSave(row, status, obs); setSaving(false); }}
           className="btn-olive w-full"
           variant="default"
@@ -632,6 +658,22 @@ function InscricaoEditor({ row, onSave }: { row: Row; onSave: (r: Row, s: Status
         <p className="text-[9px] font-mono text-(--color-stencil) text-center">
           Notificará o Discord automaticamente
         </p>
+
+        <Separator className="my-2" />
+
+        <Button
+          type="button"
+          disabled={saving || deleting}
+          variant="destructive"
+          className="w-full font-display tracking-widest text-xs"
+          onClick={async () => {
+            setDeleting(true);
+            await onDelete(row);
+            setDeleting(false);
+          }}
+        >
+          {deleting ? "EXCLUINDO…" : "✕ EXCLUIR INSCRIÇÃO"}
+        </Button>
       </div>
     </div>
   );
