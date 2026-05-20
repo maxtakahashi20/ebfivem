@@ -15,6 +15,8 @@ import { isDiscordSessionInvalidError } from "@/lib/painel-auth-storage";
 export function useDiscordSession() {
   const [profile, setProfile] = useState<DiscordProfile | null>(null);
   const [session, setSession] = useState<string | null>(null);
+  const [altoComando, setAltoComando] = useState(false);
+  const [desenvolvedor, setDesenvolvedor] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const validar = useServerFn(validarSessaoDiscord);
@@ -27,6 +29,8 @@ export function useDiscordSession() {
       if (!s) {
         setProfile(null);
         setSession(null);
+        setAltoComando(false);
+        setDesenvolvedor(false);
         setLoading(false);
         return;
       }
@@ -34,8 +38,11 @@ export function useDiscordSession() {
         const res = await validar({ data: { session: s } });
         const p = res.profile;
         const nextSession = res.session ?? s;
+        const flags = res as { altoComando?: boolean; desenvolvedor?: boolean };
         setProfile(p);
         setSession(nextSession);
+        setAltoComando(Boolean(flags.altoComando));
+        setDesenvolvedor(Boolean(flags.desenvolvedor));
         localStorage.setItem(DISCORD_SESSION_KEY, nextSession);
       } catch (e) {
         const msg = e instanceof Error ? e.message : "";
@@ -43,6 +50,8 @@ export function useDiscordSession() {
           localStorage.removeItem(DISCORD_SESSION_KEY);
           setProfile(null);
           setSession(null);
+          setAltoComando(false);
+          setDesenvolvedor(false);
         }
       } finally {
         setLoading(false);
@@ -71,6 +80,8 @@ export function useDiscordSession() {
     localStorage.removeItem(DISCORD_SESSION_KEY);
     setProfile(null);
     setSession(null);
+    setAltoComando(false);
+    setDesenvolvedor(false);
   }, [encerrar]);
 
   const setSessionToken = useCallback(
@@ -82,5 +93,15 @@ export function useDiscordSession() {
     [],
   );
 
-  return { profile, session, loading, login, logout, refresh, setSessionToken };
+  return {
+    profile,
+    session,
+    altoComando,
+    desenvolvedor,
+    loading,
+    login,
+    logout,
+    refresh,
+    setSessionToken,
+  };
 }

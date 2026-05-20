@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SuporteRouteImport } from './routes/suporte'
 import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as OrganogramaRouteImport } from './routes/organograma'
 import { Route as InscricaoRouteImport } from './routes/inscricao'
@@ -21,6 +22,11 @@ import { Route as ADMCMFRouteImport } from './routes/ADMCMF'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthDiscordCallbackRouteImport } from './routes/auth/discord.callback'
 
+const SuporteRoute = SuporteRouteImport.update({
+  id: '/suporte',
+  path: '/suporte',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PerfilRoute = PerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/inscricao': typeof InscricaoRoute
   '/organograma': typeof OrganogramaRoute
   '/perfil': typeof PerfilRoute
+  '/suporte': typeof SuporteRoute
   '/auth/discord/callback': typeof AuthDiscordCallbackRoute
 }
 export interface FileRoutesByTo {
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/inscricao': typeof InscricaoRoute
   '/organograma': typeof OrganogramaRoute
   '/perfil': typeof PerfilRoute
+  '/suporte': typeof SuporteRoute
   '/auth/discord/callback': typeof AuthDiscordCallbackRoute
 }
 export interface FileRoutesById {
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   '/inscricao': typeof InscricaoRoute
   '/organograma': typeof OrganogramaRoute
   '/perfil': typeof PerfilRoute
+  '/suporte': typeof SuporteRoute
   '/auth/discord/callback': typeof AuthDiscordCallbackRoute
 }
 export interface FileRouteTypes {
@@ -130,6 +139,7 @@ export interface FileRouteTypes {
     | '/inscricao'
     | '/organograma'
     | '/perfil'
+    | '/suporte'
     | '/auth/discord/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -143,6 +153,7 @@ export interface FileRouteTypes {
     | '/inscricao'
     | '/organograma'
     | '/perfil'
+    | '/suporte'
     | '/auth/discord/callback'
   id:
     | '__root__'
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '/inscricao'
     | '/organograma'
     | '/perfil'
+    | '/suporte'
     | '/auth/discord/callback'
   fileRoutesById: FileRoutesById
 }
@@ -170,11 +182,19 @@ export interface RootRouteChildren {
   InscricaoRoute: typeof InscricaoRoute
   OrganogramaRoute: typeof OrganogramaRoute
   PerfilRoute: typeof PerfilRoute
+  SuporteRoute: typeof SuporteRoute
   AuthDiscordCallbackRoute: typeof AuthDiscordCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/suporte': {
+      id: '/suporte'
+      path: '/suporte'
+      fullPath: '/suporte'
+      preLoaderRoute: typeof SuporteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/perfil': {
       id: '/perfil'
       path: '/perfil'
@@ -266,6 +286,7 @@ const rootRouteChildren: RootRouteChildren = {
   InscricaoRoute: InscricaoRoute,
   OrganogramaRoute: OrganogramaRoute,
   PerfilRoute: PerfilRoute,
+  SuporteRoute: SuporteRoute,
   AuthDiscordCallbackRoute: AuthDiscordCallbackRoute,
 }
 export const routeTree = rootRouteImport

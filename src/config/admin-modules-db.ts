@@ -12,7 +12,13 @@ function fmtDate(d: unknown): string {
   const s = String(d);
   if (s.includes("T")) {
     const dt = new Date(s);
-    return dt.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    return dt.toLocaleString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   }
   return s;
 }
@@ -46,133 +52,6 @@ export const MODULO_DB: Partial<Record<AdminView, ModuloDbSpec>> = {
       lider: str(r.lider),
       status: str(r.status),
       inicio: fmtDate(r.inicio),
-    }),
-  },
-  "ops-historico": {
-    table: "operacoes",
-    filter: { situacao: "concluida" },
-    rowMap: (r) => ({
-      codigo: str(r.codigo),
-      nome: str(r.nome),
-      resultado: str(r.resultado),
-      encerramento: fmtDate(r.encerramento),
-    }),
-  },
-  "ops-briefings": {
-    table: "briefings",
-    rowMap: (r) => ({
-      doc: str(r.doc),
-      titulo: str(r.titulo),
-      autor: str(r.autor),
-      data: fmtDateShort(r.data_emissao),
-    }),
-  },
-  "ops-missoes": {
-    table: "missoes",
-    rowMap: (r) => ({
-      id: str(r.codigo),
-      objetivo: str(r.objetivo),
-      prioridade: str(r.prioridade),
-      prazo: fmtDateShort(r.prazo),
-    }),
-  },
-  "ops-patrulhas": {
-    table: "patrulhas",
-    rowMap: (r) => ({
-      rota: str(r.rota),
-      setor: str(r.setor),
-      viatura: str(r.viatura),
-      horario: str(r.horario),
-    }),
-  },
-  "treino-sat": {
-    table: "treinamentos",
-    filter: { tipo: "sat" },
-    rowMap: (r) => ({
-      militar: str(r.militar),
-      nota: str(r.nota),
-      status: str(r.status),
-      data: fmtDateShort(r.data_avaliacao),
-    }),
-  },
-  "treino-cqb": {
-    table: "treinamentos",
-    filter: { tipo: "cqb" },
-    rowMap: (r) => ({
-      turma: str(r.turma),
-      instrutor: str(r.instrutor),
-      local: str(r.local),
-      proxima: fmtDate(r.proxima_aula),
-    }),
-  },
-  "treino-taf": {
-    table: "treinamentos",
-    filter: { tipo: "taf" },
-    rowMap: (r) => ({
-      militar: str(r.militar),
-      corrida: str(r.corrida),
-      flexoes: str(r.flexoes),
-      resultado: str(r.resultado),
-    }),
-  },
-  "treino-cursos": {
-    table: "cursos",
-    rowMap: (r) => ({
-      codigo: str(r.codigo),
-      nome: str(r.nome),
-      carga: str(r.carga_horas),
-      vagas: str(r.vagas),
-    }),
-  },
-  "treino-presenca": {
-    table: "presencas_treino",
-    rowMap: (r) => ({
-      treino: str(r.treino),
-      presentes: str(r.presentes),
-      ausentes: str(r.ausentes),
-      data: fmtDateShort(r.data_registro),
-    }),
-  },
-  "treino-instrutores": {
-    table: "instrutores_escala",
-    rowMap: (r) => ({
-      nome: str(r.nome),
-      especialidade: str(r.especialidade),
-      turmas: str(r.turmas),
-      status: str(r.status),
-    }),
-  },
-  "com-avisos": {
-    table: "avisos",
-    rowMap: (r) => ({
-      titulo: str(r.titulo),
-      emitido: str(r.emitido),
-      data: fmtDateShort(r.data_evento),
-      status: str(r.status),
-    }),
-  },
-  "com-alertas": {
-    table: "alertas",
-    rowMap: (r) => ({
-      nivel: str(r.nivel),
-      mensagem: str(r.mensagem),
-      data: fmtDate(r.data_evento),
-    }),
-  },
-  "com-emergencia": {
-    table: "protocolos_emergencia",
-    rowMap: (r) => ({
-      protocolo: str(r.protocolo),
-      descricao: str(r.descricao),
-      ultimo: str(r.ultimo_uso),
-    }),
-  },
-  "com-broadcast": {
-    table: "broadcasts",
-    rowMap: (r) => ({
-      canal: str(r.canal),
-      alcance: str(r.alcance),
-      data: fmtDate(r.data_evento),
     }),
   },
   "intel-relatorios": {
@@ -220,57 +99,17 @@ export const MODULO_DB: Partial<Record<AdminView, ModuloDbSpec>> = {
       acesso: str(r.acesso),
     }),
   },
-  "mil-patentes": {
-    table: "patentes",
-    rowMap: (r) => ({
-      patente: str(r.patente),
-      qtd: str(r.qtd),
-      insignia: str(r.insignia),
-    }),
-  },
-  "mil-medalhas": {
-    table: "medalhas",
-    rowMap: (r) => ({
-      medalha: str(r.medalha),
-      criterio: str(r.criterio),
-      concedidas: str(r.concedidas),
-    }),
-  },
-  "mil-promocoes": {
-    table: "promocoes",
-    rowMap: (r) => ({
-      militar: str(r.militar),
-      de: str(r.de_patente),
-      para: str(r.para_patente),
-      data: fmtDateShort(r.data_promocao),
-    }),
-  },
-  "mil-honrarias": {
-    table: "honrarias",
-    rowMap: (r) => ({
-      honra: str(r.honra),
-      militar: str(r.militar),
-      data: fmtDateShort(r.data_honra),
-    }),
-  },
   "efetivo-ativos": {
     table: "militares",
     filter: { categoria: "ativo" },
     rowMap: (r) => ({
-      id: str(r.codigo) || (r.discord_user_id ? `DSC-${String(r.discord_user_id).slice(-6)}` : "—"),
+      id:
+        str(r.codigo) ||
+        (r.discord_user_id ? `DSC-${String(r.discord_user_id).slice(-6)}` : "—"),
       nome: str(r.nome),
       patente: str(r.patente) || "—",
       discord: str(r.funcao) || (r.discord_user_id ? "Vinculado" : "Manual"),
       status: str(r.status) || "Autenticado",
-    }),
-  },
-  "efetivo-oficiais": {
-    table: "militares",
-    filter: { categoria: "oficial" },
-    rowMap: (r) => ({
-      nome: str(r.nome),
-      posto: str(r.posto),
-      funcao: str(r.funcao),
     }),
   },
   "efetivo-instrutores": {
@@ -282,93 +121,15 @@ export const MODULO_DB: Partial<Record<AdminView, ModuloDbSpec>> = {
       carga: str(r.carga),
     }),
   },
-  "efetivo-recrutas": {
-    table: "militares",
-    filter: { categoria: "recruta" },
-    rowMap: (r) => ({
-      nome: str(r.nome),
-      turma: str(r.turma),
-      fase: str(r.fase),
-      instrutor: str(r.instrutor),
-    }),
-  },
-  "efetivo-inativos": {
-    table: "militares",
-    filter: { categoria: "inativo" },
-    rowMap: (r) => ({
-      nome: str(r.nome),
-      motivo: str(r.motivo),
-      desde: fmtDateShort(r.desde),
-    }),
-  },
-  "logs-admin": {
+  /** Logs em geral — lista todos os tipos juntos. */
+  "logs-geral": {
     table: "logs",
-    filter: { tipo: "admin" },
     rowMap: (r) => ({
-      hora: fmtDate(r.hora).split(" ")[1] ?? fmtDate(r.hora),
+      hora: fmtDate(r.hora),
+      tipo: str(r.tipo),
       usuario: str(r.usuario),
       acao: str(r.acao),
-    }),
-  },
-  "logs-discord": {
-    table: "logs",
-    filter: { tipo: "discord" },
-    rowMap: (r) => ({
-      hora: fmtDate(r.hora).split(" ")[1] ?? fmtDate(r.hora),
-      tipo: str(r.evento),
-      detalhe: str(r.detalhe),
-    }),
-  },
-  "logs-ops": {
-    table: "logs",
-    filter: { tipo: "operacional" },
-    rowMap: (r) => ({
-      hora: fmtDate(r.hora).split(" ")[1] ?? fmtDate(r.hora),
-      op: str(r.op_codigo),
-      evento: str(r.evento),
-    }),
-  },
-  "logs-sistema": {
-    table: "logs",
-    filter: { tipo: "sistema" },
-    rowMap: (r) => ({
-      data: fmtDate(r.hora),
-      componente: str(r.componente),
-      evento: str(r.evento),
-    }),
-  },
-  "mapa-bases": {
-    table: "bases_taticas",
-    rowMap: (r) => ({
-      base: str(r.base),
-      coords: str(r.coords),
-      status: str(r.status),
-    }),
-  },
-  "mapa-ops": {
-    table: "operacoes",
-    filter: { situacao: "ativa" },
-    rowMap: (r) => ({
-      area: str(r.area),
-      op: str(r.nome),
-      nivel: str(r.nivel_risco),
-    }),
-  },
-  "mapa-zonas": {
-    table: "zonas_vermelhas",
-    rowMap: (r) => ({
-      zona: str(r.zona),
-      motivo: str(r.motivo),
-      desde: fmtDateShort(r.desde),
-    }),
-  },
-  "mapa-patrulhas": {
-    table: "patrulhas",
-    filter: { ativa: true },
-    rowMap: (r) => ({
-      rota: str(r.rota),
-      setor: str(r.setor),
-      viatura: str(r.viatura),
+      detalhe: str(r.detalhe ?? r.evento ?? r.componente),
     }),
   },
   "discord-webhooks": {
@@ -400,42 +161,6 @@ export const MODULO_DB: Partial<Record<AdminView, ModuloDbSpec>> = {
     rowMap: (r) => ({
       item: str(r.item),
       status: str(r.status),
-    }),
-  },
-  "agenda-treinos": {
-    table: "agenda_eventos",
-    filter: { tipo: "treino" },
-    rowMap: (r) => ({
-      data: fmtDate(r.data_hora),
-      evento: str(r.evento ?? r.titulo),
-      local: str(r.local),
-    }),
-  },
-  "agenda-ops": {
-    table: "agenda_eventos",
-    filter: { tipo: "operacao" },
-    rowMap: (r) => ({
-      data: fmtDate(r.data_hora),
-      op: str(r.titulo ?? r.evento),
-      comandante: str(r.comandante),
-    }),
-  },
-  "agenda-entrevistas": {
-    table: "agenda_eventos",
-    filter: { tipo: "entrevista" },
-    rowMap: (r) => ({
-      data: fmtDate(r.data_hora),
-      candidato: str(r.candidato),
-      instrutor: str(r.instrutor),
-    }),
-  },
-  "agenda-reunioes": {
-    table: "agenda_eventos",
-    filter: { tipo: "reuniao" },
-    rowMap: (r) => ({
-      data: fmtDate(r.data_hora),
-      titulo: str(r.titulo),
-      participantes: str(r.participantes),
     }),
   },
   "disc-advertencias": {
@@ -486,6 +211,7 @@ export const MODULO_DB: Partial<Record<AdminView, ModuloDbSpec>> = {
       ref: str(r.ref),
       titulo: str(r.titulo),
       nivel: str(r.nivel),
+      arquivo: str(r.pdf_filename),
     }),
   },
   "restrito-ops": {
@@ -495,6 +221,7 @@ export const MODULO_DB: Partial<Record<AdminView, ModuloDbSpec>> = {
       codigo: str(r.codigo),
       nome: str(r.titulo),
       acesso: str(r.acesso),
+      arquivo: str(r.pdf_filename),
     }),
   },
   "restrito-docs": {
@@ -504,6 +231,7 @@ export const MODULO_DB: Partial<Record<AdminView, ModuloDbSpec>> = {
       doc: str(r.codigo),
       titulo: str(r.titulo),
       custodia: str(r.custodia),
+      arquivo: str(r.pdf_filename),
     }),
   },
   "sys-sessoes": {
@@ -530,35 +258,17 @@ export const TABELAS_SISTEMA = [
   "inscricoes",
   "entrevistas",
   "operacoes",
-  "briefings",
-  "missoes",
-  "patrulhas",
-  "treinamentos",
-  "cursos",
-  "presencas_treino",
-  "instrutores_escala",
   "militares",
-  "patentes",
-  "medalhas",
-  "promocoes",
-  "honrarias",
   "comunicados",
-  "avisos",
-  "alertas",
-  "protocolos_emergencia",
-  "broadcasts",
   "intel_relatorios",
   "intel_investigacoes",
   "intel_suspeitos",
   "intel_blacklist",
   "intel_docs_sigilosos",
   "logs",
-  "bases_taticas",
-  "zonas_vermelhas",
   "discord_webhooks",
   "discord_cargos",
   "discord_sync_eventos",
-  "agenda_eventos",
   "disciplina_advertencias",
   "disciplina_prisoes",
   "disciplina_suspensoes",
@@ -570,4 +280,13 @@ export const TABELAS_SISTEMA = [
   "discord_membros",
   "identidades_militares",
   "documentos_emitidos",
+  "suporte_tickets",
+  "suporte_mensagens",
 ] as const;
+
+/** Views suportam upload/download de PDF anexo (campos pdf_path/pdf_filename...). */
+export const PDF_RESTRITO_VIEWS = new Set<AdminView>([
+  "restrito-intel",
+  "restrito-ops",
+  "restrito-docs",
+]);

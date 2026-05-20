@@ -4,27 +4,28 @@ import {
   Radar,
   UserPlus,
   Crosshair,
-  GraduationCap,
   ScrollText,
   Users,
   Bot,
   Eye,
   Gavel,
-  Calendar,
   Radio,
-  Map,
-  Medal,
   Settings,
   Lock,
   UserCircle,
   FileText,
+  LifeBuoy,
 } from "lucide-react";
 
 export type AdminView = string;
 
+/** Marcação opcional de gates por papel (atualmente só "alto-comando"). */
+export type RestrictedRole = "alto-comando";
+
 export type NavLeaf = {
   id: AdminView;
   label: string;
+  restricted?: RestrictedRole;
 };
 
 export type NavGroup = {
@@ -33,6 +34,7 @@ export type NavGroup = {
   icon: LucideIcon;
   defaultOpen?: boolean;
   children: NavLeaf[];
+  restricted?: RestrictedRole;
 };
 
 export type NavSingle = {
@@ -41,6 +43,7 @@ export type NavSingle = {
   label: string;
   icon: LucideIcon;
   highlight?: "war" | "default";
+  restricted?: RestrictedRole;
 };
 
 export type NavGroupEntry = {
@@ -61,6 +64,21 @@ export const IMPLEMENTED_VIEWS = new Set<AdminView>([
   "recrutamento-analise",
   "comunicados",
   "documentos",
+  "suporte-admin",
+]);
+
+/** Views com gate Alto Comando — usadas pelo servidor para autorização defensiva. */
+export const ALTO_COMANDO_VIEWS = new Set<AdminView>([
+  "logs-geral",
+  "suporte-admin",
+  "sys-db",
+  "sys-api",
+  "sys-seguranca",
+  "sys-sessoes",
+  "sys-backup",
+  "restrito-intel",
+  "restrito-ops",
+  "restrito-docs",
 ]);
 
 const PLACEHOLDER_COPY: Record<string, { title: string; desc: string; tag?: string }> = {
@@ -69,67 +87,46 @@ const PLACEHOLDER_COPY: Record<string, { title: string; desc: string; tag?: stri
     desc: "Agenda e controle de entrevistas com recrutas.",
     tag: "RECRUTAMENTO",
   },
-  "ops-ativas": { title: "Operações ativas", desc: "Missões em andamento e status operacional.", tag: "OPERAÇÕES" },
-  "ops-historico": { title: "Histórico operacional", desc: "Registro de operações concluídas.", tag: "OPERAÇÕES" },
-  "ops-briefings": { title: "Briefings", desc: "Documentos e briefings de missão.", tag: "OPERAÇÕES" },
-  "ops-missoes": { title: "Missões", desc: "Cadastro e gestão de missões.", tag: "OPERAÇÕES" },
-  "ops-patrulhas": { title: "Patrulhas", desc: "Rotas e patrulhas programadas.", tag: "OPERAÇÕES" },
-  "treino-sat": { title: "SAT", desc: "Seleção e avaliação SAT.", tag: "TREINAMENTOS" },
-  "treino-cqb": { title: "CQB", desc: "Treinamento close quarters battle.", tag: "TREINAMENTOS" },
-  "treino-taf": { title: "TAF", desc: "Teste de aptidão física.", tag: "TREINAMENTOS" },
-  "treino-cursos": { title: "Cursos", desc: "Catálogo de cursos militares.", tag: "TREINAMENTOS" },
-  "treino-presenca": { title: "Presença", desc: "Controle de presença em treinos.", tag: "TREINAMENTOS" },
-  "treino-instrutores": { title: "Instrutores", desc: "Escala de instrutores.", tag: "TREINAMENTOS" },
-  "com-avisos": { title: "Avisos", desc: "Avisos gerais ao efetivo.", tag: "COMUNICAÇÃO" },
-  "com-alertas": { title: "Alertas", desc: "Alertas operacionais prioritários.", tag: "COMUNICAÇÃO" },
-  "com-defcon": { title: "DEFCON", desc: "Nível de alerta da unidade.", tag: "COMUNICAÇÃO" },
-  "com-emergencia": { title: "Emergência", desc: "Comunicados de emergência.", tag: "COMUNICAÇÃO" },
-  "com-broadcast": { title: "Broadcast", desc: "Transmissão em massa.", tag: "COMUNICAÇÃO" },
-  "intel-relatorios": { title: "Relatórios", desc: "Relatórios de inteligência.", tag: "INTELIGÊNCIA" },
-  "intel-investigacao": { title: "Investigação", desc: "Casos em investigação.", tag: "INTELIGÊNCIA" },
-  "intel-suspeitos": { title: "Suspeitos", desc: "Base de suspeitos monitorados.", tag: "INTELIGÊNCIA" },
-  "intel-blacklist": { title: "Blacklist", desc: "Lista restritiva de indivíduos.", tag: "INTELIGÊNCIA" },
-  "intel-sigilosos": { title: "Documentos sigilosos", desc: "Acesso ultra restrito.", tag: "INTELIGÊNCIA" },
-  "mil-patentes": { title: "Patentes", desc: "Hierarquia e patentes.", tag: "SISTEMA MILITAR" },
-  "mil-medalhas": { title: "Medalhas", desc: "Condecorações e medalhas.", tag: "SISTEMA MILITAR" },
-  "mil-promocoes": { title: "Promoções", desc: "Histórico de promoções.", tag: "SISTEMA MILITAR" },
-  "mil-honrarias": { title: "Honrarias", desc: "Honras ao mérito.", tag: "SISTEMA MILITAR" },
+  "ops-ativas": {
+    title: "Operações ativas",
+    desc: "Missões em andamento e status operacional.",
+    tag: "OPERAÇÕES",
+  },
   "efetivo-ativos": {
     title: "Militares",
     desc: "Membros autenticados no Discord (inclusão automática).",
     tag: "EFETIVO",
   },
   "efetivo-instrutores": { title: "Instrutores", desc: "Corpo de instrução.", tag: "EFETIVO" },
-  "logs-admin": { title: "Logs administrativos", desc: "Ações no painel.", tag: "LOGS" },
-  "logs-discord": { title: "Logs Discord", desc: "Eventos do Discord.", tag: "LOGS" },
-  "logs-ops": { title: "Logs operacionais", desc: "Registro de operações.", tag: "LOGS" },
-  "logs-sistema": { title: "Alterações do sistema", desc: "Auditoria técnica.", tag: "LOGS" },
-  "mapa-bases": { title: "Bases", desc: "Bases no mapa tático.", tag: "MAPA TÁTICO" },
-  "mapa-ops": { title: "Operações no mapa", desc: "Áreas de operação.", tag: "MAPA TÁTICO" },
-  "mapa-zonas": { title: "Zonas vermelhas", desc: "Zonas de alto risco.", tag: "MAPA TÁTICO" },
-  "mapa-patrulhas": { title: "Patrulhas no mapa", desc: "Rotas de patrulha.", tag: "MAPA TÁTICO" },
+  "logs-geral": { title: "Logs em geral", desc: "Eventos auditados do painel, Discord, operações e sistema.", tag: "LOGS" },
   "discord-webhooks": { title: "Webhooks", desc: "Configuração de webhooks.", tag: "DISCORD" },
   "discord-bot": { title: "Status do bot", desc: "Integração com bot oficial.", tag: "DISCORD" },
   "discord-cargos": { title: "Cargos automáticos", desc: "Sincronização de cargos.", tag: "DISCORD" },
   "discord-logs": { title: "Logs Discord", desc: "Canal de logs.", tag: "DISCORD" },
   "discord-sync": { title: "Sincronização", desc: "Sync painel ↔ Discord.", tag: "DISCORD" },
-  "sys-db": { title: "Banco de dados", desc: "Status Supabase.", tag: "SISTEMA" },
-  "sys-api": { title: "API", desc: "Endpoints e integrações.", tag: "SISTEMA" },
-  "sys-seguranca": { title: "Segurança", desc: "Chaves e permissões.", tag: "SISTEMA" },
-  "sys-sessoes": { title: "Sessões", desc: "Sessões administrativas.", tag: "SISTEMA" },
-  "sys-backup": { title: "Backup", desc: "Rotinas de backup.", tag: "SISTEMA" },
-  "agenda-treinos": { title: "Treinamentos", desc: "Calendário de treinos.", tag: "AGENDA" },
-  "agenda-ops": { title: "Operações", desc: "Operações agendadas.", tag: "AGENDA" },
-  "agenda-entrevistas": { title: "Entrevistas", desc: "Entrevistas marcadas.", tag: "AGENDA" },
-  "agenda-reunioes": { title: "Reuniões", desc: "Reuniões de comando.", tag: "AGENDA" },
+  "intel-relatorios": { title: "Relatórios", desc: "Relatórios de inteligência.", tag: "INTELIGÊNCIA" },
+  "intel-investigacao": { title: "Investigação", desc: "Casos em investigação.", tag: "INTELIGÊNCIA" },
+  "intel-suspeitos": { title: "Suspeitos", desc: "Base de suspeitos monitorados.", tag: "INTELIGÊNCIA" },
+  "intel-blacklist": { title: "Blacklist", desc: "Lista restritiva de indivíduos.", tag: "INTELIGÊNCIA" },
+  "intel-sigilosos": { title: "Documentos sigilosos", desc: "Acesso ultra restrito.", tag: "INTELIGÊNCIA" },
   "disc-advertencias": { title: "Advertências", desc: "Registro disciplinar.", tag: "DISCIPLINA" },
   "disc-prisoes": { title: "Prisões", desc: "Detenções e prisões RP.", tag: "DISCIPLINA" },
   "disc-suspensoes": { title: "Suspensões", desc: "Suspensões temporárias.", tag: "DISCIPLINA" },
   "disc-expulsoes": { title: "Expulsões", desc: "Expulsões do quadro.", tag: "DISCIPLINA" },
   "disc-sindicancias": { title: "Sindicâncias", desc: "Processos disciplinares.", tag: "DISCIPLINA" },
+  "sys-db": { title: "Banco de dados", desc: "Status Supabase.", tag: "SISTEMA" },
+  "sys-api": { title: "API", desc: "Endpoints e integrações.", tag: "SISTEMA" },
+  "sys-seguranca": { title: "Segurança", desc: "Chaves e permissões.", tag: "SISTEMA" },
+  "sys-sessoes": { title: "Sessões", desc: "Sessões administrativas.", tag: "SISTEMA" },
+  "sys-backup": { title: "Backup", desc: "Rotinas de backup.", tag: "SISTEMA" },
   "restrito-intel": { title: "Inteligência restrita", desc: "Somente alto comando.", tag: "RESTRITO" },
   "restrito-ops": { title: "Operações sigilosas", desc: "Classificado.", tag: "RESTRITO" },
   "restrito-docs": { title: "Documentos internos", desc: "Arquivo restrito.", tag: "RESTRITO" },
+  "suporte-admin": {
+    title: "Suporte",
+    desc: "Atendimento de conscritos via chat ao vivo.",
+    tag: "SUPORTE",
+  },
 };
 
 export function getPlaceholderMeta(view: AdminView) {
@@ -170,6 +167,13 @@ export const NAV_ENTRIES: NavEntry[] = [
     highlight: "war",
   },
   {
+    type: "single",
+    id: "suporte-admin",
+    label: "Suporte",
+    icon: LifeBuoy,
+    restricted: "alto-comando",
+  },
+  {
     type: "group",
     group: {
       id: "recrutamento",
@@ -193,42 +197,15 @@ export const NAV_ENTRIES: NavEntry[] = [
       icon: Crosshair,
       children: [
         { id: "ops-ativas", label: "Operações ativas" },
-        { id: "ops-historico", label: "Histórico operacional" },
-        { id: "ops-briefings", label: "Briefings" },
-        { id: "ops-missoes", label: "Missões" },
-        { id: "ops-patrulhas", label: "Patrulhas" },
       ],
     },
   },
   {
-    type: "group",
-    group: {
-      id: "treinamentos",
-      label: "Treinamentos",
-      icon: GraduationCap,
-      children: [
-        { id: "treino-sat", label: "SAT" },
-        { id: "treino-cqb", label: "CQB" },
-        { id: "treino-taf", label: "TAF" },
-        { id: "treino-cursos", label: "Cursos" },
-        { id: "treino-presenca", label: "Presença" },
-        { id: "treino-instrutores", label: "Instrutores" },
-      ],
-    },
-  },
-  {
-    type: "group",
-    group: {
-      id: "logs",
-      label: "Central de Logs",
-      icon: ScrollText,
-      children: [
-        { id: "logs-admin", label: "Logs administrativos" },
-        { id: "logs-discord", label: "Logs Discord" },
-        { id: "logs-ops", label: "Logs operacionais" },
-        { id: "logs-sistema", label: "Alterações do sistema" },
-      ],
-    },
+    type: "single",
+    id: "logs-geral",
+    label: "Logs em geral",
+    icon: ScrollText,
+    restricted: "alto-comando",
   },
   {
     type: "group",
@@ -290,58 +267,11 @@ export const NAV_ENTRIES: NavEntry[] = [
   {
     type: "group",
     group: {
-      id: "agenda",
-      label: "Agenda Operacional",
-      icon: Calendar,
-      children: [
-        { id: "agenda-treinos", label: "Treinamentos" },
-        { id: "agenda-ops", label: "Operações" },
-        { id: "agenda-entrevistas", label: "Entrevistas" },
-        { id: "agenda-reunioes", label: "Reuniões" },
-      ],
-    },
-  },
-  {
-    type: "group",
-    group: {
       id: "comunicacao",
       label: "Central de Comunicação",
       icon: Radio,
       children: [
         { id: "comunicados", label: "Comunicados" },
-        { id: "com-avisos", label: "Avisos" },
-        { id: "com-alertas", label: "Alertas" },
-        { id: "com-defcon", label: "DEFCON" },
-        { id: "com-emergencia", label: "Emergência" },
-        { id: "com-broadcast", label: "Broadcast" },
-      ],
-    },
-  },
-  {
-    type: "group",
-    group: {
-      id: "mapa",
-      label: "Mapa Tático",
-      icon: Map,
-      children: [
-        { id: "mapa-bases", label: "Bases" },
-        { id: "mapa-ops", label: "Operações" },
-        { id: "mapa-zonas", label: "Zonas vermelhas" },
-        { id: "mapa-patrulhas", label: "Patrulhas" },
-      ],
-    },
-  },
-  {
-    type: "group",
-    group: {
-      id: "sistema-militar",
-      label: "Sistema Militar",
-      icon: Medal,
-      children: [
-        { id: "mil-patentes", label: "Patentes" },
-        { id: "mil-medalhas", label: "Medalhas" },
-        { id: "mil-promocoes", label: "Promoções" },
-        { id: "mil-honrarias", label: "Honrarias" },
       ],
     },
   },
@@ -351,6 +281,7 @@ export const NAV_ENTRIES: NavEntry[] = [
       id: "sistema",
       label: "Sistema",
       icon: Settings,
+      restricted: "alto-comando",
       children: [
         { id: "sys-db", label: "Banco de dados" },
         { id: "sys-api", label: "API" },
@@ -366,6 +297,7 @@ export const NAV_ENTRIES: NavEntry[] = [
       id: "restrito",
       label: "Área Restrita",
       icon: Lock,
+      restricted: "alto-comando",
       children: [
         { id: "restrito-intel", label: "Inteligência" },
         { id: "restrito-ops", label: "Operações sigilosas" },
@@ -376,3 +308,22 @@ export const NAV_ENTRIES: NavEntry[] = [
 ];
 
 buildViewLabels(NAV_ENTRIES);
+
+/** Para uso em UIs/servers ao decidir bloqueio (`entry` pode ser single ou child). */
+export function viewIsRestricted(view: AdminView): RestrictedRole | undefined {
+  for (const e of NAV_ENTRIES) {
+    if (e.type === "single") {
+      if (e.id === view) return e.restricted;
+      continue;
+    }
+    const g = e.group;
+    if (g.restricted) {
+      if (g.children.some((c) => c.id === view)) return g.restricted;
+    }
+    for (const c of g.children) {
+      if (c.id === view && c.restricted) return c.restricted;
+    }
+  }
+  if (ALTO_COMANDO_VIEWS.has(view)) return "alto-comando";
+  return undefined;
+}

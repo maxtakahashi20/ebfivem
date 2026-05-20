@@ -1,5 +1,5 @@
 -- =============================================================================
--- CMF — schema completo (sidebar ADMCMF + Painel Membro / Identidade digital)
+-- CMF — schema enxuto (painel ADMCMF + Painel Membro + Identidade + Suporte)
 -- Cole INTEIRO no Supabase → SQL Editor → Run (idempotente)
 -- =============================================================================
 
@@ -13,15 +13,7 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 DO $$ BEGIN
-  CREATE TYPE public.tipo_treinamento AS ENUM ('sat', 'cqb', 'taf');
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
   CREATE TYPE public.tipo_log AS ENUM ('admin', 'discord', 'operacional', 'sistema');
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-  CREATE TYPE public.tipo_agenda AS ENUM ('treino', 'operacao', 'entrevista', 'reuniao');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 DO $$ BEGIN
@@ -31,6 +23,37 @@ EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 DO $$ BEGIN
   CREATE TYPE public.situacao_operacao AS ENUM ('ativa', 'concluida', 'preparacao');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE TYPE public.status_ticket_suporte AS ENUM ('aberto', 'em_atendimento', 'encerrado');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE TYPE public.autor_mensagem_suporte AS ENUM ('conscrito', 'militar', 'sistema');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- ── Drop de tabelas removidas do escopo (idempotente) ───────────────────────
+DROP TABLE IF EXISTS public.treinamentos CASCADE;
+DROP TABLE IF EXISTS public.cursos CASCADE;
+DROP TABLE IF EXISTS public.presencas_treino CASCADE;
+DROP TABLE IF EXISTS public.instrutores_escala CASCADE;
+DROP TABLE IF EXISTS public.agenda_eventos CASCADE;
+DROP TABLE IF EXISTS public.bases_taticas CASCADE;
+DROP TABLE IF EXISTS public.zonas_vermelhas CASCADE;
+DROP TABLE IF EXISTS public.patrulhas CASCADE;
+DROP TABLE IF EXISTS public.briefings CASCADE;
+DROP TABLE IF EXISTS public.missoes CASCADE;
+DROP TABLE IF EXISTS public.patentes CASCADE;
+DROP TABLE IF EXISTS public.medalhas CASCADE;
+DROP TABLE IF EXISTS public.promocoes CASCADE;
+DROP TABLE IF EXISTS public.honrarias CASCADE;
+DROP TABLE IF EXISTS public.avisos CASCADE;
+DROP TABLE IF EXISTS public.alertas CASCADE;
+DROP TABLE IF EXISTS public.defcon_config CASCADE;
+DROP TABLE IF EXISTS public.protocolos_emergencia CASCADE;
+DROP TABLE IF EXISTS public.broadcasts CASCADE;
+DROP TYPE  IF EXISTS public.tipo_agenda;
+DROP TYPE  IF EXISTS public.tipo_treinamento;
 
 -- ── Trigger updated_at ───────────────────────────────────────────────────────
 CREATE OR REPLACE FUNCTION public.touch_updated_at()
@@ -64,7 +87,7 @@ CREATE TABLE IF NOT EXISTS public.entrevistas (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- ── Operações ────────────────────────────────────────────────────────────────
+-- ── Operações (apenas tabela base — subordinados foram removidos) ──────────
 CREATE TABLE IF NOT EXISTS public.operacoes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   codigo TEXT NOT NULL,
@@ -81,89 +104,7 @@ CREATE TABLE IF NOT EXISTS public.operacoes (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE TABLE IF NOT EXISTS public.briefings (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  doc TEXT NOT NULL,
-  titulo TEXT NOT NULL,
-  autor TEXT,
-  data_emissao DATE DEFAULT CURRENT_DATE,
-  classificado BOOLEAN DEFAULT false,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS public.missoes (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  codigo TEXT NOT NULL,
-  objetivo TEXT NOT NULL,
-  prioridade TEXT DEFAULT 'Média',
-  prazo DATE,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS public.patrulhas (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  rota TEXT NOT NULL,
-  setor TEXT,
-  viatura TEXT,
-  horario TEXT,
-  ativa BOOLEAN DEFAULT true,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- ── Treinamentos ─────────────────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS public.treinamentos (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tipo public.tipo_treinamento NOT NULL,
-  militar TEXT,
-  turma TEXT,
-  instrutor TEXT,
-  local TEXT,
-  nota TEXT,
-  corrida TEXT,
-  flexoes TEXT,
-  resultado TEXT,
-  proxima_aula TIMESTAMPTZ,
-  status TEXT,
-  data_avaliacao DATE,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS public.cursos (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  codigo TEXT NOT NULL,
-  nome TEXT NOT NULL,
-  carga_horas TEXT,
-  vagas TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS public.presencas_treino (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  treino TEXT NOT NULL,
-  presentes TEXT,
-  ausentes TEXT,
-  data_registro DATE DEFAULT CURRENT_DATE,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS public.instrutores_escala (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  nome TEXT NOT NULL,
-  especialidade TEXT,
-  turmas TEXT,
-  carga_semanal TEXT,
-  status TEXT DEFAULT 'Disponível',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- ── Efetivo / Sistema militar ──────────────────────────────────────────────────
+-- ── Efetivo ──────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.militares (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   codigo TEXT,
@@ -185,98 +126,13 @@ CREATE TABLE IF NOT EXISTS public.militares (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE TABLE IF NOT EXISTS public.patentes (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  patente TEXT NOT NULL,
-  qtd TEXT,
-  insignia TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS public.medalhas (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  medalha TEXT NOT NULL,
-  criterio TEXT,
-  concedidas TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS public.promocoes (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  militar TEXT NOT NULL,
-  de_patente TEXT,
-  para_patente TEXT,
-  data_promocao DATE DEFAULT CURRENT_DATE,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS public.honrarias (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  honra TEXT NOT NULL,
-  militar TEXT NOT NULL,
-  data_honra DATE DEFAULT CURRENT_DATE,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- ── Comunicação ──────────────────────────────────────────────────────────────
+-- ── Comunicação (apenas comunicados) ────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.comunicados (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   titulo TEXT NOT NULL,
   corpo TEXT NOT NULL,
   emitido_por TEXT,
   publicado_em TIMESTAMPTZ DEFAULT now(),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS public.avisos (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  titulo TEXT NOT NULL,
-  emitido TEXT,
-  data_evento DATE DEFAULT CURRENT_DATE,
-  status TEXT DEFAULT 'Ativo',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS public.alertas (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  nivel TEXT NOT NULL,
-  mensagem TEXT NOT NULL,
-  data_evento TIMESTAMPTZ DEFAULT now(),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS public.defcon_config (
-  id SMALLINT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
-  nivel SMALLINT NOT NULL DEFAULT 4 CHECK (nivel BETWEEN 1 AND 5),
-  descricao TEXT,
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-INSERT INTO public.defcon_config (id, nivel, descricao)
-VALUES (1, 4, 'Atenção elevada')
-ON CONFLICT (id) DO NOTHING;
-
-CREATE TABLE IF NOT EXISTS public.protocolos_emergencia (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  protocolo TEXT NOT NULL,
-  descricao TEXT NOT NULL,
-  ultimo_uso TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS public.broadcasts (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  canal TEXT,
-  alcance TEXT,
-  data_evento TIMESTAMPTZ DEFAULT now(),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -332,7 +188,7 @@ CREATE TABLE IF NOT EXISTS public.intel_docs_sigilosos (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- ── Logs ─────────────────────────────────────────────────────────────────────
+-- ── Logs (Logs em geral) ────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tipo public.tipo_log NOT NULL,
@@ -344,25 +200,6 @@ CREATE TABLE IF NOT EXISTS public.logs (
   componente TEXT,
   evento TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- ── Mapa tático ──────────────────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS public.bases_taticas (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  base TEXT NOT NULL,
-  coords TEXT,
-  status TEXT DEFAULT 'Operacional',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS public.zonas_vermelhas (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  zona TEXT NOT NULL,
-  motivo TEXT,
-  desde DATE DEFAULT CURRENT_DATE,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- ── Discord ──────────────────────────────────────────────────────────────────
@@ -399,22 +236,6 @@ CREATE TABLE IF NOT EXISTS public.discord_sync_eventos (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   item TEXT NOT NULL,
   status TEXT DEFAULT 'Sincronizado',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- ── Agenda ───────────────────────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS public.agenda_eventos (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tipo public.tipo_agenda NOT NULL,
-  data_hora TIMESTAMPTZ,
-  titulo TEXT,
-  evento TEXT,
-  local TEXT,
-  candidato TEXT,
-  instrutor TEXT,
-  comandante TEXT,
-  participantes TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -466,7 +287,7 @@ CREATE TABLE IF NOT EXISTS public.disciplina_sindicancias (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- ── Área restrita ────────────────────────────────────────────────────────────
+-- ── Área restrita (com anexo PDF opcional) ──────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.documentos_restritos (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tipo public.tipo_doc_restrito NOT NULL,
@@ -476,9 +297,17 @@ CREATE TABLE IF NOT EXISTS public.documentos_restritos (
   nivel TEXT,
   acesso TEXT,
   custodia TEXT,
+  pdf_path TEXT,
+  pdf_filename TEXT,
+  pdf_mime TEXT,
+  pdf_size_bytes INTEGER,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+ALTER TABLE public.documentos_restritos ADD COLUMN IF NOT EXISTS pdf_path TEXT;
+ALTER TABLE public.documentos_restritos ADD COLUMN IF NOT EXISTS pdf_filename TEXT;
+ALTER TABLE public.documentos_restritos ADD COLUMN IF NOT EXISTS pdf_mime TEXT;
+ALTER TABLE public.documentos_restritos ADD COLUMN IF NOT EXISTS pdf_size_bytes INTEGER;
 
 -- ── Sistema ────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.sessoes_admin (
@@ -543,6 +372,40 @@ CREATE TABLE IF NOT EXISTS public.documentos_emitidos (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- ── Suporte (chat conscrito ↔ alto comando) ──────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.suporte_tickets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  titulo TEXT NOT NULL,
+  protocolo TEXT,
+  rg TEXT,
+  nome TEXT,
+  sobrenome TEXT,
+  acesso_token UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+  status public.status_ticket_suporte NOT NULL DEFAULT 'aberto',
+  atendente_discord_id TEXT,
+  atendente_nome TEXT,
+  ultima_mensagem_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+-- Migração idempotente: novos campos / relaxar NOT NULL
+ALTER TABLE public.suporte_tickets ADD COLUMN IF NOT EXISTS titulo TEXT;
+ALTER TABLE public.suporte_tickets ALTER COLUMN protocolo DROP NOT NULL;
+ALTER TABLE public.suporte_tickets ALTER COLUMN rg DROP NOT NULL;
+UPDATE public.suporte_tickets SET titulo = COALESCE(NULLIF(titulo, ''), CONCAT('Ticket ', LEFT(id::text, 8)))
+  WHERE titulo IS NULL OR titulo = '';
+ALTER TABLE public.suporte_tickets ALTER COLUMN titulo SET NOT NULL;
+
+CREATE TABLE IF NOT EXISTS public.suporte_mensagens (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ticket_id UUID NOT NULL REFERENCES public.suporte_tickets(id) ON DELETE CASCADE,
+  autor public.autor_mensagem_suporte NOT NULL,
+  autor_nome TEXT,
+  autor_discord_id TEXT,
+  mensagem TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- ── Índices ────────────────────────────────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS inscricoes_rg_idx ON public.inscricoes (rg);
 CREATE INDEX IF NOT EXISTS inscricoes_status_idx ON public.inscricoes (status);
@@ -558,10 +421,11 @@ CREATE INDEX IF NOT EXISTS militares_categoria_idx ON public.militares (categori
 CREATE INDEX IF NOT EXISTS militares_discord_user_id_idx ON public.militares (discord_user_id);
 
 ALTER TABLE public.militares ADD COLUMN IF NOT EXISTS discord_user_id TEXT UNIQUE;
-CREATE INDEX IF NOT EXISTS treinamentos_tipo_idx ON public.treinamentos (tipo);
 CREATE INDEX IF NOT EXISTS logs_tipo_idx ON public.logs (tipo);
-CREATE INDEX IF NOT EXISTS agenda_tipo_idx ON public.agenda_eventos (tipo);
 CREATE INDEX IF NOT EXISTS docs_restritos_tipo_idx ON public.documentos_restritos (tipo);
+CREATE INDEX IF NOT EXISTS suporte_tickets_status_idx ON public.suporte_tickets (status);
+CREATE INDEX IF NOT EXISTS suporte_tickets_ultima_msg_idx ON public.suporte_tickets (ultima_mensagem_em DESC);
+CREATE INDEX IF NOT EXISTS suporte_mensagens_ticket_idx ON public.suporte_mensagens (ticket_id, created_at);
 
 -- ── RLS (somente service role no servidor; inscrições públicas) ────────────────
 ALTER TABLE public.inscricoes ENABLE ROW LEVEL SECURITY;
@@ -578,15 +442,14 @@ DO $$
 DECLARE t text;
 BEGIN
   FOR t IN SELECT unnest(ARRAY[
-    'entrevistas','operacoes','briefings','missoes','patrulhas','treinamentos','cursos',
-    'presencas_treino','instrutores_escala','militares','patentes','medalhas','promocoes',
-    'honrarias','comunicados','avisos','alertas','defcon_config','protocolos_emergencia',
-    'broadcasts','intel_relatorios','intel_investigacoes','intel_suspeitos','intel_blacklist',
-    'intel_docs_sigilosos','logs','bases_taticas','zonas_vermelhas','discord_webhooks',
-    'discord_cargos','discord_bot_status','discord_sync_eventos','agenda_eventos',
+    'entrevistas','operacoes','militares','comunicados',
+    'intel_relatorios','intel_investigacoes','intel_suspeitos','intel_blacklist',
+    'intel_docs_sigilosos','logs','discord_webhooks','discord_cargos',
+    'discord_bot_status','discord_sync_eventos',
     'disciplina_advertencias','disciplina_prisoes','disciplina_suspensoes','disciplina_expulsoes',
     'disciplina_sindicancias','documentos_restritos','sessoes_admin','backups_registro',
-    'discord_membros','identidades_militares','documentos_emitidos'
+    'discord_membros','identidades_militares','documentos_emitidos',
+    'suporte_tickets','suporte_mensagens'
   ]) LOOP
     EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);
   END LOOP;
@@ -597,15 +460,13 @@ DO $$
 DECLARE t text;
 BEGIN
   FOR t IN SELECT unnest(ARRAY[
-    'inscricoes','entrevistas','operacoes','briefings','missoes','patrulhas','treinamentos',
-    'cursos','presencas_treino','instrutores_escala','militares','patentes','medalhas',
-    'promocoes','honrarias','comunicados','avisos','alertas','defcon_config',
-    'protocolos_emergencia','broadcasts','intel_relatorios','intel_investigacoes',
-    'intel_suspeitos','intel_blacklist','intel_docs_sigilosos','bases_taticas',
-    'zonas_vermelhas','discord_webhooks','discord_cargos','discord_bot_status',
-    'discord_sync_eventos','agenda_eventos','disciplina_advertencias','disciplina_prisoes',
+    'inscricoes','entrevistas','operacoes','militares','comunicados',
+    'intel_relatorios','intel_investigacoes','intel_suspeitos','intel_blacklist',
+    'intel_docs_sigilosos','discord_webhooks','discord_cargos','discord_bot_status',
+    'discord_sync_eventos','disciplina_advertencias','disciplina_prisoes',
     'disciplina_suspensoes','disciplina_expulsoes','disciplina_sindicancias',
-    'documentos_restritos','discord_membros','identidades_militares'
+    'documentos_restritos','discord_membros','identidades_militares',
+    'suporte_tickets'
   ]) LOOP
     EXECUTE format('DROP TRIGGER IF EXISTS trg_%s_updated_at ON public.%I', t, t);
     EXECUTE format(

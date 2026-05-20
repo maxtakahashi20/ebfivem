@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { AdminView } from "@/config/admin-nav";
 import { getModuloForm, type ModuloFormField } from "@/config/admin-module-forms";
+import { PDF_RESTRITO_VIEWS } from "@/config/admin-modules-db";
 import {
   Dialog,
   DialogContent,
@@ -11,21 +12,44 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+export type AdminFormPdf = {
+  base64: string;
+  filename: string;
+  mime: string;
+};
+
+export type AdminFormSubmit = (
+  valores: Record<string, string>,
+  pdf: AdminFormPdf | null,
+) => void;
+
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   view: AdminView;
   title: string;
   saving: boolean;
-  onSubmit: (valores: Record<string, string>) => void;
+  onSubmit: AdminFormSubmit;
 };
 
-export function AdminModuleFormDialog({ open, onOpenChange, view, title, saving, onSubmit }: Props) {
+export function AdminModuleFormDialog({
+  open,
+  onOpenChange,
+  view,
+  title,
+  saving,
+  onSubmit,
+}: Props) {
   const spec = getModuloForm(view);
   const [valores, setValores] = useState<Record<string, string>>({});
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const allowsPdf = PDF_RESTRITO_VIEWS.has(view);
 
   useEffect(() => {
-    if (open) setValores({});
+    if (open) {
+      setValores({});
+      setPdfFile(null);
+    }
   }, [open, view]);
 
   if (!spec) return null;
@@ -34,9 +58,17 @@ export function AdminModuleFormDialog({ open, onOpenChange, view, title, saving,
     setValores((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(valores);
+    let pdf: AdminFormPdf | null = null;
+    if (pdfFile) {
+      pdf = {
+        base64: await fileToBase64(pdfFile),
+        filename: pdfFile.name,
+        mime: pdfFile.type || "application/pdf",
+      };
+    }
+    onSubmit(valores, pdf);
   };
 
   return (
@@ -48,11 +80,39 @@ export function AdminModuleFormDialog({ open, onOpenChange, view, title, saving,
           </DialogHeader>
           <div className="grid gap-4 py-4">
             {spec.fields.map((field) => (
-              <FieldInput key={field.key} field={field} value={valores[field.key] ?? ""} onChange={setField} />
+              <FieldInput
+                key={field.key}
+                field={field}
+                value={valores[field.key] ?? ""}
+                onChange={setField}
+              />
             ))}
+            {allowsPdf && (
+              <div className="grid gap-1.5">
+                <Label htmlFor="pdf-anexo" className="stencil text-[10px]">
+                  Anexar PDF (opcional · até 25 MB)
+                </Label>
+                <Input
+                  id="pdf-anexo"
+                  type="file"
+                  accept="application/pdf"
+                  onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
+                  className="font-mono text-xs bg-transparent"
+                />
+                {pdfFile && (
+                  <p className="text-[10px] font-mono text-(--color-stencil)">
+                    {pdfFile.name} · {(pdfFile.size / 1024).toFixed(0)} KB
+                  </p>
+                )}
+              </div>
+            )}
           </div>
           <DialogFooter className="gap-2 sm:gap-0">
-            <button type="button" className="btn-ghost-olive text-xs" onClick={() => onOpenChange(false)}>
+            <button
+              type="button"
+              className="btn-ghost-olive text-xs"
+              onClick={() => onOpenChange(false)}
+            >
               Cancelar
             </button>
             <button type="submit" className="btn-olive text-xs" disabled={saving}>
@@ -63,6 +123,19 @@ export function AdminModuleFormDialog({ open, onOpenChange, view, title, saving,
       </DialogContent>
     </Dialog>
   );
+}
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error ?? new Error("Falha ao ler arquivo."));
+    reader.onload = () => {
+      const r = reader.result;
+      if (typeof r === "string") resolve(r);
+      else reject(new Error("Resultado inesperado do FileReader."));
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 function FieldInput({

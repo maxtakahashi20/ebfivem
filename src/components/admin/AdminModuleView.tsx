@@ -2,18 +2,26 @@ import { useCallback, useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import type { AdminView } from "@/config/admin-nav";
+import { ALTO_COMANDO_VIEWS } from "@/config/admin-nav";
 import { getAcaoEspecial, getLabelAcao, getModuloForm } from "@/config/admin-module-forms";
-import { MODULO_DB } from "@/config/admin-modules-db";
-import { AdminModuleFormDialog } from "@/components/admin/AdminModuleFormDialog";
+import { MODULO_DB, PDF_RESTRITO_VIEWS } from "@/config/admin-modules-db";
+import {
+  AdminModuleFormDialog,
+  type AdminFormPdf,
+} from "@/components/admin/AdminModuleFormDialog";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { getModuleConfig, type ModuleStat } from "@/components/admin/module-registry";
 import {
-  atualizarDefcon,
   atualizarStatusDiscordBot,
+  baixarPdfRestrito,
   carregarModuloAdmin,
   criarRegistroModulo,
   executarAcaoEspecial,
+  removerPdfRestrito,
+  uploadPdfRestrito,
 } from "@/lib/admin-modules.functions";
+import { useDiscordSession } from "@/hooks/useDiscordSession";
+import { DISCORD_SESSION_KEY } from "@/lib/discord-oauth";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -26,8 +34,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+function getDiscordSessionToken(): string | undefined {
+  if (typeof window === "undefined") return undefined;
+  return localStorage.getItem(DISCORD_SESSION_KEY) ?? undefined;
+}
+
 export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKey: string }) {
   const cfg = getModuleConfig(view);
+  const { altoComando } = useDiscordSession();
   const [search, setSearch] = useState("");
   const [rows, setRows] = useState(cfg.rows);
   const [stats, setStats] = useState<ModuleStat[]>(cfg.stats);
@@ -40,11 +54,19 @@ export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKe
   const loadModulo = useServerFn(carregarModuloAdmin);
   const criarRegistro = useServerFn(criarRegistroModulo);
   const acaoEspecial = useServerFn(executarAcaoEspecial);
+  const uploadPdf = useServerFn(uploadPdfRestrito);
+  const downloadPdf = useServerFn(baixarPdfRestrito);
+  const deletePdf = useServerFn(removerPdfRestrito);
+
+  const isRestrita = ALTO_COMANDO_VIEWS.has(view);
+  const acessoNegado = isRestrita && !altoComando;
+  const supportsPdf = PDF_RESTRITO_VIEWS.has(view);
 
   const reload = useCallback(() => {
     if (!usesDb(view)) return;
+    if (acessoNegado) return;
     setLoading(true);
-    loadModulo({ data: { accessKey, view } })
+    loadModulo({ data: { accessKey, view, session: getDiscordSessionToken() } })
       .then((payload) => {
         setRows(payload.rows);
         if (payload.stats.length > 0) {
@@ -52,9 +74,11 @@ export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKe
         }
         if (payload.extra) setExtra(payload.extra);
       })
-      .catch(() => toast.error("Falha ao carregar dados do módulo"))
+      .catch((e) =>
+        toast.error(e instanceof Error ? e.message : "Falha ao carregar dados do módulo"),
+      )
       .finally(() => setLoading(false));
-  }, [accessKey, view, loadModulo]);
+  }, [accessKey, view, loadModulo, acessoNegado]);
 
   useEffect(() => {
     if (!usesDb(view)) {
@@ -75,10 +99,8 @@ export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKe
   const temFormulario = !!getModuloForm(view);
   const acaoEsp = getAcaoEspecial(view);
   const labelAcao = getLabelAcao(view, cfg.primaryAction);
-  // Mapa tático: CTA fica no card do mapa (não duplica no cabeçalho)
   const temAcaoHeader = !!(
     labelAcao &&
-    cfg.variant !== "map" &&
     cfg.variant !== "defcon" &&
     (temFormulario || acaoEsp || view === "sys-db")
   );
@@ -92,7 +114,9 @@ export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKe
     if (acaoEsp) {
       setActionLoading(true);
       try {
-        const res = await acaoEspecial({ data: { accessKey, view } });
+        const res = await acaoEspecial({
+          data: { accessKey, view, session: getDiscordSessionToken() },
+        });
         toast.success(res.mensagem ?? "Ação concluída");
         reload();
       } catch (e) {
@@ -105,11 +129,34 @@ export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKe
     if (temFormulario) setDialogOpen(true);
   };
 
-  const handleFormSubmit = async (valores: Record<string, string>) => {
+  const handleFormSubmit = async (
+    valores: Record<string, string>,
+    pdf: AdminFormPdf | null,
+  ) => {
     setSaving(true);
     try {
-      await criarRegistro({ data: { accessKey, view, valores } });
-      toast.success("Registro salvo");
+      const session = getDiscordSessionToken();
+      const result = await criarRegistro({ data: { accessKey, view, valores, session } });
+      if (pdf) {
+        if (!result.id) {
+          toast.error("Registro criado, mas não foi possível anexar o PDF (ID ausente).");
+        } else if (!session) {
+          toast.error("Sessão Discord necessária para anexar PDF.");
+        } else {
+          await uploadPdf({
+            data: {
+              accessKey,
+              session,
+              view,
+              recordId: result.id,
+              base64: pdf.base64,
+              filename: pdf.filename,
+              mime: pdf.mime,
+            },
+          });
+        }
+      }
+      toast.success(pdf ? "Registro salvo com PDF anexado" : "Registro salvo");
       setDialogOpen(false);
       reload();
     } catch (e) {
@@ -118,6 +165,68 @@ export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKe
       setSaving(false);
     }
   };
+
+  const handleDownloadPdf = async (recordId: string) => {
+    const session = getDiscordSessionToken();
+    if (!session) {
+      toast.error("Sessão Discord necessária.");
+      return;
+    }
+    try {
+      const { url, filename } = await downloadPdf({
+        data: { accessKey, session, recordId },
+      });
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.rel = "noopener";
+      a.target = "_blank";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao baixar PDF");
+    }
+  };
+
+  const handleDeletePdf = async (recordId: string) => {
+    const session = getDiscordSessionToken();
+    if (!session) {
+      toast.error("Sessão Discord necessária.");
+      return;
+    }
+    const ok = window.confirm("Remover o PDF deste registro?");
+    if (!ok) return;
+    try {
+      await deletePdf({ data: { accessKey, session, recordId } });
+      toast.success("PDF removido");
+      reload();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao remover PDF");
+    }
+  };
+
+  if (acessoNegado) {
+    return (
+      <div>
+        <AdminPageHeader tag={cfg.tag} title={cfg.title} sub={cfg.subtitle} />
+        <Card className="field-paper border-0 shadow-none">
+          <CardContent className="py-10 text-center space-y-3">
+            <div className="tag-rank bg-(--color-destructive) text-[10px] inline-block">
+              RESTRITO · ALTO COMANDO
+            </div>
+            <p className="font-display tracking-widest text-(--color-olive-deep)">
+              Acesso negado
+            </p>
+            <p className="text-xs font-mono text-(--color-stencil) max-w-md mx-auto">
+              Esta área é reservada ao Alto Comando do CMF. Solicite ao comando que adicione seu
+              cargo Discord à lista <code>DISCORD_ALTO_COMANDO_ROLE_IDS</code>.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -146,7 +255,7 @@ export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKe
           view={view}
           title={labelAcao}
           saving={saving}
-          onSubmit={(v) => void handleFormSubmit(v)}
+          onSubmit={(v, pdf) => void handleFormSubmit(v, pdf)}
         />
       )}
 
@@ -160,7 +269,9 @@ export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKe
       )}
 
       {loading && (
-        <p className="text-xs font-mono text-(--color-stencil) mb-4 stencil">CARREGANDO REGISTROS…</p>
+        <p className="text-xs font-mono text-(--color-stencil) mb-4 stencil">
+          CARREGANDO REGISTROS…
+        </p>
       )}
 
       {stats.length > 0 && (
@@ -168,7 +279,10 @@ export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKe
           {stats.map((s) => (
             <Card key={s.label} className="field-paper border-0 shadow-none">
               <CardHeader className="pb-1 pt-4 px-4">
-                <CardTitle className="stencil text-[10px]" style={{ color: s.color ?? "var(--color-olive-deep)" }}>
+                <CardTitle
+                  className="stencil text-[10px]"
+                  style={{ color: s.color ?? "var(--color-olive-deep)" }}
+                >
                   {s.label}
                 </CardTitle>
               </CardHeader>
@@ -183,20 +297,6 @@ export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKe
         </div>
       )}
 
-      {cfg.variant === "defcon" && (
-        <DefconPanel
-          accessKey={accessKey}
-          nivelAtivo={Number(extra.defconNivel ?? 4)}
-          onUpdated={reload}
-        />
-      )}
-      {cfg.variant === "map" && (
-        <TacticalMap
-          mode={cfg.mapMode ?? "bases"}
-          onAdd={temFormulario ? () => setDialogOpen(true) : undefined}
-          addLabel={labelAcao ?? undefined}
-        />
-      )}
       {cfg.variant === "discord" && view === "discord-bot" && (
         <DiscordBotPanel
           accessKey={accessKey}
@@ -211,7 +311,6 @@ export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKe
       {(cfg.variant === "table" ||
         cfg.variant === "logs" ||
         cfg.variant === "comunicacao" ||
-        cfg.variant === "agenda" ||
         cfg.variant === "system" ||
         cfg.variant === "discord") &&
         cfg.columns.length > 0 && (
@@ -234,21 +333,52 @@ export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKe
                         {col.label}
                       </TableHead>
                     ))}
+                    {supportsPdf && <TableHead className="stencil text-[10px]">AÇÕES</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.map((row, i) => (
-                    <TableRow key={i} className="border-(--color-border)">
-                      {cfg.columns.map((col) => (
-                        <TableCell
-                          key={col.key}
-                          className={`text-sm ${col.mono ? "font-mono text-xs" : ""}`}
-                        >
-                          {statusBadge(col.key, row[col.key]) ?? row[col.key]}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
+                  {filtered.map((row, i) => {
+                    const recordId = (row as Record<string, string>).__id;
+                    const pdfPath = (row as Record<string, string>).__pdf_path;
+                    return (
+                      <TableRow key={i} className="border-(--color-border)">
+                        {cfg.columns.map((col) => (
+                          <TableCell
+                            key={col.key}
+                            className={`text-sm ${col.mono ? "font-mono text-xs" : ""}`}
+                          >
+                            {statusBadge(col.key, row[col.key]) ?? row[col.key]}
+                          </TableCell>
+                        ))}
+                        {supportsPdf && (
+                          <TableCell className="text-xs">
+                            <div className="flex gap-2">
+                              {pdfPath && recordId ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    className="btn-ghost-olive text-[10px] px-2 py-1"
+                                    onClick={() => void handleDownloadPdf(recordId)}
+                                  >
+                                    ▾ Baixar
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn-ghost-olive text-[10px] px-2 py-1 text-(--color-destructive)"
+                                    onClick={() => void handleDeletePdf(recordId)}
+                                  >
+                                    ✕ Remover
+                                  </button>
+                                </>
+                              ) : (
+                                <span className="text-(--color-stencil)">sem PDF</span>
+                              )}
+                            </div>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
               {!loading && filtered.length === 0 && (
@@ -269,7 +399,6 @@ function usesDb(view: AdminView): boolean {
     view === "sys-db" ||
     view === "sys-api" ||
     view === "sys-seguranca" ||
-    view === "com-defcon" ||
     view === "discord-bot"
   );
 }
@@ -288,132 +417,25 @@ function statusBadge(key: string, value: string) {
     v.includes("disponível")
   ) {
     variant = "default";
-  } else if (v.includes("alto") || v.includes("reprov") || v.includes("inapto") || v.includes("expuls")) {
+  } else if (
+    v.includes("alto") ||
+    v.includes("reprov") ||
+    v.includes("inapto") ||
+    v.includes("expuls")
+  ) {
     variant = "destructive";
-  } else if (v.includes("análise") || v.includes("médio") || v.includes("amarelo") || v.includes("preparação")) {
+  } else if (
+    v.includes("análise") ||
+    v.includes("médio") ||
+    v.includes("amarelo") ||
+    v.includes("preparação")
+  ) {
     variant = "secondary";
   }
   return (
     <Badge variant={variant} className="font-display tracking-widest text-[10px]">
       {value}
     </Badge>
-  );
-}
-
-function DefconPanel({
-  accessKey,
-  nivelAtivo,
-  onUpdated,
-}: {
-  accessKey: string;
-  nivelAtivo: number;
-  onUpdated: () => void;
-}) {
-  const salvarDefcon = useServerFn(atualizarDefcon);
-  const [saving, setSaving] = useState(false);
-  const levels = [
-    { n: 5, label: "DEFCON 5", desc: "Paz — rotina normal" },
-    { n: 4, label: "DEFCON 4", desc: "Atenção elevada" },
-    { n: 3, label: "DEFCON 3", desc: "Prontidão operacional" },
-    { n: 2, label: "DEFCON 2", desc: "Alerta máximo" },
-    { n: 1, label: "DEFCON 1", desc: "Guerra iminente" },
-  ];
-
-  const alterarNivel = async (nivel: number) => {
-    if (nivel === nivelAtivo) return;
-    setSaving(true);
-    try {
-      await salvarDefcon({ data: { accessKey, nivel } });
-      toast.success(`DEFCON ${nivel} ativado`);
-      onUpdated();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Falha ao alterar DEFCON");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <Card className="field-paper border-0 shadow-none mb-6">
-      <CardHeader>
-        <CardTitle className="stencil text-xs">CONTROLE DE ALERTA</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {levels.map((l) => (
-          <button
-            key={l.n}
-            type="button"
-            disabled={saving}
-            onClick={() => void alterarNivel(l.n)}
-            className={`w-full flex items-center justify-between p-3 border text-left transition-all disabled:opacity-50 ${
-              l.n === nivelAtivo
-                ? "border-(--color-olive-deep) bg-khaki/60 ring-2 ring-(--color-olive-deep)/30"
-                : "border-(--color-border) hover:bg-olive-deep/5"
-            }`}
-          >
-            <div>
-              <span className="font-display tracking-widest">{l.label}</span>
-              <p className="text-xs text-(--color-stencil) mt-0.5">{l.desc}</p>
-            </div>
-            {l.n === nivelAtivo && (
-              <span className="tag-rank bg-(--color-olive-deep) text-[9px]">ATUAL</span>
-            )}
-          </button>
-        ))}
-        <p className="text-[10px] font-mono text-(--color-stencil) pt-2">
-          Clique em um nível para alterar o alerta da unidade.
-        </p>
-      </CardContent>
-    </Card>
-  );
-}
-
-function TacticalMap({
-  mode,
-  onAdd,
-  addLabel,
-}: {
-  mode: "bases" | "ops" | "danger" | "patrol";
-  onAdd?: () => void;
-  addLabel?: string;
-}) {
-  const labels = {
-    bases: { title: "BASES CMF", color: "bg-green-500" },
-    ops: { title: "ÁREAS DE OPERAÇÃO", color: "bg-blue-500" },
-    danger: { title: "ZONAS VERMELHAS", color: "bg-red-500 animate-pulse" },
-    patrol: { title: "ROTAS DE PATRULHA", color: "bg-yellow-500" },
-  };
-  const L = labels[mode];
-
-  return (
-    <Card className="field-paper border-0 shadow-none mb-6 overflow-hidden">
-      <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
-        <CardTitle className="stencil text-xs">{L.title} — MAPA TÁTICO</CardTitle>
-        {onAdd && addLabel && (
-          <button type="button" className="btn-olive text-[10px]" onClick={onAdd}>
-            ▸ {addLabel}
-          </button>
-        )}
-      </CardHeader>
-      <CardContent>
-        <div className="relative aspect-[16/9] max-h-72 rounded border-2 border-(--color-olive-deep)/30 bg-(--color-olive-deep)/5 overflow-hidden">
-          <div
-            className="absolute inset-0 opacity-20"
-            style={{
-              backgroundImage:
-                "linear-gradient(var(--color-olive-deep) 1px, transparent 1px), linear-gradient(90deg, var(--color-olive-deep) 1px, transparent 1px)",
-              backgroundSize: "24px 24px",
-            }}
-          />
-          <span className={`absolute top-[20%] left-[30%] size-3 rounded-full ${L.color} shadow-lg`} />
-          <span className={`absolute top-[45%] left-[55%] size-3 rounded-full ${L.color} shadow-lg`} />
-          <span className={`absolute top-[60%] left-[25%] size-2.5 rounded-full ${L.color} opacity-80`} />
-          <span className="absolute bottom-3 right-3 font-mono text-[10px] text-(--color-stencil)">
-            San Andreas · CMF
-          </span>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
 
@@ -436,7 +458,7 @@ function DiscordBotPanel({
   const handleRefresh = async () => {
     setLoading(true);
     try {
-      await refreshBot({ data: { accessKey } });
+      await refreshBot({ data: { accessKey, session: getDiscordSessionToken() } });
       toast.success("Status do bot atualizado");
       onRefresh();
     } catch (e) {
@@ -451,9 +473,13 @@ function DiscordBotPanel({
       <CardContent className="pt-5 space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3">
-            <span className={`size-3 rounded-full shadow-[0_0_8px_lime] ${online ? "bg-green-500" : "bg-red-500"}`} />
+            <span
+              className={`size-3 rounded-full shadow-[0_0_8px_lime] ${online ? "bg-green-500" : "bg-red-500"}`}
+            />
             <div>
-              <div className="font-display tracking-widest">BOT CMF — {online ? "ONLINE" : "OFFLINE"}</div>
+              <div className="font-display tracking-widest">
+                BOT CMF — {online ? "ONLINE" : "OFFLINE"}
+              </div>
               <p className="text-xs text-(--color-stencil)">Status em discord_bot_status</p>
             </div>
           </div>
@@ -525,7 +551,10 @@ function EntrevistasPanel({
                 <div className="font-display tracking-wide">{s.candidato}</div>
                 <p className="text-xs text-(--color-stencil)">{s.instrutor}</p>
               </div>
-              <Badge variant={s.status === "Confirmada" ? "default" : "outline"} className="text-[10px]">
+              <Badge
+                variant={s.status === "Confirmada" ? "default" : "outline"}
+                className="text-[10px]"
+              >
                 {s.status}
               </Badge>
             </div>

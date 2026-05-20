@@ -14,6 +14,7 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { CentralGuerra } from "@/components/admin/CentralGuerra";
 import { AdminModuleView } from "@/components/admin/AdminModuleView";
 import { DocumentosPainel } from "@/components/admin/DocumentosPainel";
+import { SuporteAdmin } from "@/components/admin/SuporteAdmin";
 import { PerfilMilitar } from "@/components/military/PerfilMilitar";
 import { PENDING_VIEW_KEY } from "@/lib/painel-nav";
 import { useDiscordSession } from "@/hooks/useDiscordSession";
@@ -312,6 +313,8 @@ function PanelContent({
       );
     case "comunicados":
       return <Comunicados accessKey={accessKey} />;
+    case "suporte-admin":
+      return <SuporteAdmin accessKey={accessKey} />;
     default:
       return <AdminModuleView view={view} accessKey={accessKey} />;
   }

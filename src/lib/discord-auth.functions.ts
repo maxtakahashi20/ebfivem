@@ -18,6 +18,7 @@ import {
   upsertDiscordMembro,
   vincularDiscordNaInscricao,
 } from "@/lib/identidade-db";
+import { hasFullAccess, isDesenvolvedor } from "@/lib/access-control";
 
 function resolveRedirectUri(): string {
   const { redirectUri } = discordConfig();
@@ -294,7 +295,13 @@ export const completarDiscordOAuth = createServerFn({ method: "POST" })
       }
     }
 
-    return { profile, session, inscricaoId: inscricao?.id ?? null };
+    return {
+      profile,
+      session,
+      inscricaoId: inscricao?.id ?? null,
+      altoComando: hasFullAccess(profile),
+      desenvolvedor: isDesenvolvedor(profile),
+    };
   });
 
 export const validarSessaoDiscord = createServerFn({ method: "POST" })
@@ -304,14 +311,26 @@ export const validarSessaoDiscord = createServerFn({ method: "POST" })
     if (!profile) throw new Error("Sessão Discord expirada. Entre novamente.");
 
     const { guildId } = discordConfig();
-    if (!guildId) return { profile, session: data.session };
+    if (!guildId) {
+      return {
+        profile,
+        session: data.session,
+        altoComando: hasFullAccess(profile),
+        desenvolvedor: isDesenvolvedor(profile),
+      };
+    }
 
     const refreshed = await enrichProfileWithRoles(profile, guildId);
     const session = await signDiscordSession(refreshed);
     const inscricao = await buscarInscricaoPorDiscordId(refreshed.id, refreshed.username);
     await upsertDiscordMembro(refreshed, inscricao?.id ?? null);
     await sincronizarMilitarEfetivo(refreshed);
-    return { profile: refreshed, session };
+    return {
+      profile: refreshed,
+      session,
+      altoComando: hasFullAccess(refreshed),
+      desenvolvedor: isDesenvolvedor(refreshed),
+    };
   });
 
 export const encerrarSessaoDiscord = createServerFn({ method: "POST" }).handler(async () => ({
@@ -332,7 +351,12 @@ export const liberarAcessoPainelDiscord = createServerFn({ method: "POST" })
     await upsertDiscordMembro(profile, inscricao?.id ?? null);
     await sincronizarMilitarEfetivo(profile);
     const accessKey = process.env.ACCESS_KEY?.trim() || "26L5";
-    return { accessKey, profile };
+    return {
+      accessKey,
+      profile,
+      altoComando: hasFullAccess(profile),
+      desenvolvedor: isDesenvolvedor(profile),
+    };
   });
 
 export const buscarInscricaoPorDiscord = createServerFn({ method: "POST" })

@@ -11,6 +11,7 @@ const links = [
   { to: "/organograma", label: "Organograma" },
   { to: "/inscricao", label: "Alistamento" },
   { to: "/acompanhar", label: "Acompanhar" },
+  { to: "/suporte", label: "Suporte" },
   { to: "/autoria", label: "Autoria" },
 ];
 

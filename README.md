@@ -96,8 +96,31 @@ Copie `.env.example` para `.env` e preencha.
 | `SUPABASE_URL` | Opcional se já existir `VITE_SUPABASE_URL` (há fallback no código). |
 | `SUPABASE_PUBLISHABLE_KEY` | Usada pelo middleware de auth; pode repetir o valor publishable do dashboard. |
 | `ACCESS_KEY` | Chave compartilhada para `/ADMCMF` e operações restritas nas server functions; se vazio, o código pode usar um padrão local (ver `src/lib/inscricoes.functions.ts`). |
+| `DISCORD_ALTO_COMANDO_ROLE_IDS` | Lista de IDs de cargos Discord que liberam Alto Comando — separados por vírgula. Quem **não** tem esses cargos não vê **Logs em geral**, **Sistema**, **Área Restrita** e a aba **Suporte** do painel. |
+| `DISCORD_DESENVOLVEDOR_ROLE_IDS` | Lista de IDs de cargos Discord com **acesso pleno** ao painel (mesmo que Alto Comando + badge "MODO DESENVOLVEDOR"). Use apenas para o cargo de dev. |
 
 Consulte sempre `.env.example` para comentários atualizados.
+
+### Alto Comando
+
+Para identificar quais cargos do Discord pertencem ao Alto Comando:
+
+1. No Discord, ative o **Modo Desenvolvedor** (Configurações → Avançado).
+2. Clique com o botão direito no cargo do servidor CMF e copie o **ID**.
+3. Cole o ID em `DISCORD_ALTO_COMANDO_ROLE_IDS` (separe múltiplos por vírgula).
+4. Reinicie `npm run dev` ou redeploy.
+
+A checagem é feita em `src/lib/access-control.ts` comparando `profile.roles[].id` com os IDs do env. Sem variável configurada, **ninguém** é Alto Comando.
+
+### Desenvolvedor
+
+`DISCORD_DESENVOLVEDOR_ROLE_IDS` aceita os mesmos formatos. Quem tem um desses cargos é tratado como **Alto Comando + DEV**: vê todas as áreas restritas e ganha uma pílula **MODO DESENVOLVEDOR** no rodapé do sidebar. Funciona em paralelo ao Alto Comando — basta possuir **um** cargo de qualquer um dos dois grupos.
+
+### Suporte ao conscrito
+
+- **Conscrito (público):** `/suporte` — abre o ticket informando **protocolo + RG** da inscrição.
+- **Atendente (Alto Comando):** aba **Suporte** dentro de `/ADMCMF` (visível somente para membros com cargo de Alto Comando).
+- Chat é "ao vivo" via polling a cada 3 segundos.
 
 ---
 
@@ -113,6 +136,15 @@ Consulte sempre `.env.example` para comentários atualizados.
 
 Leituras sensíveis e updates são feitos no servidor com **`SUPABASE_SERVICE_ROLE_KEY`** (cliente admin Supabase), não via políticas públicas de `SELECT`.
 
+### Storage para Área Restrita (PDF)
+
+Os itens da **Área Restrita** suportam anexar PDFs. Crie um bucket **privado** no Supabase para armazenar os arquivos:
+
+1. **Storage → New bucket** → nome `area-restrita` → privado.
+2. Não é preciso criar policies — o servidor usa a service role para upload/download.
+
+Sem o bucket, criar registros funciona; só os anexos falham.
+
 Tipos TypeScript gerados / alinhados estão em `src/integrations/supabase/types.ts`.
 
 ---
@@ -126,7 +158,8 @@ Tipos TypeScript gerados / alinhados estão em `src/integrations/supabase/types.
 | `/organograma` | `src/routes/organograma.tsx` | Estrutura visual |
 | `/inscricao` | `src/routes/inscricao.tsx` | Envio da ficha |
 | `/acompanhar` | `src/routes/acompanhar.tsx` | Consulta RG/protocolo |
-| `/ADMCMF` | `src/routes/ADMCMF.tsx` | Painel (chave em sessão + `ACCESS_KEY`) |
+| `/suporte` | `src/routes/suporte.tsx` | Chat de suporte ao conscrito (protocolo + RG) |
+| `/ADMCMF` | `src/routes/ADMCMF.tsx` | Painel (Discord OAuth + `ACCESS_KEY`) |
 | `/autoria` | `src/routes/autoria.tsx` | Créditos |
 
 A árvore gerada pelo TanStack Router fica em `src/routeTree.gen.ts` (não editar manualmente).
