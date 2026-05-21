@@ -20,11 +20,11 @@ export function AdminThemeToggle({ className, compact }: Props) {
       aria-label={isDark ? "Ativar modo claro" : "Ativar modo escuro"}
       title={isDark ? "Modo claro" : "Modo escuro"}
       className={cn(
-        "relative inline-flex items-center justify-center rounded-sm border border-(--color-olive-deep)/30",
-        "bg-(--color-olive-deep)/5 text-(--color-olive-deep) transition-colors",
-        "hover:bg-(--color-olive-deep)/15 hover:border-(--color-olive-deep)/50",
-        "dark:border-(--color-stencil)/25 dark:bg-(--color-stencil)/5 dark:text-(--color-stencil)",
-        "dark:hover:bg-(--color-stencil)/10 dark:hover:border-(--color-stencil)/40",
+        "relative inline-flex items-center justify-center rounded-sm border border-olive-deep/30",
+        "bg-olive-deep/5 text-olive-deep transition-colors",
+        "hover:bg-olive-deep/15 hover:border-olive-deep/50",
+        "dark:border-stencil/25 dark:bg-stencil/5 dark:text-stencil",
+        "dark:hover:bg-stencil/10 dark:hover:border-stencil/40",
         compact ? "size-8" : "size-9",
         className,
       )}

@@ -230,7 +230,7 @@ function CentralComando({ accessKey, onLogout }: { accessKey: string; onLogout: 
             transition={{ duration: 0.3, ease: "easeOut" }}
             className="adm-topbar border-b-2 border-(--color-olive-deep) bg-khaki/70 backdrop-blur sticky top-0 z-30 px-4 py-3 flex items-center gap-3"
           >
-            <SidebarTrigger className="text-(--color-olive-deep) hover:bg-olive-deep/10 h-8 w-8 dark:text-(--color-stencil) dark:hover:bg-(--color-stencil)/10" />
+            <SidebarTrigger className="text-(--color-olive-deep) hover:bg-olive-deep/10 h-8 w-8 dark:text-(--color-stencil) dark:hover:bg-stencil/10" />
             <div className="stencil text-xs hidden md:block">{getViewLabel(view)}</div>
             <div className="ml-auto flex items-center gap-3">
               <AdminThemeToggle compact className="md:hidden" />

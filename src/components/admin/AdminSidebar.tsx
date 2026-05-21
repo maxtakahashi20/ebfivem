@@ -144,7 +144,7 @@ export function AdminSidebar({ view, onViewChange, accessKey, onLogout }: Props)
                         isActive={active}
                         onClick={() => onViewChange(entry.id)}
                         className={`${btnBase} ${active ? btnActive : btnIdle} ${
-                          war ? "adm-nav-war border border-(--color-destructive)/40" : ""
+                          war ? "adm-nav-war border border-destructive/40" : ""
                         }`}
                       >
                         <motion.span
@@ -186,7 +186,7 @@ export function AdminSidebar({ view, onViewChange, accessKey, onLogout }: Props)
                         </SidebarMenuButton>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
-                        <SidebarMenuSub className="adm-nav-sub border-l-2 border-(--color-olive-deep)/25 ml-3 pl-2">
+                        <SidebarMenuSub className="adm-nav-sub border-l-2 border-olive-deep/25 ml-3 pl-2">
                           {g.children.map((child) => {
                             const childActive = view === child.id;
                             return (

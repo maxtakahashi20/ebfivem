@@ -89,9 +89,9 @@ export function FotoGaleriaSection({ fotos = FOTOS_ORGANOGRAMA }: FotoGaleriaPro
 
   if (fotos.length === 0) {
     return (
-      <section id="galeria" className="grad-4 py-16 text-[color:var(--color-khaki)]">
+      <section id="galeria" className="grad-4 py-16 text-(--color-khaki)">
         <div className="mx-auto max-w-6xl px-6 text-center">
-          <p className="stencil text-xs text-[color:var(--color-gold)] mb-2">GALERIA</p>
+          <p className="stencil text-xs text-(--color-gold) mb-2">GALERIA</p>
           <p className="font-mono text-sm opacity-70">Nenhuma foto encontrada em src/assets/</p>
         </div>
       </section>
@@ -102,11 +102,11 @@ export function FotoGaleriaSection({ fotos = FOTOS_ORGANOGRAMA }: FotoGaleriaPro
     <section
       id="galeria"
       ref={secRef}
-      className="grad-4 py-20 text-[color:var(--color-khaki)] overflow-hidden border-y-2 border-[color:var(--color-olive-deep)]"
+      className="grad-4 py-20 text-(--color-khaki) overflow-hidden border-y-2 border-(--color-olive-deep)"
     >
       <div className="mx-auto max-w-7xl px-6">
         <div className="text-center mb-12">
-          <div className="stencil text-xs text-[color:var(--color-gold)] mb-2">
+          <div className="stencil text-xs text-(--color-gold) mb-2">
             SEÇÃO III · REGISTRO FOTOGRÁFICO
           </div>
           <h2 className="font-display text-3xl md:text-5xl tracking-widest text-white mb-3">
@@ -162,7 +162,7 @@ export function FotoGaleriaSection({ fotos = FOTOS_ORGANOGRAMA }: FotoGaleriaPro
       </div>
 
       <Dialog open={!!lightbox} onOpenChange={(open) => !open && fechar()}>
-        <DialogContent className="max-w-[min(96vw,1100px)] border-2 border-[color:var(--color-olive-deep)] bg-[color:var(--color-olive-deep)] p-0 gap-0 overflow-hidden">
+        <DialogContent className="max-w-[min(96vw,1100px)] border-2 border-(--color-olive-deep) bg-(--color-olive-deep) p-0 gap-0 overflow-hidden">
           <DialogTitle className="sr-only">
             {lightbox?.legenda ?? "Foto ampliada"}
           </DialogTitle>
@@ -174,10 +174,10 @@ export function FotoGaleriaSection({ fotos = FOTOS_ORGANOGRAMA }: FotoGaleriaPro
                 className="w-full max-h-[80vh] object-contain bg-black/40 galeria-lightbox-enter"
               />
               <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/90 to-transparent px-6 py-5">
-                <p className="font-display tracking-widest text-[color:var(--color-khaki)] text-lg">
+                <p className="font-display tracking-widest text-(--color-khaki) text-lg">
                   {lightbox.legenda}
                 </p>
-                <p className="font-mono text-[10px] text-[color:var(--color-gold)] mt-1">
+                <p className="font-mono text-[10px] text-(--color-gold) mt-1">
                   {indiceLb + 1} / {fotos.length}
                 </p>
               </div>
@@ -192,7 +192,7 @@ export function FotoGaleriaSection({ fotos = FOTOS_ORGANOGRAMA }: FotoGaleriaPro
               <button
                 type="button"
                 onClick={anterior}
-                className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 text-white hover:bg-[color:var(--color-olive-bright)] transition-colors"
+                className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 text-white hover:bg-(--color-olive-bright) transition-colors"
                 aria-label="Anterior"
               >
                 <ChevronLeft className="size-6" />
@@ -200,7 +200,7 @@ export function FotoGaleriaSection({ fotos = FOTOS_ORGANOGRAMA }: FotoGaleriaPro
               <button
                 type="button"
                 onClick={proximo}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 text-white hover:bg-[color:var(--color-olive-bright)] transition-colors"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 text-white hover:bg-(--color-olive-bright) transition-colors"
                 aria-label="Próxima"
               >
                 <ChevronRight className="size-6" />
@@ -233,7 +233,7 @@ function GaleriaCard({
       <button
         type="button"
         onClick={onAbrir}
-        className="galeria-card-inner group w-full text-left focus-visible:outline-2 focus-visible:outline-[color:var(--color-gold)]"
+        className="galeria-card-inner group w-full text-left focus-visible:outline-2 focus-visible:outline-(--color-gold)"
       >
         <div className="galeria-card-frame relative overflow-hidden">
           <img
@@ -248,13 +248,13 @@ function GaleriaCard({
             <span className="font-display text-xs tracking-widest text-white drop-shadow-md">
               {foto.legenda}
             </span>
-            <span className="flex items-center gap-1 text-[10px] font-mono text-[color:var(--color-gold)] mt-1">
+            <span className="flex items-center gap-1 text-[10px] font-mono text-(--color-gold) mt-1">
               <ZoomIn className="size-3" />
               AMPLIAR
             </span>
           </div>
-          <div className="galeria-card-canto absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-[color:var(--color-gold)] opacity-0 group-hover:opacity-100 transition-opacity" />
-          <div className="galeria-card-canto absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-[color:var(--color-gold)] opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="galeria-card-canto absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-(--color-gold) opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="galeria-card-canto absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-(--color-gold) opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>
       </button>
     </article>
