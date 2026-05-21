@@ -309,6 +309,102 @@
   @keyframes fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
   .reveal { animation: fade-up .7s ease-out both; }
 
+  /* ─── Galeria organograma ───────────────────────────────────── */
+  @keyframes galeria-marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  @keyframes galeria-card-in {
+    from { opacity: 0; transform: translateY(24px) scale(0.96); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes galeria-shine {
+    0% { transform: translateX(-120%) skewX(-12deg); }
+    100% { transform: translateX(220%) skewX(-12deg); }
+  }
+  @keyframes galeria-scan-pulse {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 0.35; }
+  }
+  @keyframes galeria-lightbox-in {
+    from { opacity: 0; transform: scale(0.94); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .galeria-marquee-wrap {
+    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+  .galeria-marquee-track {
+    display: flex;
+    gap: 0.75rem;
+    width: max-content;
+    animation: galeria-marquee 55s linear infinite;
+  }
+  .galeria-marquee-track:hover {
+    animation-play-state: paused;
+  }
+  .galeria-marquee-item {
+    position: relative;
+    width: 220px;
+    height: 140px;
+    overflow: hidden;
+    border: 2px solid oklch(0.45 0.08 130 / 70%);
+    background: oklch(0.14 0.02 130);
+    cursor: pointer;
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+  }
+  .galeria-marquee-shine {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      105deg,
+      transparent 40%,
+      oklch(0.75 0.12 95 / 25%) 50%,
+      transparent 60%
+    );
+    animation: galeria-shine 4s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .galeria-card {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  .galeria-card--visivel {
+    animation: galeria-card-in 0.65s ease-out both;
+  }
+  .galeria-card--destaque .galeria-card-frame {
+    border-color: oklch(0.62 0.12 95 / 80%);
+  }
+  .galeria-card-inner {
+    cursor: pointer;
+  }
+  .galeria-card-frame {
+    border: 2px solid oklch(0.38 0.06 130 / 80%);
+    background: oklch(0.18 0.03 130);
+    box-shadow: 0 4px 20px oklch(0 0 0 / 25%);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  .galeria-card-inner:hover .galeria-card-frame,
+  .galeria-card-inner:focus-visible .galeria-card-frame {
+    border-color: oklch(0.55 0.12 95);
+    box-shadow: 0 8px 28px oklch(0 0 0 / 40%);
+  }
+  .galeria-card-overlay {
+    background: linear-gradient(180deg, transparent 30%, oklch(0.12 0.02 130 / 92%) 100%);
+  }
+  .galeria-card-scan {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent, oklch(0.55 0.14 140 / 12%), transparent);
+    animation: galeria-scan-pulse 5s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .galeria-lightbox-enter {
+    animation: galeria-lightbox-in 0.35s ease-out both;
+  }
+
   /* ─── HUD militar — painel /ADMCMF ─────────────────────────── */
   .hud-border {
     border: 1px solid oklch(0.30 0.08 140 / 60%);

@@ -4,6 +4,7 @@ import b2 from "@/assets/batalhoes-2.png";
 import b3 from "@/assets/batalhoes-3.png";
 import b4 from "@/assets/batalhoes-4.png";
 import b5 from "@/assets/batalhoes-5.png";
+import { FotoGaleriaSection } from "@/components/organograma/FotoGaleria";
 
 export const Route = createFileRoute("/organograma")({
   head: () => ({
@@ -48,12 +49,20 @@ function OrganogramaPage() {
           <h1 className="font-display text-4xl md:text-6xl leading-tight text-white mb-4">
             Organograma do CMF
           </h1>
-          <p className="max-w-2xl opacity-90">
+          <p className="max-w-2xl opacity-90 mb-6">
             Estrutura operacional do Comando Militar do Fivem, organizada em batalhões,
             brigadas e unidades de especialização inspiradas diretamente no Exército Brasileiro.
           </p>
+          <a
+            href="#galeria"
+            className="btn-olive inline-block text-xs tracking-widest"
+          >
+            ▸ VER GALERIA DE FOTOS
+          </a>
         </div>
       </section>
+
+      <FotoGaleriaSection />
 
       {/* UNIDADES PRINCIPAIS */}
       <section className="grad-1 py-20">
@@ -127,7 +136,7 @@ function OrganogramaPage() {
       </section>
 
       {/* AVISO */}
-      <section className="grad-4 py-16 text-[color:var(--color-khaki)]">
+      <section className="grad-3 border-t-2 border-[color:var(--color-olive-deep)] py-16 text-[color:var(--color-khaki)]">
         <div className="mx-auto max-w-4xl px-6 text-center">
           <div className="stencil text-xs text-[color:var(--color-olive-bright)] mb-2">AVISO INSTITUCIONAL</div>
           <p className="opacity-90">
