@@ -16,6 +16,8 @@ import {
 } from "@/components/site-chrome";
 import { useRouterState } from "@tanstack/react-router";
 import { MilitarySoundProvider } from "@/components/MilitarySoundProvider";
+import { AdminThemeProvider } from "@/components/admin/AdminThemeProvider";
+import { ADMIN_THEME_KEY } from "@/lib/admin-theme";
 
 import appCss from "../styles.css?url";
 import favicon from "../assets/cmf-logo.png?url";
@@ -85,10 +87,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: React.ReactNode }) {
+  const themeBootScript = `(function(){try{if(/^\\/admcmf(\\/|$)/i.test(location.pathname)&&localStorage.getItem("${ADMIN_THEME_KEY}")==="dark"){document.documentElement.classList.add("dark")}}catch(e){}})()`;
+
   return (
     <html lang="pt-BR">
       <head>
         <HeadContent />
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
       </head>
       <body>
         {children}
@@ -108,13 +113,24 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       {!painel && <MilitarySoundProvider />}
-      <div className="min-h-screen flex flex-col">
-        {painel ? <PanelBrandHeader /> : <Header />}
-        <main className="flex-1">
-          <Outlet />
-        </main>
-        <Footer pathname={pathname} />
-      </div>
+      {painel ? (
+        <AdminThemeProvider>
+          <div className="min-h-screen flex flex-col">
+            <PanelBrandHeader />
+            <main className="flex-1">
+              <Outlet />
+            </main>
+          </div>
+        </AdminThemeProvider>
+      ) : (
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-1">
+            <Outlet />
+          </main>
+          <Footer pathname={pathname} />
+        </div>
+      )}
       <Toaster richColors position="top-right" />
     </QueryClientProvider>
   );

@@ -1,7 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
+import { motion } from "framer-motion";
 import logo from "@/assets/cmf-logo.png";
 import { SfxToggle } from "@/components/SfxToggle";
 import { PainelMembroButton } from "@/components/PainelMembroButton";
+import { AdminThemeToggle } from "@/components/admin/AdminThemeToggle";
 
 const DISCORD_URL = "https://discord.gg/F2T248Ytpj";
 
@@ -33,14 +35,20 @@ function BrandMark() {
   );
 }
 
-/** Painel /ADMCMF: só logo + título (sem nav, Discord ou faixa). */
+/** Painel /ADMCMF: logo + título + toggle de tema. */
 export function PanelBrandHeader() {
   return (
-    <header className="border-b-2 border-(--color-olive-deep) bg-khaki/70 backdrop-blur supports-backdrop-filter:bg-khaki/60 sticky top-0 z-40 shrink-0">
-      <div className="px-6 py-3">
+    <motion.header
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+      className="adm-panel-header border-b-2 border-(--color-olive-deep) bg-khaki/70 backdrop-blur supports-backdrop-filter:bg-khaki/60 sticky top-0 z-40 shrink-0"
+    >
+      <div className="px-6 py-3 flex items-center justify-between gap-4">
         <BrandMark />
+        <AdminThemeToggle />
       </div>
-    </header>
+    </motion.header>
   );
 }
 

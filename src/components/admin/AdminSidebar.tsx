@@ -5,6 +5,8 @@ import {
   LogOut,
   Shield,
 } from "lucide-react";
+import { motion } from "framer-motion";
+import { AdminThemeToggle } from "@/components/admin/AdminThemeToggle";
 import { useDiscordSession } from "@/hooks/useDiscordSession";
 import {
   Sidebar,
@@ -145,7 +147,13 @@ export function AdminSidebar({ view, onViewChange, accessKey, onLogout }: Props)
                           war ? "adm-nav-war border border-(--color-destructive)/40" : ""
                         }`}
                       >
-                        <Icon className="size-4 shrink-0" />
+                        <motion.span
+                          whileHover={{ scale: 1.08 }}
+                          whileTap={{ scale: 0.92 }}
+                          className="inline-flex shrink-0"
+                        >
+                          <Icon className="size-4 shrink-0" />
+                        </motion.span>
                         <span className="group-data-[collapsible=icon]:hidden">{entry.label}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -222,6 +230,14 @@ export function AdminSidebar({ view, onViewChange, accessKey, onLogout }: Props)
         </div>
 
         <SidebarMenu className="gap-2">
+          <SidebarMenuItem className="group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center">
+            <div className="flex w-full items-center gap-2 px-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+              <AdminThemeToggle compact className="group-data-[collapsible=icon]:mx-auto" />
+              <span className="stencil text-[8px] text-(--color-stencil) group-data-[collapsible=icon]:hidden">
+                TEMA
+              </span>
+            </div>
+          </SidebarMenuItem>
           <SidebarMenuItem className="group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center">
             <SidebarMenuButton
               tooltip="Encerrar sessão"

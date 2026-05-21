@@ -42,6 +42,7 @@
 
 :root {
   --radius: 0.25rem;
+  color-scheme: light;
 
   /* Vivid Brazilian Army green palette */
   --background: oklch(0.96 0.012 110);
@@ -75,23 +76,34 @@
 }
 
 .dark {
-  --background: oklch(0.18 0.02 110);
+  --background: oklch(0.14 0.018 110);
   --foreground: oklch(0.92 0.02 90);
-  --card: oklch(0.22 0.025 110);
+  --card: oklch(0.18 0.022 110);
   --card-foreground: oklch(0.92 0.02 90);
-  --popover: oklch(0.22 0.025 110);
+  --popover: oklch(0.18 0.022 110);
   --popover-foreground: oklch(0.92 0.02 90);
-  --primary: oklch(0.62 0.16 135);
-  --primary-foreground: oklch(0.12 0.015 110);
-  --secondary: oklch(0.30 0.04 110);
-  --secondary-foreground: oklch(0.92 0.02 90);
-  --muted: oklch(0.26 0.03 110);
-  --muted-foreground: oklch(0.70 0.02 90);
-  --accent: oklch(0.78 0.14 85);
+  --primary: oklch(0.58 0.12 135);
+  --primary-foreground: oklch(0.96 0.015 90);
+  --secondary: oklch(0.22 0.028 110);
+  --secondary-foreground: oklch(0.88 0.02 90);
+  --muted: oklch(0.20 0.025 110);
+  --muted-foreground: oklch(0.68 0.02 90);
+  --accent: oklch(0.72 0.12 85);
   --accent-foreground: oklch(0.12 0.015 110);
-  --border: oklch(0.92 0.02 90 / 15%);
-  --input: oklch(0.92 0.02 90 / 20%);
-  --ring: oklch(0.62 0.16 135);
+  --destructive: oklch(0.55 0.18 30);
+  --destructive-foreground: oklch(0.97 0.01 90);
+  --border: oklch(0.92 0.02 90 / 12%);
+  --input: oklch(0.92 0.02 90 / 16%);
+  --ring: oklch(0.58 0.12 135);
+
+  /* Military palette — night ops */
+  --olive-bright: oklch(0.56 0.11 135);
+  --olive: oklch(0.48 0.09 132);
+  --olive-deep: oklch(0.82 0.04 95);
+  --khaki: oklch(0.17 0.02 110);
+  --stencil: oklch(0.72 0.02 90);
+  --gold: oklch(0.76 0.11 85);
+  color-scheme: dark;
 }
 
 @layer base {
@@ -103,6 +115,12 @@
     background-image:
       repeating-linear-gradient(0deg, rgba(60,90,40,0.035) 0 1px, transparent 1px 6px),
       repeating-linear-gradient(90deg, rgba(60,90,40,0.035) 0 1px, transparent 1px 6px);
+    transition: background-color 0.35s ease, color 0.35s ease;
+  }
+  .dark body {
+    background-image:
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.018) 0 1px, transparent 1px 6px),
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.018) 0 1px, transparent 1px 6px);
   }
   h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: 0.04em; text-transform: uppercase; }
 }
@@ -119,6 +137,12 @@
       linear-gradient(180deg, oklch(0.96 0.012 110) 0%, oklch(0.91 0.022 100) 100%);
     border: 1px solid var(--color-border);
     box-shadow: 0 1px 0 oklch(1 0 0 / 60%) inset, 0 8px 24px -12px rgba(0,0,0,0.35);
+    transition: background 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+  }
+  .dark .field-paper {
+    background:
+      linear-gradient(180deg, oklch(0.20 0.025 110) 0%, oklch(0.16 0.02 115) 100%);
+    box-shadow: 0 1px 0 oklch(1 0 0 / 6%) inset, 0 8px 28px -10px rgba(0,0,0,0.65);
   }
   .tag-rank {
     display: inline-flex; align-items: center; gap: 0.5rem;
@@ -155,6 +179,14 @@
     transition: background .2s ease, color .2s ease;
   }
   .btn-ghost-olive:hover { background: var(--color-olive-deep); color: oklch(0.96 0.015 90); }
+  .dark .btn-ghost-olive {
+    color: var(--color-stencil);
+    border-color: oklch(0.92 0.02 90 / 25%);
+  }
+  .dark .btn-ghost-olive:hover {
+    background: oklch(0.92 0.02 90 / 10%);
+    color: oklch(0.96 0.015 90);
+  }
 
   /* Identidade militar digital — carteira */
   .id-militar-card {
@@ -555,6 +587,58 @@
   .adm-nav-status {
     border-top: 1px solid oklch(0.4 0.07 132 / 0.2);
     padding-top: 0.5rem;
+  }
+
+  /* Admin dark mode surfaces */
+  .adm-panel-header,
+  .adm-topbar {
+    transition: background-color 0.35s ease, border-color 0.35s ease;
+  }
+  .dark .adm-panel-header,
+  .dark .adm-topbar {
+    background: oklch(0.16 0.02 110 / 82%) !important;
+    border-color: oklch(0.92 0.02 90 / 18%) !important;
+  }
+  .dark .adm-nav-sidebar {
+    background: oklch(0.12 0.018 110) !important;
+    border-color: oklch(0.92 0.02 90 / 15%) !important;
+  }
+  .dark .admcmf-shell {
+    background: var(--color-background);
+  }
+  .dark .adm-nav-active {
+    background: oklch(0.42 0.08 132) !important;
+    color: oklch(0.96 0.015 90) !important;
+    box-shadow: 0 0 18px oklch(0.48 0.09 132 / 0.45);
+  }
+  .dark .adm-nav-active::before {
+    background: oklch(0.76 0.11 85);
+  }
+  .dark .adm-nav-btn:hover:not([data-active="true"]) {
+    box-shadow: 0 0 12px oklch(0.48 0.09 132 / 0.2);
+  }
+  .dark .adm-nav-sub-active {
+    color: oklch(0.92 0.02 90) !important;
+    background: oklch(0.48 0.09 132 / 0.18) !important;
+  }
+  .dark .adm-nav-sep {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      oklch(0.92 0.02 90 / 18%),
+      transparent
+    );
+  }
+  .dark .adm-nav-war {
+    background: linear-gradient(
+      90deg,
+      oklch(0.55 0.18 30 / 0.18),
+      transparent
+    ) !important;
+    color: oklch(0.72 0.14 30) !important;
+  }
+  .dark .adm-nav-status {
+    border-top-color: oklch(0.92 0.02 90 / 12%);
   }
 
   /* Central de guerra — radar */

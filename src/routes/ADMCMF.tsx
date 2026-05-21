@@ -11,6 +11,8 @@ import {
 import { enviarComunicadoDiscord } from "@/lib/discord.functions";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { AdminPageTransition } from "@/components/admin/AdminPageTransition";
+import { AdminThemeToggle } from "@/components/admin/AdminThemeToggle";
 import { CentralGuerra } from "@/components/admin/CentralGuerra";
 import { AdminModuleView } from "@/components/admin/AdminModuleView";
 import { DocumentosPainel } from "@/components/admin/DocumentosPainel";
@@ -41,6 +43,7 @@ import {
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { motion } from "framer-motion";
 
 export const Route = createFileRoute("/ADMCMF")({
   head: () => ({
@@ -221,23 +224,33 @@ function CentralComando({ accessKey, onLogout }: { accessKey: string; onLogout: 
         {/* ── Main content ─────────────────────────────────────────── */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Topbar */}
-          <div className="border-b-2 border-(--color-olive-deep) bg-khaki/70 backdrop-blur sticky top-0 z-30 px-4 py-3 flex items-center gap-3">
-            <SidebarTrigger className="text-(--color-olive-deep) hover:bg-olive-deep/10 h-8 w-8" />
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="adm-topbar border-b-2 border-(--color-olive-deep) bg-khaki/70 backdrop-blur sticky top-0 z-30 px-4 py-3 flex items-center gap-3"
+          >
+            <SidebarTrigger className="text-(--color-olive-deep) hover:bg-olive-deep/10 h-8 w-8 dark:text-(--color-stencil) dark:hover:bg-(--color-stencil)/10" />
             <div className="stencil text-xs hidden md:block">{getViewLabel(view)}</div>
-            <div className="ml-auto text-[10px] font-mono text-(--color-stencil)">
-              {new Date().toLocaleString("pt-BR")}
+            <div className="ml-auto flex items-center gap-3">
+              <AdminThemeToggle compact className="md:hidden" />
+              <div className="text-[10px] font-mono text-(--color-stencil)">
+                {new Date().toLocaleString("pt-BR")}
+              </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Page */}
           <ScrollArea className="flex-1">
             <div className="p-6 max-w-6xl">
-              <PanelContent
-                view={view}
-                accessKey={accessKey}
-                onLogout={onLogout}
-                onViewChange={setView}
-              />
+              <AdminPageTransition viewKey={view}>
+                <PanelContent
+                  view={view}
+                  accessKey={accessKey}
+                  onLogout={onLogout}
+                  onViewChange={setView}
+                />
+              </AdminPageTransition>
             </div>
           </ScrollArea>
         </div>

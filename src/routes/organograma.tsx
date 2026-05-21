@@ -62,8 +62,6 @@ function OrganogramaPage() {
         </div>
       </section>
 
-      <FotoGaleriaSection />
-
       {/* UNIDADES PRINCIPAIS */}
       <section className="grad-1 py-20">
         <div className="mx-auto max-w-6xl px-6">
@@ -134,6 +132,8 @@ function OrganogramaPage() {
           </div>
         </div>
       </section>
+
+      <FotoGaleriaSection />
 
       {/* AVISO */}
       <section className="grad-3 border-t-2 border-[color:var(--color-olive-deep)] py-16 text-[color:var(--color-khaki)]">
