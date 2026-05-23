@@ -68,13 +68,14 @@ CREATE TABLE IF NOT EXISTS public.inscricoes (
   rg TEXT NOT NULL,
   telefone TEXT NOT NULL,
   discord_id TEXT NOT NULL,
-  motivacao TEXT NOT NULL,
+  motivacao TEXT NOT NULL DEFAULT '',
   status public.status_inscricao NOT NULL DEFAULT 'pendente',
   observacoes_instrutor TEXT,
   protocolo TEXT NOT NULL UNIQUE DEFAULT ('EB-' || upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 8))),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+ALTER TABLE public.inscricoes ALTER COLUMN motivacao SET DEFAULT '';
 
 CREATE TABLE IF NOT EXISTS public.entrevistas (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -433,8 +434,8 @@ DROP POLICY IF EXISTS "anyone can insert inscricao" ON public.inscricoes;
 CREATE POLICY "anyone can insert inscricao" ON public.inscricoes FOR INSERT TO anon, authenticated
   WITH CHECK (
     char_length(nome) BETWEEN 1 AND 80 AND char_length(sobrenome) BETWEEN 1 AND 80
-    AND rg ~ '^[0-9]{1,8}$' AND char_length(telefone) BETWEEN 8 AND 20
-    AND char_length(discord_id) BETWEEN 2 AND 64 AND char_length(motivacao) BETWEEN 10 AND 2000
+    AND rg ~ '^[0-9]{1,8}$' AND char_length(telefone) BETWEEN 1 AND 20
+    AND char_length(discord_id) BETWEEN 1 AND 64
   );
 
 -- Demais tabelas: RLS ativo sem policy pública (admin via service role)

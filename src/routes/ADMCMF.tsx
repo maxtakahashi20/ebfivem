@@ -66,7 +66,6 @@ type Row = {
   rg: string;
   telefone: string;
   discord_id: string;
-  motivacao: string;
   status: Status;
   observacoes_instrutor: string | null;
   created_at: string;
@@ -619,13 +618,6 @@ function InscricaoEditor({
           <LabelValue label="PROTOCOLO"   value={row.protocolo} />
           <LabelValue label="APRESENTAÇÃO"     value={new Date(row.created_at).toLocaleString("pt-BR")} />
           <LabelValue label="ATUALIZADO"  value={new Date(row.updated_at).toLocaleString("pt-BR")} />
-        </div>
-
-        <div className="mb-4">
-          <div className="stencil text-[10px] mb-1">MOTIVAÇÃO</div>
-          <p className="text-sm whitespace-pre-wrap p-3 bg-background/60 border border-(--color-border)">
-            {row.motivacao}
-          </p>
         </div>
 
         <div>

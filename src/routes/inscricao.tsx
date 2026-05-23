@@ -17,13 +17,13 @@ export const Route = createFileRoute("/inscricao")({
 
 type Form = {
   nome: string; sobrenome: string; rg: string;
-  telefone: string; discord_id: string; motivacao: string;
+  telefone: string; discord_id: string;
 };
 
 function Inscricao() {
   const submit = useServerFn(criarInscricao);
   const [form, setForm] = useState<Form>({
-    nome: "", sobrenome: "", rg: "", telefone: "", discord_id: "", motivacao: "",
+    nome: "", sobrenome: "", rg: "", telefone: "", discord_id: "",
   });
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState<{ protocolo: string; rg: string; created_at?: string } | null>(null);
@@ -37,10 +37,6 @@ function Inscricao() {
     e.preventDefault();
     if (!/^\d{1,8}$/.test(form.rg)) {
       toast.error("RG deve conter até 8 dígitos numéricos.");
-      return;
-    }
-    if (form.motivacao.trim().length < 10) {
-      toast.error("Descreva sua motivação com pelo menos 10 caracteres.");
       return;
     }
     setLoading(true);
@@ -57,7 +53,6 @@ function Inscricao() {
           rg: form.rg,
           telefone: form.telefone,
           discord_id: form.discord_id,
-          motivacao: form.motivacao,
           created_at: res.created_at,
         });
       } catch (pdfErr) {
@@ -79,7 +74,6 @@ function Inscricao() {
         rg: form.rg,
         telefone: form.telefone,
         discord_id: form.discord_id,
-        motivacao: form.motivacao,
         created_at: done.created_at,
       });
 
@@ -150,19 +144,6 @@ function Inscricao() {
           placeholder="usuario#0000 ou ID numérico"
           maxLength={64}
         />
-        <div>
-          <label className="block stencil text-[11px] mb-1">Motivação para o Alistamento</label>
-          <textarea
-            className="w-full bg-transparent border border-(--color-input) px-3 py-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-(--color-olive-bright) min-h-32"
-            value={form.motivacao}
-            onChange={(e) => set("motivacao", e.target.value)}
-            required
-            maxLength={2000}
-            placeholder="Descreva por que deseja servir ao CMF..."
-          />
-          <div className="text-[10px] text-right text-(--color-stencil) mt-1">{form.motivacao.length}/2000</div>
-        </div>
-
         <div className="flex items-center justify-between gap-4 pt-2 border-t border-(--color-border)">
           <div className="stencil text-[10px]">DECLARO QUE AS INFORMAÇÕES SÃO VERDADEIRAS.</div>
           <button type="submit" disabled={loading} className="btn-olive disabled:opacity-60">

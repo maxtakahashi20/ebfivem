@@ -18,9 +18,8 @@ const InscricaoSchema = z.object({
   nome: z.string().trim().min(1).max(80),
   sobrenome: z.string().trim().min(1).max(80),
   rg: z.string().trim().regex(/^\d{1,8}$/, "RG deve conter até 8 dígitos"),
-  telefone: z.string().trim().min(8).max(20),
-  discord_id: z.string().trim().min(2).max(64),
-  motivacao: z.string().trim().min(10).max(2000),
+  telefone: z.string().trim().min(1).max(20),
+  discord_id: z.string().trim().min(1).max(64),
 });
 
 export const criarInscricao = createServerFn({ method: "POST" })
@@ -29,7 +28,15 @@ export const criarInscricao = createServerFn({ method: "POST" })
     const discordUserId = /^\d{17,20}$/.test(data.discord_id) ? data.discord_id : null;
     const { data: row, error } = await supabaseAdmin
       .from("inscricoes")
-      .insert({ ...data, discord_user_id: discordUserId })
+      .insert({
+        nome: data.nome,
+        sobrenome: data.sobrenome,
+        rg: data.rg,
+        telefone: data.telefone,
+        discord_id: data.discord_id,
+        discord_user_id: discordUserId,
+        motivacao: "",
+      })
       .select("id, protocolo, rg, status, created_at")
       .single();
     if (error) throw new Error(error.message);
@@ -104,7 +111,7 @@ export const listarInscricoes = createServerFn({ method: "POST" })
     let q = supabaseAdmin
       .from("inscricoes")
       .select(
-        "id, protocolo, nome, sobrenome, rg, telefone, discord_id, motivacao, status, observacoes_instrutor, created_at, updated_at",
+        "id, protocolo, nome, sobrenome, rg, telefone, discord_id, status, observacoes_instrutor, created_at, updated_at",
       )
       .order("created_at", { ascending: false })
       .limit(500);

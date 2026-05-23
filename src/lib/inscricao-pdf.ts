@@ -8,7 +8,6 @@ export type InscricaoPdfData = {
   rg: string;
   telefone: string;
   discord_id: string;
-  motivacao: string;
   created_at?: string;
 };
 
@@ -63,22 +62,8 @@ export function gerarComprovantePdf(d: InscricaoPdfData): jsPDF {
   drawField(doc, MARGIN, y, "ID DO DISCORD", d.discord_id);
   y += 14;
 
-  // Section: motivação
-  drawSection(doc, MARGIN, y, W, "SEÇÃO II — DECLARAÇÃO DE MOTIVAÇÃO");
-  y += 8;
-  doc.setFont("courier", "normal");
-  doc.setFontSize(10);
-  const split = doc.splitTextToSize(d.motivacao, W - MARGIN * 2 - 4);
-  doc.setFillColor(252, 250, 235);
-  const boxH = Math.max(20, split.length * 5 + 6);
-  doc.rect(MARGIN, y, W - MARGIN * 2, boxH, "F");
-  doc.setDrawColor(80, 90, 60);
-  doc.rect(MARGIN, y, W - MARGIN * 2, boxH);
-  doc.text(split, MARGIN + 3, y + 6);
-  y += boxH + 8;
-
   // Section: registro
-  drawSection(doc, MARGIN, y, W, "SEÇÃO III — REGISTRO");
+  drawSection(doc, MARGIN, y, W, "SEÇÃO II — REGISTRO");
   y += 8;
   const dataIns = d.created_at ? new Date(d.created_at) : new Date();
   drawField(doc, MARGIN, y, "DATA DE APRESENTAÇÃO", dataIns.toLocaleString("pt-BR"));
