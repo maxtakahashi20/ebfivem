@@ -1,13 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { LazyImage } from "@/components/organograma/LazyImage";
 import {
-  FOTOS_MARQUEE,
-  FOTOS_ORGANOGRAMA,
+  carregarManifestGaleria,
+  fotosMarquee,
   type FotoGaleria,
 } from "@/lib/organograma-galeria";
 
@@ -38,14 +39,35 @@ function useReveal<T extends HTMLElement>() {
   return { ref, visivel };
 }
 
-type FotoGaleriaProps = {
-  fotos?: FotoGaleria[];
-};
-
-export function FotoGaleriaSection({ fotos = FOTOS_ORGANOGRAMA }: FotoGaleriaProps) {
+export function FotoGaleriaSection() {
   const { ref: secRef, visivel: secVisivel } = useReveal<HTMLElement>();
+  const [fotos, setFotos] = useState<FotoGaleria[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState<FotoGaleria | null>(null);
   const [indiceLb, setIndiceLb] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    carregarManifestGaleria()
+      .then((m) => {
+        if (!cancelled) setFotos(m.photos);
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setErro(e instanceof Error ? e.message : "Falha ao carregar galeria");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const marquee = useMemo(() => fotosMarquee(fotos, 12), [fotos]);
+  const marqueeDuplo = useMemo(() => [...marquee, ...marquee], [marquee]);
 
   const abrir = useCallback(
     (foto: FotoGaleria) => {
@@ -85,14 +107,23 @@ export function FotoGaleriaSection({ fotos = FOTOS_ORGANOGRAMA }: FotoGaleriaPro
     return () => window.removeEventListener("keydown", onKey);
   }, [lightbox, anterior, proximo]);
 
-  const marqueeDuplo = [...FOTOS_MARQUEE, ...FOTOS_MARQUEE];
+  if (loading) {
+    return (
+      <section id="galeria" className="grad-4 py-16 text-(--color-khaki) border-y-2 border-(--color-olive-deep)">
+        <div className="mx-auto max-w-6xl px-6 text-center">
+          <p className="stencil text-xs text-(--color-gold) mb-2">SEÇÃO III · REGISTRO FOTOGRÁFICO</p>
+          <p className="font-mono text-sm opacity-70 animate-pulse">Carregando galeria…</p>
+        </div>
+      </section>
+    );
+  }
 
-  if (fotos.length === 0) {
+  if (erro || fotos.length === 0) {
     return (
       <section id="galeria" className="grad-4 py-16 text-(--color-khaki)">
         <div className="mx-auto max-w-6xl px-6 text-center">
           <p className="stencil text-xs text-(--color-gold) mb-2">GALERIA</p>
-          <p className="font-mono text-sm opacity-70">Nenhuma foto encontrada em src/assets/</p>
+          <p className="font-mono text-sm opacity-70">{erro ?? "Nenhuma foto na galeria."}</p>
         </div>
       </section>
     );
@@ -117,11 +148,10 @@ export function FotoGaleriaSection({ fotos = FOTOS_ORGANOGRAMA }: FotoGaleriaPro
             Clique para ampliar.
           </p>
           <p className="font-mono text-[10px] mt-3 opacity-60">
-            {fotos.length} registros · atualização contínua
+            {fotos.length} registros · imagens otimizadas WebP
           </p>
         </div>
 
-        {/* Faixa animada */}
         <div className="galeria-marquee-wrap mb-14 -mx-6 md:mx-0">
           <div className="galeria-marquee-track">
             {marqueeDuplo.map((foto, i) => (
@@ -131,11 +161,11 @@ export function FotoGaleriaSection({ fotos = FOTOS_ORGANOGRAMA }: FotoGaleriaPro
                 onClick={() => abrir(foto)}
                 className="galeria-marquee-item group shrink-0"
               >
-                <img
+                <LazyImage
                   src={foto.src}
-                  alt=""
-                  loading="lazy"
-                  decoding="async"
+                  alt={foto.legenda}
+                  eager={i < 4}
+                  sizes="220px"
                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
                 <span className="galeria-marquee-shine" aria-hidden />
@@ -144,19 +174,13 @@ export function FotoGaleriaSection({ fotos = FOTOS_ORGANOGRAMA }: FotoGaleriaPro
           </div>
         </div>
 
-        {/* Grade masonry */}
         <div
           className={`columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4 transition-all duration-700 ${
             secVisivel ? "translate-y-0 opacity-100" : "opacity-100"
           }`}
         >
           {fotos.map((foto, i) => (
-            <GaleriaCard
-              key={foto.id}
-              foto={foto}
-              index={i}
-              onAbrir={() => abrir(foto)}
-            />
+            <GaleriaCard key={foto.id} foto={foto} index={i} onAbrir={() => abrir(foto)} />
           ))}
         </div>
       </div>
@@ -236,11 +260,10 @@ function GaleriaCard({
         className="galeria-card-inner group w-full text-left focus-visible:outline-2 focus-visible:outline-(--color-gold)"
       >
         <div className="galeria-card-frame relative overflow-hidden">
-          <img
+          <LazyImage
             src={foto.src}
             alt={foto.legenda}
-            loading="lazy"
-            decoding="async"
+            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
             className="w-full h-auto block transition-transform duration-700 ease-out group-hover:scale-105"
           />
           <span className="galeria-card-scan" aria-hidden />

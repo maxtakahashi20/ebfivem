@@ -1,20 +1,33 @@
 import { createFileRoute } from "@tanstack/react-router";
-import b1 from "@/assets/batalhoes-1.png";
-import b2 from "@/assets/batalhoes-2.png";
-import b3 from "@/assets/batalhoes-3.png";
-import b4 from "@/assets/batalhoes-4.png";
-import b5 from "@/assets/batalhoes-5.png";
-import { FotoGaleriaSection } from "@/components/organograma/FotoGaleria";
+import { lazy, Suspense } from "react";
+
+const FotoGaleriaSection = lazy(() =>
+  import("@/components/organograma/FotoGaleria").then((m) => ({
+    default: m.FotoGaleriaSection,
+  })),
+);
 
 export const Route = createFileRoute("/organograma")({
   head: () => ({
     meta: [
       { title: "Organograma · CMF · Composição da Tropa" },
-      { name: "description", content: "Composição do CMF: batalhões, brigadas e unidades de especialização inspirados no Exército Brasileiro." },
+      {
+        name: "description",
+        content:
+          "Composição do CMF: batalhões, brigadas e unidades de especialização inspirados no Exército Brasileiro.",
+      },
     ],
   }),
   component: OrganogramaPage,
 });
+
+const BRASOES = [
+  { src: "/brasoes/batalhoes-1.webp", alt: "Brasões: 1º BPE, 3º BAvEx e 27º BI PQDT" },
+  { src: "/brasoes/batalhoes-2.webp", alt: "Brasões: Cia PREC PQDT, 8º B LOG e 13º BIB" },
+  { src: "/brasoes/batalhoes-3.webp", alt: "Brasões: D SAU, 1º BAC e 1º BFESP" },
+  { src: "/brasoes/batalhoes-4.webp", alt: "Brasões: COPESP e C I OP ESP" },
+  { src: "/brasoes/batalhoes-5.webp", alt: "Brasões: unidades especializadas em biomas" },
+] as const;
 
 const unidades = [
   { sigla: "1º BPE", nome: "1º Batalhão de Polícia do Exército", funcao: "Polícia do Exército · Guarda e escolta de autoridades" },
@@ -37,10 +50,34 @@ const biomas = [
   { sigla: "18ª BDA INF Pantanal", nome: "18ª Brigada de Infantaria de Pantanal", bioma: "Pantanal" },
 ];
 
+function BrasaoImg({
+  src,
+  alt,
+  className,
+  loading = "lazy",
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+  loading?: "lazy" | "eager";
+}) {
+  return (
+    <img
+      src={src}
+      alt={alt}
+      loading={loading}
+      decoding="async"
+      width={800}
+      height={600}
+      sizes="(max-width: 768px) 100vw, 33vw"
+      className={className}
+    />
+  );
+}
+
 function OrganogramaPage() {
   return (
     <div>
-      {/* HERO */}
       <section className="grad-3 border-b-2 border-(--color-olive-deep) text-(--color-khaki)">
         <div className="mx-auto max-w-6xl px-6 py-20">
           <div className="stencil text-xs mb-2 text-(--color-gold)">
@@ -53,16 +90,12 @@ function OrganogramaPage() {
             Estrutura operacional do Comando Militar do Fivem, organizada em batalhões,
             brigadas e unidades de especialização inspiradas diretamente no Exército Brasileiro.
           </p>
-          <a
-            href="#galeria"
-            className="btn-olive inline-block text-xs tracking-widest"
-          >
+          <a href="#galeria" className="btn-olive inline-block text-xs tracking-widest">
             ▸ VER GALERIA DE FOTOS
           </a>
         </div>
       </section>
 
-      {/* UNIDADES PRINCIPAIS */}
       <section className="grad-1 py-20">
         <div className="mx-auto max-w-6xl px-6">
           <div className="stencil text-xs mb-2">SEÇÃO I · BATALHÕES E UNIDADES</div>
@@ -72,13 +105,23 @@ function OrganogramaPage() {
           </p>
 
           <div className="grid md:grid-cols-3 gap-4 mb-10">
-            <img src={b1} alt="1º BPE, 3º BAvEx e 27º BI PQDT" className="w-full h-auto border-2 border-(--color-olive-deep) bg-(--color-khaki) p-3" />
-            <img src={b2} alt="Cia PREC PQDT, 8º B LOG e 13º BIB" className="w-full h-auto border-2 border-(--color-olive-deep) bg-(--color-khaki) p-3" />
-            <img src={b3} alt="D SAU, 1º BAC e 1º BFESP" className="w-full h-auto border-2 border-(--color-olive-deep) bg-(--color-khaki) p-3" />
+            {BRASOES.slice(0, 3).map((b) => (
+              <BrasaoImg
+                key={b.src}
+                src={b.src}
+                alt={b.alt}
+                loading="eager"
+                className="w-full h-auto border-2 border-(--color-olive-deep) bg-(--color-khaki) p-3"
+              />
+            ))}
           </div>
 
           <div className="grid md:grid-cols-2 gap-4 mb-10">
-            <img src={b4} alt="COPESP e C I OP ESP" className="w-full h-auto border-2 border-(--color-olive-deep) bg-(--color-khaki) p-3" />
+            <BrasaoImg
+              src={BRASOES[3].src}
+              alt={BRASOES[3].alt}
+              className="w-full h-auto border-2 border-(--color-olive-deep) bg-(--color-khaki) p-3"
+            />
             <div className="field-paper p-5">
               <div className="tag-rank mb-3">COMANDO · OP. ESPECIAIS</div>
               <p className="text-sm text-(--color-stencil)">
@@ -105,7 +148,6 @@ function OrganogramaPage() {
         </div>
       </section>
 
-      {/* BIOMAS */}
       <section className="grad-2 border-y-2 border-(--color-olive-deep) py-20">
         <div className="mx-auto max-w-6xl px-6">
           <div className="stencil text-xs mb-2">SEÇÃO II · ESPECIALIZAÇÕES POR BIOMA</div>
@@ -115,7 +157,11 @@ function OrganogramaPage() {
             Exército Brasileiro, replicados no CMF para operações em terrenos diversos.
           </p>
 
-          <img src={b5} alt="Unidades especializadas em biomas" className="w-full h-auto border-2 border-(--color-olive-deep) bg-(--color-khaki) p-3 mb-8" />
+          <BrasaoImg
+            src={BRASOES[4].src}
+            alt={BRASOES[4].alt}
+            className="w-full h-auto border-2 border-(--color-olive-deep) bg-(--color-khaki) p-3 mb-8"
+          />
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
             {biomas.map((u, i) => (
@@ -133,9 +179,18 @@ function OrganogramaPage() {
         </div>
       </section>
 
-      <FotoGaleriaSection />
+      <Suspense
+        fallback={
+          <section id="galeria" className="grad-4 py-16 text-(--color-khaki)">
+            <div className="mx-auto max-w-6xl px-6 text-center font-mono text-sm opacity-70">
+              Carregando galeria…
+            </div>
+          </section>
+        }
+      >
+        <FotoGaleriaSection />
+      </Suspense>
 
-      {/* AVISO */}
       <section className="grad-3 border-t-2 border-(--color-olive-deep) py-16 text-(--color-khaki)">
         <div className="mx-auto max-w-4xl px-6 text-center">
           <div className="stencil text-xs text-(--color-olive-bright) mb-2">AVISO INSTITUCIONAL</div>

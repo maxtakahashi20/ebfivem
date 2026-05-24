@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
+    "build": "npm run optimize:images && vite build",
     "build:dev": "vite build --mode development",
+    "optimize:images": "node scripts/optimize-galeria.mjs",
     "preview": "vite preview",
     "start": "node .output/server/index.mjs",
     "lint": "eslint .",
@@ -89,6 +90,7 @@
     "globals": "^15.15.0",
     "pg": "^8.21.0",
     "prettier": "^3.7.3",
+    "sharp": "^0.34.5",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
     "vite": "^7.3.1"
