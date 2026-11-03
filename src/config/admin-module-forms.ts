@@ -214,14 +214,6 @@ export function getModuloForm(view: AdminView): ModuloFormSpec | null {
   };
 }
 
-export type AcaoEspecial = "discord-sync" | "sys-backup";
-
-export function getAcaoEspecial(view: AdminView): AcaoEspecial | null {
-  if (view === "discord-sync") return "discord-sync";
-  if (view === "sys-backup") return "sys-backup";
-  return null;
-}
-
 /** Texto do botão de cadastro (registry → mapa → padrão) */
 export function getLabelAcao(view: AdminView, primaryAction?: string): string | null {
   if (primaryAction) return primaryAction;

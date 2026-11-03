@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import type { AdminView } from "@/config/admin-nav";
 import { papelDaView } from "@/config/admin-nav";
 import { papelAlcanca } from "@/lib/access-control";
-import { getAcaoEspecial, getLabelAcao, getModuloForm } from "@/config/admin-module-forms";
+import { getLabelAcao, getModuloForm } from "@/config/admin-module-forms";
 import { MODULO_DB, PDF_RESTRITO_VIEWS } from "@/config/admin-modules-db";
 import {
   AdminModuleFormDialog,
@@ -17,7 +17,6 @@ import {
   baixarPdfRestrito,
   carregarModuloAdmin,
   criarRegistroModulo,
-  executarAcaoEspecial,
   removerPdfRestrito,
   uploadPdfRestrito,
 } from "@/lib/admin-modules.functions";
@@ -45,11 +44,9 @@ export function AdminModuleView({ view }: { view: AdminView }) {
   const [loading, setLoading] = useState(usesDb(view));
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [actionLoading, setActionLoading] = useState(false);
 
   const loadModulo = useServerFn(carregarModuloAdmin);
   const criarRegistro = useServerFn(criarRegistroModulo);
-  const acaoEspecial = useServerFn(executarAcaoEspecial);
   const uploadPdf = useServerFn(uploadPdfRestrito);
   const downloadPdf = useServerFn(baixarPdfRestrito);
   const deletePdf = useServerFn(removerPdfRestrito);
@@ -92,33 +89,17 @@ export function AdminModuleView({ view }: { view: AdminView }) {
   });
 
   const temFormulario = !!getModuloForm(view);
-  const acaoEsp = getAcaoEspecial(view);
   const labelAcao = getLabelAcao(view, cfg.primaryAction);
   const temAcaoHeader = !!(
     labelAcao &&
     cfg.variant !== "defcon" &&
-    (temFormulario || acaoEsp || view === "sys-db")
+    (temFormulario || view === "sys-db")
   );
 
   const handlePrimaryAction = async () => {
     if (view === "sys-db") {
       reload();
       toast.success("Contagens atualizadas");
-      return;
-    }
-    if (acaoEsp) {
-      setActionLoading(true);
-      try {
-        const res = await acaoEspecial({
-          data: { view, session: getDiscordSessionToken() },
-        });
-        toast.success(res.mensagem ?? "Ação concluída");
-        reload();
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Falha na ação");
-      } finally {
-        setActionLoading(false);
-      }
       return;
     }
     if (temFormulario) setDialogOpen(true);
@@ -233,10 +214,10 @@ export function AdminModuleView({ view }: { view: AdminView }) {
             <button
               type="button"
               className="btn-olive text-xs disabled:opacity-50"
-              disabled={actionLoading || saving}
+              disabled={saving}
               onClick={() => void handlePrimaryAction()}
             >
-              ▸ {actionLoading ? "Processando…" : labelAcao}
+              ▸ {labelAcao}
             </button>
           ) : undefined
         }
@@ -295,7 +276,6 @@ export function AdminModuleView({ view }: { view: AdminView }) {
         <DiscordBotPanel
           online={extra.online !== false}
           latencia={Number(extra.latencia_ms ?? 0)}
-          uptime={String(extra.uptime_pct ?? "—")}
           onRefresh={reload}
         />
       )}
@@ -435,12 +415,10 @@ function statusBadge(key: string, value: string) {
 function DiscordBotPanel({
   online,
   latencia,
-  uptime,
   onRefresh,
 }: {
   online: boolean;
   latencia: number;
-  uptime: string;
   onRefresh: () => void;
 }) {
   const refreshBot = useServerFn(atualizarStatusDiscordBot);
@@ -471,7 +449,7 @@ function DiscordBotPanel({
               <div className="font-display tracking-widest">
                 BOT 2ª DE — {online ? "ONLINE" : "OFFLINE"}
               </div>
-              <p className="text-xs text-(--color-stencil)">Status em discord_bot_status</p>
+              <p className="text-xs text-(--color-stencil)">Consulta o bot no Discord ao atualizar</p>
             </div>
           </div>
           <button
@@ -483,18 +461,14 @@ function DiscordBotPanel({
             {loading ? "Atualizando…" : "↻ Atualizar status"}
           </button>
         </div>
-        <div className="grid sm:grid-cols-3 gap-3 text-sm font-mono">
+        <div className="grid sm:grid-cols-2 gap-3 text-sm font-mono">
           <div className="p-3 border border-(--color-border)">
             <div className="stencil text-[10px] mb-1">LATÊNCIA</div>
             <div>{latencia} ms</div>
           </div>
           <div className="p-3 border border-(--color-border)">
-            <div className="stencil text-[10px] mb-1">UPTIME</div>
-            <div>{uptime}</div>
-          </div>
-          <div className="p-3 border border-(--color-border)">
             <div className="stencil text-[10px] mb-1">FONTE</div>
-            <div>Supabase</div>
+            <div>API do Discord</div>
           </div>
         </div>
       </CardContent>

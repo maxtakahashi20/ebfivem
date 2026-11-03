@@ -13,9 +13,7 @@ export const getPainelStatus = createServerFn({ method: "POST" })
     await exigirPapel(data.session, "membro");
 
     return {
-      sistema: true,
-      discord: hasWebhook(process.env.DISCORD_WEBHOOK_URL),
-      api: !!(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL),
+      bot: !!process.env.DISCORD_BOT_TOKEN?.trim(),
       webhook: hasWebhook(process.env.DISCORD_WEBHOOK_URL),
     };
   });

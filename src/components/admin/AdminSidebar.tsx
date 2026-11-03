@@ -49,9 +49,7 @@ export function AdminSidebar({ view, onViewChange, onLogout }: Props) {
   const fetchStatus = useServerFn(getPainelStatus);
   const { papel, desenvolvedor } = useDiscordSession();
   const [status, setStatus] = useState({
-    sistema: true,
-    discord: false,
-    api: false,
+    bot: false,
     webhook: false,
   });
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
@@ -219,10 +217,11 @@ export function AdminSidebar({ view, onViewChange, onLogout }: Props) {
               MODO DESENVOLVEDOR
             </div>
           )}
-          <StatusDot ok={status.sistema} label="SISTEMA OPERACIONAL" />
-          <StatusDot ok={status.discord} label="DISCORD ONLINE" />
-          <StatusDot ok={status.api} label="API ONLINE" />
-          <StatusDot ok={status.webhook} label="WEBHOOK ATIVO" />
+          <StatusDot ok={status.bot} label={status.bot ? "BOT CONFIGURADO" : "BOT AUSENTE"} />
+          <StatusDot
+            ok={status.webhook}
+            label={status.webhook ? "WEBHOOK CONFIGURADO" : "WEBHOOK AUSENTE"}
+          />
         </div>
 
         <SidebarMenu className="gap-2">

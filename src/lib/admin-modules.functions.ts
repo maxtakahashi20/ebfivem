@@ -4,7 +4,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import type { AdminView } from "@/config/admin-nav";
 import { papelDaView } from "@/config/admin-nav";
-import { getAcaoEspecial, getModuloForm } from "@/config/admin-module-forms";
+import { getModuloForm } from "@/config/admin-module-forms";
 import { MODULO_DB, PDF_RESTRITO_VIEWS, TABELAS_SISTEMA } from "@/config/admin-modules-db";
 import { enviarLogOperacional } from "@/lib/discord.functions";
 import { sincronizarTodosDiscordNoEfetivo } from "@/lib/identidade-db";
@@ -265,65 +265,27 @@ export const criarRegistroModulo = createServerFn({ method: "POST" })
     return { ok: true, id: (inserted?.id as string | undefined) ?? null };
   });
 
-export const executarAcaoEspecial = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) =>
-    z.object({ view: z.string(), session: z.string() }).parse(input),
-  )
-  .handler(async ({ data }) => {
-    const view = data.view as AdminView;
-    const autor = await exigirPapel(data.session, papelDaView(view));
-    const acao = getAcaoEspecial(view);
-    if (!acao) throw new Error("Ação não disponível");
-
-    if (acao === "discord-sync") {
-      const itens = [
-        { item: "Cargos por patente", status: "Sincronizado" },
-        { item: "Nicknames 2ª DE", status: "Sincronizado" },
-        { item: "Webhooks operacionais", status: "Sincronizado" },
-      ];
-      const { error } = await supabaseAdmin.from("discord_sync_eventos").insert(itens);
-      if (error) throw new Error(error.message);
-
-      await supabaseAdmin
-        .from("discord_bot_status")
-        .update({ latencia_ms: 35 + Math.floor(Math.random() * 30), online: true })
-        .eq("id", 1);
-
-      await registrarAuditoria(autor, "Sincronização Discord executada", view);
-      return { ok: true, mensagem: "Sincronização concluída" };
-    }
-
-    if (acao === "sys-backup") {
-      const agora = new Date();
-      const backupId = `BK-${agora.toISOString().slice(0, 10).replace(/-/g, "")}-${String(agora.getHours()).padStart(2, "0")}${String(agora.getMinutes()).padStart(2, "0")}`;
-      const { error } = await supabaseAdmin.from("backups_registro").insert({
-        backup_id: backupId,
-        tipo: "Completo",
-        tamanho: `${120 + Math.floor(Math.random() * 20)} MB`,
-        data_backup: agora.toISOString(),
-      });
-      if (error) throw new Error(error.message);
-
-      await registrarAuditoria(autor, `Backup registrado: ${backupId}`, view);
-      return { ok: true, mensagem: `Backup ${backupId} registrado` };
-    }
-
-    throw new Error("Ação desconhecida");
-  });
-
 export const atualizarStatusDiscordBot = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z.object({ session: z.string() }).parse(input),
   )
   .handler(async ({ data }) => {
     const autor = await exigirPapel(data.session, papelDaView("discord-bot"));
-    const latencia = 30 + Math.floor(Math.random() * 50);
+    const token = process.env.DISCORD_BOT_TOKEN?.trim();
+    const inicio = Date.now();
+    const res = token
+      ? await fetch("https://discord.com/api/users/@me", {
+          headers: { Authorization: `Bot ${token}` },
+        }).catch(() => null)
+      : null;
+    const online = !!res?.ok;
+    const latencia = online ? Date.now() - inicio : 0;
     const { error } = await supabaseAdmin
       .from("discord_bot_status")
-      .update({ online: true, latencia_ms: latencia, uptime_pct: "99.8%" })
+      .update({ online, latencia_ms: latencia })
       .eq("id", 1);
     if (error) throw new Error(error.message);
-    await registrarAuditoria(autor, "Status do bot atualizado", "discord-bot");
+    await registrarAuditoria(autor, online ? "Bot verificado: online" : "Bot verificado: offline", "discord-bot");
     return { ok: true, latencia_ms: latencia };
   });
 
@@ -340,7 +302,6 @@ async function carregarDiscordBot(): Promise<ModuloAdminPayload> {
     stats: [
       { label: "Status", value: data?.online ? "Online" : "Offline" },
       { label: "Latência", value: `${data?.latencia_ms ?? 0}ms` },
-      { label: "Uptime", value: data?.uptime_pct ?? "—" },
     ],
     extra: data ?? {},
   };
