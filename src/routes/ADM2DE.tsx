@@ -15,6 +15,7 @@ import { AdminPageTransition } from "@/components/admin/AdminPageTransition";
 import { AdminThemeToggle } from "@/components/admin/AdminThemeToggle";
 import { CentralGuerra } from "@/components/admin/CentralGuerra";
 import { AdminModuleView } from "@/components/admin/AdminModuleView";
+import { UltimoProtocolo } from "@/components/admin/UltimoProtocolo";
 import { DocumentosPainel } from "@/components/admin/DocumentosPainel";
 import { SuporteAdmin } from "@/components/admin/SuporteAdmin";
 import { PerfilMilitar } from "@/components/military/PerfilMilitar";
@@ -194,6 +195,7 @@ function CentralComando({ accessKey, onLogout }: { accessKey: string; onLogout: 
     <SidebarProvider
       style={{ "--sidebar-width-icon": "3.5rem" } as React.CSSProperties}
     >
+      <UltimoProtocolo accessKey={accessKey} />
       <div className="flex min-h-screen w-full adm2de-shell">
         <AdminSidebar
           view={view}

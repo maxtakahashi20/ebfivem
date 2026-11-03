@@ -127,6 +127,20 @@ export const listarInscricoes = createServerFn({ method: "POST" })
     return rows ?? [];
   });
 
+export const obterUltimoProtocolo = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => z.object({ accessKey: z.string() }).parse(input))
+  .handler(async ({ data }) => {
+    assertAccessKey(data.accessKey);
+    const { data: row, error } = await supabaseAdmin
+      .from("inscricoes")
+      .select("protocolo")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return row?.protocolo ?? null;
+  });
+
 export const obterEstatisticas = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z.object({ accessKey: z.string() }).parse(input),

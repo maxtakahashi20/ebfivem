@@ -44,7 +44,10 @@ export function PanelBrandHeader() {
     >
       <div className="px-6 py-3 flex items-center justify-between gap-4">
         <BrandMark />
-        <AdminThemeToggle />
+        <div className="flex items-center gap-3">
+          <div id="panel-header-slot" />
+          <AdminThemeToggle />
+        </div>
       </div>
     </motion.header>
   );
