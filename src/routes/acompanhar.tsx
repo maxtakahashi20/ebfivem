@@ -17,7 +17,7 @@ export const Route = createFileRoute("/acompanhar")({
   validateSearch: (s) => searchSchema.parse(s),
   head: () => ({
     meta: [
-      { title: "Acompanhar Inscrição · Exército Brasileiro" },
+      { title: "Acompanhar Inscrição · 2ª DE" },
       {
         name: "description",
         content: "Acompanhe o status do seu alistamento pelo RG ou pelo protocolo da ficha.",

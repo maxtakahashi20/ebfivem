@@ -4,7 +4,7 @@ import { PerfilMilitar } from "@/components/military/PerfilMilitar";
 export const Route = createFileRoute("/identidade")({
   head: () => ({
     meta: [
-      { title: "Identidade Militar · CMF" },
+      { title: "Identidade Militar · 2ª DE" },
       { name: "description", content: "Consulte sua carteira militar digital com protocolo e RG." },
     ],
   }),

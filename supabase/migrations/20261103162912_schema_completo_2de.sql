@@ -1,5 +1,5 @@
 -- =============================================================================
--- CMF — schema completo (painel ADMCMF + Painel Membro + Identidade + Suporte)
+-- 2ª DE — schema completo (painel ADM2DE + Painel Membro + Identidade + Suporte)
 -- Cole INTEIRO no Supabase → SQL Editor → Run. Pode rodar mais de uma vez.
 -- Para um banco com outras tabelas, use supabase/reset-banco.sql.
 -- =============================================================================

@@ -1,4 +1,4 @@
-/** Chave do painel /ADMCMF — persiste no localStorage (não some ao fechar o navegador). */
+/** Chave do painel /ADM2DE — persiste no localStorage (não some ao fechar o navegador). */
 export const PANEL_ACCESS_KEY_STORAGE = "eb_cmd_key";
 
 export function getPanelAccessKey(): string | null {

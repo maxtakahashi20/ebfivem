@@ -74,7 +74,7 @@ const FORMS: Partial<Record<AdminView, ModuloFormSpec>> = {
   },
   "efetivo-ativos": {
     fields: [
-      { key: "id", label: "ID CMF", dbColumn: "codigo", required: true },
+      { key: "id", label: "ID 2ª DE", dbColumn: "codigo", required: true },
       { key: "nome", label: "Nome", dbColumn: "nome", required: true },
       { key: "patente", label: "Patente", dbColumn: "patente" },
       { key: "status", label: "Status", dbColumn: "status", placeholder: "Autenticado" },
@@ -158,10 +158,10 @@ const FORMS: Partial<Record<AdminView, ModuloFormSpec>> = {
   },
   "sys-sessoes": {
     fields: [
-      { key: "origem", label: "Origem", dbColumn: "origem", placeholder: "Painel ADMCMF" },
+      { key: "origem", label: "Origem", dbColumn: "origem", placeholder: "Painel ADM2DE" },
       { key: "status", label: "Status", dbColumn: "status", placeholder: "Ativa" },
     ],
-    defaults: { status: "Ativa", origem: "Painel ADMCMF" },
+    defaults: { status: "Ativa", origem: "Painel ADM2DE" },
   },
   "logs-geral": {
     fields: [
@@ -170,7 +170,7 @@ const FORMS: Partial<Record<AdminView, ModuloFormSpec>> = {
       { key: "acao", label: "Ação", dbColumn: "acao" },
       { key: "detalhe", label: "Detalhe", dbColumn: "detalhe" },
     ],
-    defaults: { tipo: "admin", usuario: "Painel ADMCMF" },
+    defaults: { tipo: "admin", usuario: "Painel ADM2DE" },
   },
 };
 

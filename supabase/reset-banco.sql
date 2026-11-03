@@ -1,5 +1,5 @@
 -- =============================================================================
--- ⚠️  APAGA TODO O SCHEMA public DO BANCO E RECRIA AS TABELAS DO CMF. SEM VOLTA.
+-- ⚠️  APAGA TODO O SCHEMA public DO BANCO E RECRIA AS TABELAS DA 2ª DE. SEM VOLTA.
 --
 -- Rode no projeto certo: Supabase → SQL Editor → cole INTEIRO → Run.
 -- Fica fora de supabase/migrations/ de propósito, para o `npm run db:migrate`

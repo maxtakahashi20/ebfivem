@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { assertAccessKey } from "@/lib/access-key.server";
 import { registrarLog } from "@/lib/logs.server";
 
-const ATENDENTE = "Comando CMF";
+const ATENDENTE = "Comando 2ª DE";
 const MAX_MENSAGEM = 2000;
 const HISTORICO_LIMIT = 200;
 
@@ -72,7 +72,7 @@ export const abrirOuObterTicket = createServerFn({ method: "POST" })
     await supabaseAdmin.from("suporte_mensagens").insert({
       ticket_id: novo.id,
       autor: "sistema",
-      autor_nome: "Sistema CMF",
+      autor_nome: "Sistema 2ª DE",
       mensagem: data.nome
         ? `Ticket aberto por ${data.nome} — assunto: ${data.titulo}.`
         : `Ticket aberto — assunto: ${data.titulo}.`,

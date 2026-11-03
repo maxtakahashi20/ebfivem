@@ -29,7 +29,7 @@ export function gerarComprovantePdf(d: InscricaoPdfData): jsPDF {
   doc.setTextColor(220, 215, 170);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
-  doc.text("CMF · COMANDO MILITAR DO FIVEM", W / 2, MARGIN + 4, { align: "center" });
+  doc.text("2ª DE · 2ª DIVISÃO DO EXÉRCITO", W / 2, MARGIN + 4, { align: "center" });
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   doc.text("COMPROVANTE OFICIAL DE ALISTAMENTO", W / 2, MARGIN + 10, { align: "center" });
@@ -73,7 +73,7 @@ export function gerarComprovantePdf(d: InscricaoPdfData): jsPDF {
   doc.setFontSize(9);
   const decl = doc.splitTextToSize(
     "Declaro, sob compromisso, que as informações prestadas neste comprovante são verdadeiras e " +
-      "que me apresento voluntariamente ao Comando Militar do Fivem (CMF), reconhecendo a hierarquia, " +
+      "que me apresento voluntariamente à 2ª Divisão do Exército (2ª DE), reconhecendo a hierarquia, " +
       "a disciplina e o regulamento interno da tropa. Este documento é de uso fictício, destinado " +
       "exclusivamente ao ambiente FiveM.",
     W - MARGIN * 2,
@@ -90,7 +90,7 @@ export function gerarComprovantePdf(d: InscricaoPdfData): jsPDF {
   doc.text("ASSINATURA DO CONSCRITO", MARGIN, y + 4);
   doc.text("INSTRUTOR DESIGNADO", W - MARGIN - 70, y + 4);
 
-  // Stamp CMF (faux)
+  // Stamp 2ª DE (faux)
   doc.saveGraphicsState?.();
   doc.setTextColor(20, 20, 20);
   doc.setDrawColor(20, 20, 20);
@@ -100,7 +100,7 @@ export function gerarComprovantePdf(d: InscricaoPdfData): jsPDF {
   doc.rect(sx, sy, 30, 16);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(20);
-  doc.text("CMF", sx + 15, sy + 11, { align: "center" });
+  doc.text("2ª DE", sx + 15, sy + 11, { align: "center" });
   doc.restoreGraphicsState?.();
 
   // Footer
@@ -108,7 +108,7 @@ export function gerarComprovantePdf(d: InscricaoPdfData): jsPDF {
   doc.setFontSize(7);
   doc.setFont("helvetica", "normal");
   doc.text(
-    `CMF · COMANDO MILITAR DO FIVEM · DOCUMENTO Nº ${d.protocolo} · USO FICTÍCIO · ${new Date().getFullYear()}`,
+    `2ª DE · 2ª DIVISÃO DO EXÉRCITO · DOCUMENTO Nº ${d.protocolo} · USO FICTÍCIO · ${new Date().getFullYear()}`,
     W / 2,
     H - MARGIN - 2,
     { align: "center" },
@@ -140,5 +140,5 @@ function drawField(doc: jsPDF, x: number, y: number, label: string, value: strin
 
 export function baixarComprovante(d: InscricaoPdfData) {
   const pdf = gerarComprovantePdf(d);
-  pdf.save(`CMF-${d.protocolo}.pdf`);
+  pdf.save(`2DE-${d.protocolo}.pdf`);
 }

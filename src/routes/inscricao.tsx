@@ -8,8 +8,8 @@ import { baixarComprovante } from "@/lib/inscricao-pdf";
 export const Route = createFileRoute("/inscricao")({
   head: () => ({
     meta: [
-      { title: "Alistamento · CMF" },
-      { name: "description", content: "Ficha oficial de alistamento do CMF — Comando Militar do Fivem." },
+      { title: "Alistamento · 2ª DE" },
+      { name: "description", content: "Ficha oficial de alistamento da 2ª DE — 2ª Divisão do Exército." },
     ],
   }),
   component: Inscricao,
@@ -102,10 +102,10 @@ function Inscricao() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
-      <div className="stencil text-xs mb-2">FORMULÁRIO 02-B · FICHA DE ALISTAMENTO CMF</div>
+      <div className="stencil text-xs mb-2">FORMULÁRIO 02-B · FICHA DE ALISTAMENTO 2ª DE</div>
       <h1 className="text-4xl mb-2">Apresente-se</h1>
       <p className="text-(--color-stencil) mb-8 max-w-xl">
-        Toda informação será analisada por um instrutor designado do CMF. Ao final do envio, você
+        Toda informação será analisada por um instrutor designado da 2ª DE. Ao final do envio, você
         receberá automaticamente um <strong>comprovante oficial em PDF</strong> com seu código
         de identificação.
       </p>

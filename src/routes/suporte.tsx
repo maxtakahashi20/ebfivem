@@ -10,7 +10,7 @@ import {
   type SuporteTicket,
 } from "@/lib/suporte.functions";
 
-const STORAGE_KEY = "cmf_suporte_ticket";
+const STORAGE_KEY = "2de_suporte_ticket";
 const POLL_MS = 3000;
 const MAX_LEN = 2000;
 
@@ -48,11 +48,11 @@ function persist(t: StoredTicket) {
 export const Route = createFileRoute("/suporte")({
   head: () => ({
     meta: [
-      { title: "Suporte ao Conscrito · CMF" },
+      { title: "Suporte ao Conscrito · 2ª DE" },
       {
         name: "description",
         content:
-          "Canal direto de suporte para candidatos do CMF — abra um chamado informando o assunto.",
+          "Canal direto de suporte para candidatos da 2ª DE — abra um chamado informando o assunto.",
       },
     ],
   }),
@@ -183,7 +183,7 @@ function SuportePage() {
       <div className="mx-auto max-w-md px-6 py-16">
         <div className="field-paper p-8 space-y-5">
           <div>
-            <p className="stencil text-xs text-(--color-olive-deep)">SUPORTE · CMF</p>
+            <p className="stencil text-xs text-(--color-olive-deep)">SUPORTE · 2ª DE</p>
             <h1 className="font-display text-2xl tracking-widest text-(--color-olive-deep) mt-1">
               Fale com os Guerreiros
             </h1>

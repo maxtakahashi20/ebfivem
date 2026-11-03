@@ -10,6 +10,6 @@ export const Route = createFileRoute("/documentos")({
   validateSearch: (s) => searchSchema.parse(s),
   beforeLoad: ({ search }) => {
     queuePainelView("documentos", search.protocolo ? { protocolo: search.protocolo } : undefined);
-    throw redirect({ to: "/ADMCMF" });
+    throw redirect({ to: "/ADM2DE" });
   },
 });

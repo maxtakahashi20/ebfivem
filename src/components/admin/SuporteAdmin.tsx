@@ -123,7 +123,7 @@ export function SuporteAdmin({ accessKey }: { accessKey: string }) {
       <AdminPageHeader
         tag="SUPORTE"
         title="Suporte ao conscrito"
-        sub="Chat ao vivo com candidatos do CMF."
+        sub="Chat ao vivo com candidatos da 2ª DE."
         action={
           <button
             type="button"

@@ -38,7 +38,7 @@ export function CentralGuerra() {
               <span className="absolute top-[48%] left-[28%] size-2 rounded-full bg-yellow-500 shadow-[0_0_8px_gold]" title="Patrulha" />
               <span className="absolute top-[65%] left-[70%] size-2.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_10px_red]" title="Contato" />
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="font-mono text-[10px] text-(--color-stencil)">CMF · AO VIVO</span>
+                <span className="font-mono text-[10px] text-(--color-stencil)">2ª DE · AO VIVO</span>
               </div>
             </div>
           </CardContent>

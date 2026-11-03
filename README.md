@@ -1,6 +1,6 @@
-# CMF · Defesa Brasileira Digital
+# 2ª DE · 2ª Divisão do Exército
 
-Portal institucional temático (**uso fictício / comunidade FiveM**) para o **Comando Militar do Fivem (CMF)** — história, organograma, ficha de alistamento e acompanhamento de status. Stack moderna full-stack com **TanStack Start**, **React 19**, **Supabase** e deploy pensado para **Cloudflare Workers**.
+Portal institucional temático (**uso fictício / comunidade FiveM**) para a **2ª Divisão do Exército (2ª DE)** — história, organograma, ficha de alistamento e acompanhamento de status. Stack moderna full-stack com **TanStack Start**, **React 19**, **Supabase** e deploy pensado para **Cloudflare Workers**.
 
 ---
 
@@ -29,7 +29,7 @@ Portal institucional temático (**uso fictício / comunidade FiveM**) para o **C
 | **Inscrição** (`/inscricao`) | Formulário de ficha de alistamento com validação (Zod no servidor). |
 | **Comprovante PDF** | Após envio bem-sucedido, geração de PDF local com **jsPDF** (protocolo e dados principais). |
 | **Acompanhar** (`/acompanhar`) | Consulta de status por **RG** ou **protocolo** (`EB-XXXXXXXX`). |
-| **Painel instrutor** (`/ADMCMF`) | Lista filtro/busca de inscrições; atualização de status e observações (protegido por **ACCESS_KEY**). |
+| **Painel instrutor** (`/ADM2DE`) | Lista filtro/busca de inscrições; atualização de status e observações (protegido por **ACCESS_KEY**). |
 
 Status possíveis da inscrição: `pendente`, `em_analise`, `aprovado`, `reprovado`.
 
@@ -64,7 +64,7 @@ Deploy recomendado: **Vercel** (plugin **`nitro/vite`**). Opcional: Cloudflare v
 
 ```bash
 git clone <url-do-repositório>
-cd defesa-brasileira-digital
+cd ebfivem
 npm install
 cp .env.example .env
 # Edite .env com URL e chaves do seu projeto Supabase (obrigatório o service role para server functions).
@@ -95,21 +95,21 @@ Copie `.env.example` para `.env` e preencha.
 | `SUPABASE_SERVICE_ROLE_KEY` | **Obrigatória** para `criarInscricao`, consultas admin e painel — **nunca** exponha no cliente nem em `VITE_*`. |
 | `SUPABASE_URL` | Opcional se já existir `VITE_SUPABASE_URL` (há fallback no código). |
 | `SUPABASE_PUBLISHABLE_KEY` | Usada pelo middleware de auth; pode repetir o valor publishable do dashboard. |
-| `ACCESS_KEY` | **Obrigatória.** Chave única do painel `/ADMCMF` e das operações restritas. Sem ela, ninguém entra. Use um valor longo e aleatório: quem tem a chave vê tudo. |
+| `ACCESS_KEY` | **Obrigatória.** Chave única do painel `/ADM2DE` e das operações restritas. Sem ela, ninguém entra. Use um valor longo e aleatório: quem tem a chave vê tudo. |
 
 Consulte sempre `.env.example` para comentários atualizados.
 
 ### Suporte ao conscrito
 
 - **Conscrito (público):** `/suporte` — abre o ticket informando um título.
-- **Atendente:** aba **Suporte** dentro de `/ADMCMF`.
+- **Atendente:** aba **Suporte** dentro de `/ADM2DE`.
 - Chat é "ao vivo" via polling a cada 3 segundos.
 
 ---
 
 ## Banco de dados (Supabase)
 
-- **Banco vazio:** cole `supabase/migrations/20261103162912_schema_completo_cmf.sql` no **SQL Editor**, ou rode `npm run db:migrate`.
+- **Banco vazio:** cole `supabase/migrations/20261103162912_schema_completo_2de.sql` no **SQL Editor**, ou rode `npm run db:migrate`.
 - **Banco com outras tabelas:** `supabase/reset-banco.sql` **apaga todo o schema `public`** e recria as tabelas. Não tem volta.
 
 Os dois criam o enum `status_inscricao`, as tabelas, índices, RLS, triggers de `updated_at` e o bucket privado `area-restrita`.
@@ -135,7 +135,7 @@ Tipos TypeScript gerados / alinhados estão em `src/integrations/supabase/types.
 | `/acompanhar` | `src/routes/acompanhar.tsx` | Consulta RG/protocolo |
 | `/suporte` | `src/routes/suporte.tsx` | Chat de suporte ao conscrito (protocolo + RG) |
 | `/identidade` | `src/routes/identidade.tsx` | Carteira militar digital (protocolo + RG) |
-| `/ADMCMF` | `src/routes/ADMCMF.tsx` | Painel (`ACCESS_KEY`) |
+| `/ADM2DE` | `src/routes/ADM2DE.tsx` | Painel (`ACCESS_KEY`) |
 | `/autoria` | `src/routes/autoria.tsx` | Créditos |
 
 A árvore gerada pelo TanStack Router fica em `src/routeTree.gen.ts` (não editar manualmente).

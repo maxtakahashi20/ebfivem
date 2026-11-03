@@ -3,8 +3,8 @@ import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/autoria")({
   head: () => ({
     meta: [
-      { title: "Autoria · CMF" },
-      { name: "description", content: "Direitos autorais e autoria do Comando Militar do Fivem." },
+      { title: "Autoria · 2ª DE" },
+      { name: "description", content: "Direitos autorais e autoria da 2ª Divisão do Exército." },
     ],
   }),
   component: Autoria,
@@ -24,7 +24,7 @@ function Autoria() {
           <p className="leading-relaxed">
             Todo o conteúdo, identidade visual, símbolos, logotipos, textos, fichas e
             sistemas apresentados neste portal pertencem <strong>exclusivamente ao
-            CMF — Comando Militar do Fivem</strong>. Nenhuma parte deste material pode
+            2ª DE — 2ª Divisão do Exército</strong>. Nenhuma parte deste material pode
             ser reproduzida, distribuída ou utilizada sem autorização prévia e expressa
             do Comando.
           </p>
@@ -35,7 +35,7 @@ function Autoria() {
         <section>
           <div className="stencil text-xs mb-1">USO FICTÍCIO</div>
           <p className="leading-relaxed">
-            O CMF é uma <strong>comunidade fictícia</strong> de roleplay militar dentro
+            A 2ª DE é uma <strong>comunidade fictícia</strong> de roleplay militar dentro
             do jogo FiveM. Todo o material, hierarquia, regulamentos, fichas de
             alistamento e operações descritas neste portal destinam-se
             <strong> exclusivamente ao uso ficcional dentro do jogo</strong> e não
@@ -60,7 +60,7 @@ function Autoria() {
         <div className="divider-tape opacity-60" />
 
         <div className="text-[10px] stencil text-right pt-4 border-t border-[color:var(--color-border)]">
-          © {new Date().getFullYear()} CMF · TODOS OS DIREITOS RESERVADOS
+          © {new Date().getFullYear()} 2ª DE · TODOS OS DIREITOS RESERVADOS
         </div>
       </div>
     </div>

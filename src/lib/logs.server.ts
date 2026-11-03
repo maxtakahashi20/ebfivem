@@ -8,7 +8,7 @@ export async function registrarLog(
 ): Promise<void> {
   const { error } = await supabaseAdmin.from("logs").insert({
     tipo,
-    usuario: tipo === "admin" ? "Painel ADMCMF" : "Sistema CMF",
+    usuario: tipo === "admin" ? "Painel ADM2DE" : "Sistema 2ª DE",
     acao,
     detalhe: detalhe ?? null,
   });

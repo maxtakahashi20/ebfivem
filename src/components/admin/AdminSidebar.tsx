@@ -87,7 +87,7 @@ export function AdminSidebar({ view, onViewChange, accessKey, onLogout }: Props)
           <div className="min-w-0 overflow-hidden group-data-[collapsible=icon]:hidden">
             <div className="stencil text-[9px] leading-none">PAINEL DE INSTRUTORES</div>
             <div className="font-display text-sm leading-tight tracking-widest text-(--color-olive-deep)">
-              CMF · COMANDO
+              2ª DE · COMANDO
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-/** Gera matrícula, validade e payload QR para identidade militar digital CMF */
+/** Gera matrícula, validade e payload QR para identidade militar digital 2ª DE */
 
 export type IdentidadeMilitarData = {
   protocolo: string;
@@ -29,7 +29,7 @@ function hash8(s: string): string {
 export function gerarMatricula(protocolo: string, rg: string): string {
   const ano = new Date().getFullYear();
   const seq = hash8(`${protocolo}:${rg}`);
-  return `CMF-${ano}-${seq.slice(0, 6)}`;
+  return `2DE-${ano}-${seq.slice(0, 6)}`;
 }
 
 export function gerarValidade(baseDate?: Date): { de: string; ate: string; deIso: string; ateIso: string } {
@@ -50,7 +50,7 @@ export function montarIdentidade(d: IdentidadeMilitarData): IdentidadeGerada {
   const matricula = gerarMatricula(d.protocolo, d.rg);
   const { de, ate } = gerarValidade(d.created_at ? new Date(d.created_at) : undefined);
   const qrPayload = JSON.stringify({
-    org: "CMF",
+    org: "2DE",
     matricula,
     protocolo: d.protocolo,
     rg: d.rg,
@@ -78,7 +78,7 @@ export async function gerarQrDataUrl(text: string, size = 120): Promise<string> 
   });
 }
 
-const FOTO_KEY = "cmf_id_foto_";
+const FOTO_KEY = "2de_id_foto_";
 
 export function salvarFotoLocal(matricula: string, dataUrl: string) {
   if (typeof window === "undefined") return;

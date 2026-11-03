@@ -100,7 +100,7 @@ async function carregarSysDb(): Promise<ModuloAdminPayload> {
   return {
     rows,
     stats: [
-      { label: "Tabelas CMF", value: TABELAS_SISTEMA.length },
+      { label: "Tabelas 2ª DE", value: TABELAS_SISTEMA.length },
       { label: "Total registros", value: totalRegistros },
       { label: "Status", value: "Online" },
     ],

@@ -3,7 +3,7 @@
  * Volume baixo por padrão; respeita preferência do usuário em localStorage.
  */
 
-const STORAGE_KEY = "cmf_sfx_enabled";
+const STORAGE_KEY = "2de_sfx_enabled";
 
 let ctx: AudioContext | null = null;
 let enabled = true;

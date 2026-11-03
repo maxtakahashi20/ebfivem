@@ -1,4 +1,4 @@
-export const ADMIN_THEME_KEY = "admcmf-theme";
+export const ADMIN_THEME_KEY = "adm2de-theme";
 
 export type AdminTheme = "light" | "dark";
 

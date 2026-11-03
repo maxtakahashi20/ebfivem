@@ -112,7 +112,7 @@ export function getPlaceholderMeta(view: AdminView) {
   return (
     PLACEHOLDER_COPY[view] ?? {
       title: view,
-      desc: "Módulo em desenvolvimento para a intranet CMF.",
+      desc: "Módulo em desenvolvimento para a intranet 2ª DE.",
       tag: "COMANDO",
     }
   );

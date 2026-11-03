@@ -144,7 +144,7 @@ export function FotoGaleriaSection() {
             Galeria da Tropa
           </h2>
           <p className="max-w-2xl mx-auto text-sm opacity-80">
-            Momentos de instrução, operações e presença em campo — a força do CMF em imagens.
+            Momentos de instrução, operações e presença em campo — a força da 2ª DE em imagens.
             Clique para ampliar.
           </p>
           <p className="font-mono text-[10px] mt-3 opacity-60">

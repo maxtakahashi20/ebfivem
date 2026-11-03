@@ -20,5 +20,5 @@ export function consumePendingDocProtocolo(): string | null {
 
 export function goToPainel(view: AdminView = "perfil", extras?: { protocolo?: string }) {
   queuePainelView(view, extras);
-  window.location.assign("/ADMCMF");
+  window.location.assign("/ADM2DE");
 }

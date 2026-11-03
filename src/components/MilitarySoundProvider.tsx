@@ -16,7 +16,7 @@ export function MilitarySoundProvider() {
   useEffect(() => {
     initMilitarySounds();
     if (!isMilitarySoundsEnabled()) return;
-    if (prevPath.current !== pathname && !/^\/admcmf/i.test(pathname)) {
+    if (prevPath.current !== pathname && !/^\/adm2de/i.test(pathname)) {
       playRadioSquawk();
     }
     prevPath.current = pathname;
@@ -28,7 +28,7 @@ export function MilitarySoundProvider() {
 
     const onClick = (e: MouseEvent) => {
       const t = e.target as HTMLElement;
-      if (t.closest(".admcmf-shell, [data-sfx-off]")) return;
+      if (t.closest(".adm2de-shell, [data-sfx-off]")) return;
       if (t.closest("button, .btn-olive, .btn-ghost-olive, a.tag-rank")) {
         playTerminalClick();
       }
@@ -36,7 +36,7 @@ export function MilitarySoundProvider() {
 
     const onOver = (e: MouseEvent) => {
       const t = e.target as HTMLElement;
-      if (t.closest(".admcmf-shell, [data-sfx-off]")) return;
+      if (t.closest(".adm2de-shell, [data-sfx-off]")) return;
       if (t.closest("button, .btn-olive, .btn-ghost-olive, a[href]")) {
         playHoverThrottled();
       }

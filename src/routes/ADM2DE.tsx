@@ -37,7 +37,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { motion } from "framer-motion";
 
-export const Route = createFileRoute("/ADMCMF")({
+export const Route = createFileRoute("/ADM2DE")({
   head: () => ({
     meta: [
       { title: "Comando · Painel de Instrutores" },
@@ -129,7 +129,7 @@ function Comando() {
       <div className="mx-auto max-w-md px-6 py-24">
         <form onSubmit={entrar} className="field-paper p-8 relative">
           <div className="absolute -top-3 left-6 tag-rank bg-(--color-destructive)">RESTRITO</div>
-          <p className="stencil text-xs mb-4 mt-3 text-center">PAINEL · CMF</p>
+          <p className="stencil text-xs mb-4 mt-3 text-center">PAINEL · 2ª DE</p>
           {checking ? (
             <p className="font-mono text-sm text-(--color-stencil) text-center">VERIFICANDO SESSÃO…</p>
           ) : (
@@ -194,7 +194,7 @@ function CentralComando({ accessKey, onLogout }: { accessKey: string; onLogout: 
     <SidebarProvider
       style={{ "--sidebar-width-icon": "3.5rem" } as React.CSSProperties}
     >
-      <div className="flex min-h-screen w-full admcmf-shell">
+      <div className="flex min-h-screen w-full adm2de-shell">
         <AdminSidebar
           view={view}
           onViewChange={setView}

@@ -10,11 +10,11 @@ const FotoGaleriaSection = lazy(() =>
 export const Route = createFileRoute("/organograma")({
   head: () => ({
     meta: [
-      { title: "Organograma · CMF · Composição da Tropa" },
+      { title: "Organograma · 2ª DE · Composição da Tropa" },
       {
         name: "description",
         content:
-          "Composição do CMF: batalhões, brigadas e unidades de especialização inspirados no Exército Brasileiro.",
+          "Composição da 2ª DE: batalhões, brigadas e unidades de especialização inspirados no Exército Brasileiro.",
       },
     ],
   }),
@@ -84,10 +84,10 @@ function OrganogramaPage() {
             DOCUMENTO ORG · COMPOSIÇÃO DA TROPA
           </div>
           <h1 className="font-display text-4xl md:text-6xl leading-tight text-white mb-4">
-            Organograma do CMF
+            Organograma da 2ª DE
           </h1>
           <p className="max-w-2xl opacity-90 mb-6">
-            Estrutura operacional do Comando Militar do Fivem, organizada em batalhões,
+            Estrutura operacional da 2ª Divisão do Exército, organizada em batalhões,
             brigadas e unidades de especialização inspiradas diretamente no Exército Brasileiro.
           </p>
           <a href="#galeria" className="btn-olive inline-block text-xs tracking-widest">
@@ -101,7 +101,7 @@ function OrganogramaPage() {
           <div className="stencil text-xs mb-2">SEÇÃO I · BATALHÕES E UNIDADES</div>
           <h2 className="text-3xl md:text-4xl mb-3">Batalhões e Brigadas</h2>
           <p className="text-(--color-stencil) mb-10 max-w-2xl">
-            Cada unidade possui seu próprio brasão, doutrina e missão dentro da estrutura do CMF.
+            Cada unidade possui seu próprio brasão, doutrina e missão dentro da estrutura da 2ª DE.
           </p>
 
           <div className="grid md:grid-cols-3 gap-4 mb-10">
@@ -125,7 +125,7 @@ function OrganogramaPage() {
             <div className="field-paper p-5">
               <div className="tag-rank mb-3">COMANDO · OP. ESPECIAIS</div>
               <p className="text-sm text-(--color-stencil)">
-                O COPESP integra e comanda as operações especiais do CMF, com apoio direto do
+                O COPESP integra e comanda as operações especiais da 2ª DE, com apoio direto do
                 Centro de Instrução de Operações Especiais (C I OP ESP), responsável pela
                 formação e qualificação dos operadores.
               </p>
@@ -154,7 +154,7 @@ function OrganogramaPage() {
           <h2 className="text-3xl md:text-4xl mb-3">Batalhões e Brigadas de Biomas</h2>
           <p className="text-(--color-stencil) mb-10 max-w-3xl">
             Conheça os batalhões e brigadas de especialização em biomas dentro da doutrina do
-            Exército Brasileiro, replicados no CMF para operações em terrenos diversos.
+            Exército Brasileiro, replicados na 2ª DE para operações em terrenos diversos.
           </p>
 
           <BrasaoImg
@@ -196,7 +196,7 @@ function OrganogramaPage() {
           <div className="stencil text-xs text-(--color-olive-bright) mb-2">AVISO INSTITUCIONAL</div>
           <p className="opacity-90">
             Todos os brasões e nomenclaturas são referências ao Exército Brasileiro, utilizadas
-            no CMF exclusivamente para fins de imersão, entretenimento e roleplay dentro do FiveM.
+            na 2ª DE exclusivamente para fins de imersão, entretenimento e roleplay dentro do FiveM.
           </p>
         </div>
       </section>

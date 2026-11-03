@@ -18,7 +18,7 @@ import { Route as HistoriaRouteImport } from './routes/historia'
 import { Route as DocumentosRouteImport } from './routes/documentos'
 import { Route as AutoriaRouteImport } from './routes/autoria'
 import { Route as AcompanharRouteImport } from './routes/acompanhar'
-import { Route as ADMCMFRouteImport } from './routes/ADMCMF'
+import { Route as ADM2DERouteImport } from './routes/ADM2DE'
 import { Route as IndexRouteImport } from './routes/index'
 
 const SuporteRoute = SuporteRouteImport.update({
@@ -66,9 +66,9 @@ const AcompanharRoute = AcompanharRouteImport.update({
   path: '/acompanhar',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ADMCMFRoute = ADMCMFRouteImport.update({
-  id: '/ADMCMF',
-  path: '/ADMCMF',
+const ADM2DERoute = ADM2DERouteImport.update({
+  id: '/ADM2DE',
+  path: '/ADM2DE',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -79,7 +79,7 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/ADMCMF': typeof ADMCMFRoute
+  '/ADM2DE': typeof ADM2DERoute
   '/acompanhar': typeof AcompanharRoute
   '/autoria': typeof AutoriaRoute
   '/documentos': typeof DocumentosRoute
@@ -92,7 +92,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/ADMCMF': typeof ADMCMFRoute
+  '/ADM2DE': typeof ADM2DERoute
   '/acompanhar': typeof AcompanharRoute
   '/autoria': typeof AutoriaRoute
   '/documentos': typeof DocumentosRoute
@@ -106,7 +106,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/ADMCMF': typeof ADMCMFRoute
+  '/ADM2DE': typeof ADM2DERoute
   '/acompanhar': typeof AcompanharRoute
   '/autoria': typeof AutoriaRoute
   '/documentos': typeof DocumentosRoute
@@ -121,7 +121,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/ADMCMF'
+    | '/ADM2DE'
     | '/acompanhar'
     | '/autoria'
     | '/documentos'
@@ -134,7 +134,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/ADMCMF'
+    | '/ADM2DE'
     | '/acompanhar'
     | '/autoria'
     | '/documentos'
@@ -147,7 +147,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/ADMCMF'
+    | '/ADM2DE'
     | '/acompanhar'
     | '/autoria'
     | '/documentos'
@@ -161,7 +161,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ADMCMFRoute: typeof ADMCMFRoute
+  ADM2DERoute: typeof ADM2DERoute
   AcompanharRoute: typeof AcompanharRoute
   AutoriaRoute: typeof AutoriaRoute
   DocumentosRoute: typeof DocumentosRoute
@@ -238,11 +238,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AcompanharRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/ADMCMF': {
-      id: '/ADMCMF'
-      path: '/ADMCMF'
-      fullPath: '/ADMCMF'
-      preLoaderRoute: typeof ADMCMFRouteImport
+    '/ADM2DE': {
+      id: '/ADM2DE'
+      path: '/ADM2DE'
+      fullPath: '/ADM2DE'
+      preLoaderRoute: typeof ADM2DERouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -257,7 +257,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ADMCMFRoute: ADMCMFRoute,
+  ADM2DERoute: ADM2DERoute,
   AcompanharRoute: AcompanharRoute,
   AutoriaRoute: AutoriaRoute,
   DocumentosRoute: DocumentosRoute,

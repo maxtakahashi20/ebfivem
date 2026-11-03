@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import banner from "@/assets/cmf-banner.jpg";
+import banner from "@/assets/banner-2de.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "CMF · Comando Militar do Fivem" },
-      { name: "description", content: "Portal informativo do CMF. Alistamento milsim no FiveM. Fundado em 8 de outubro de 2023." },
+      { title: "2ª DE · 2ª Divisão do Exército" },
+      { name: "description", content: "Portal informativo da 2ª DE. Alistamento milsim no FiveM. Fundada em 8 de outubro de 2023." },
     ],
   }),
   component: Index,
@@ -21,19 +21,19 @@ const valores = [
   { k: "Lealdade", d: "Fidelidade aos compromissos assumidos e aos camaradas." },
 ];
 
-// História e Propósito do CMF
+// História e Propósito da 2ª DE
 const fatos = [
-  { n: "08 OUT 2023", t: "Fundação do CMF", d: "Nasce o Comando Militar do Fivem com o propósito de trazer o milsim para dentro do FiveM brasileiro, aproximando jovens e adultos do militarismo." },
+  { n: "08 OUT 2023", t: "Fundação da 2ª DE", d: "Nasce a 2ª Divisão do Exército com o propósito de trazer o milsim para dentro do FiveM brasileiro, aproximando jovens e adultos do militarismo." },
   { n: "PROPÓSITO", t: "Milsim com Imersão Total", d: "Reproduzir, em ambiente FiveM controlado, a hierarquia, a disciplina e os procedimentos operacionais do Exército Brasileiro, com o máximo de realismo possível." },
   { n: "DOUTRINA", t: "Hierarquia e Disciplina", d: "Toda a tropa é regida por regulamento interno espelhado nos valores do Exército Brasileiro: patriotismo, civismo, lealdade, probidade." },
   { n: "FORMAÇÃO", t: "Instrução Contínua", d: "Conscritos passam por instrução de ordem unida, tiro virtual, patrulha urbana e operações de escolta, sob avaliação de instrutores designados." },
-  { n: "HOJE", t: "Tropa Ativa", d: "O CMF segue ativo com operações regulares, alistamentos abertos e uma comunidade que respeita a cadeia de comando." },
+  { n: "HOJE", t: "Tropa Ativa", d: "A 2ª DE segue ativa com operações regulares, alistamentos abertos e uma comunidade que respeita a cadeia de comando." },
 ];
 
 // Alto Comando atual
 const comando = [
-  { posto: "GENERAL DE EXÉRCITO", nome: "Arthur Vieira", funcao: "Comandante do CMF" },
-  { posto: "GENERAL DE DIVISÃO", nome: "Rafael", funcao: "Subcomandante do CMF" },
+  { posto: "GENERAL DE EXÉRCITO", nome: "Arthur Vieira", funcao: "Comandante da 2ª DE" },
+  { posto: "GENERAL DE DIVISÃO", nome: "Rafael", funcao: "Subcomandante da 2ª DE" },
 ];
 
 function Index() {
@@ -58,11 +58,11 @@ function Index() {
               ◆ ALISTAMENTO ABERTO · 2026
             </div>
             <h1 className="font-display text-5xl md:text-7xl leading-[0.95] mb-6">
-              Comando Militar<br/>
-              <span className="text-[color:var(--color-olive-bright)]">do Fivem.</span>
+              2ª Divisão<br/>
+              <span className="text-[color:var(--color-olive-bright)]">do Exército.</span>
             </h1>
             <p className="max-w-xl text-base md:text-lg opacity-95 mb-8 font-body">
-              O CMF é uma comunidade milsim dedicada a aproximar jovens e adultos do militarismo
+              A 2ª DE é uma comunidade milsim dedicada a aproximar jovens e adultos do militarismo
               dentro do FiveM, com o máximo de imersão possível. Apresente-se, registre sua ficha
               e siga a hierarquia.
             </p>
@@ -81,7 +81,7 @@ function Index() {
               <div className="absolute -top-3 left-4 tag-rank">FICHA · 01-A</div>
               <div className="stencil text-xs mb-3">CLASSIFICAÇÃO: PÚBLICO</div>
               <pre className="font-mono text-[12px] leading-relaxed whitespace-pre-wrap">
-{`OPERAÇÃO   : ALISTAMENTO CMF
+{`OPERAÇÃO   : ALISTAMENTO 2ª DE
 SETOR      : RECRUTAMENTO GERAL
 EFETIVO    : COMUNIDADE FIVEM
 PROTOCOLO  : EB-XX-XXXXXX
@@ -92,7 +92,7 @@ CONDIÇÃO   : ABERTO P/ INSCRIÇÃO
 > CONSTRUA A IMERSÃO`}
               </pre>
               <div className="mt-6 flex justify-end">
-                <div className="stamp-cmf">CMF</div>
+                <div className="stamp-2de">2ª DE</div>
               </div>
             </div>
           </div>
@@ -105,7 +105,7 @@ CONDIÇÃO   : ABERTO P/ INSCRIÇÃO
         <div className="mx-auto max-w-6xl px-6 py-20 grid md:grid-cols-2 gap-12 items-start">
           <div className="reveal">
             <div className="stencil text-xs mb-2">SEÇÃO I · OBJETIVO</div>
-            <h2 className="text-3xl md:text-4xl mb-4">Missão do CMF</h2>
+            <h2 className="text-3xl md:text-4xl mb-4">Missão da 2ª DE</h2>
             <p className="text-[color:var(--color-stencil)] leading-relaxed">
               Trazer o milsim para dentro do FiveM, aproximando jovens e adultos do militarismo com
               o máximo de imersão possível. Reproduzimos hierarquia, disciplina e procedimentos
@@ -135,7 +135,7 @@ CONDIÇÃO   : ABERTO P/ INSCRIÇÃO
           <div className="stencil text-xs mb-2">SEÇÃO II · DOUTRINA</div>
           <h2 className="text-3xl md:text-4xl mb-3">Valores do Exército Brasileiro</h2>
           <p className="text-[color:var(--color-stencil)] mb-10 max-w-2xl">
-            Os valores oficiais do Exército Brasileiro que servem de base para a conduta dentro do CMF.
+            Os valores oficiais do Exército Brasileiro que servem de base para a conduta dentro da 2ª DE.
           </p>
           <div className="grid md:grid-cols-3 gap-5">
             {valores.map((v, i) => (
@@ -157,9 +157,9 @@ CONDIÇÃO   : ABERTO P/ INSCRIÇÃO
       <section className="grad-3 py-20 text-[color:var(--color-khaki)]">
         <div className="mx-auto max-w-6xl px-6">
           <div className="stencil text-xs mb-2 text-[color:var(--color-gold)]">SEÇÃO III · DOCUMENTO HISTÓRICO</div>
-          <h2 className="text-3xl md:text-4xl mb-3 text-white">História e Propósito do CMF</h2>
+          <h2 className="text-3xl md:text-4xl mb-3 text-white">História e Propósito da 2ª DE</h2>
           <p className="text-[color:var(--color-khaki)] mb-10 max-w-2xl">
-            Da fundação em 8 de outubro de 2023 até as operações de hoje — o que o CMF é, e por que existe.
+            Da fundação em 8 de outubro de 2023 até as operações de hoje — o que a 2ª DE é, e por que existe.
           </p>
           <ol className="relative border-l-2 border-[color:var(--color-gold)] ml-3 space-y-8">
             {fatos.map((f, i) => (
@@ -174,7 +174,7 @@ CONDIÇÃO   : ABERTO P/ INSCRIÇÃO
           {/* ALTO COMANDO ATUAL */}
           <div className="mt-16">
             <div className="stencil text-xs mb-2 text-[color:var(--color-gold)]">ALTO COMANDO · EM EXERCÍCIO</div>
-            <h3 className="text-2xl md:text-3xl mb-6 text-white">Comandantes Atuais do CMF</h3>
+            <h3 className="text-2xl md:text-3xl mb-6 text-white">Comandantes Atuais da 2ª DE</h3>
             <div className="grid md:grid-cols-2 gap-5">
               {comando.map((c) => (
                 <div key={c.nome} className="field-paper p-6 text-[color:var(--color-stencil)] reveal">
@@ -196,7 +196,7 @@ CONDIÇÃO   : ABERTO P/ INSCRIÇÃO
           <div className="stencil text-xs text-[color:var(--color-olive-bright)] mb-2">CONVOCAÇÃO</div>
           <h2 className="text-4xl md:text-5xl mb-4">A tropa conta com você.</h2>
           <p className="opacity-90 mb-8 max-w-2xl mx-auto">
-            Preencha sua ficha de alistamento. Sua candidatura será analisada por um instrutor designado do CMF.
+            Preencha sua ficha de alistamento. Sua candidatura será analisada por um instrutor designado da 2ª DE.
           </p>
           <Link to="/inscricao" className="btn-olive text-base">
             ▸ Apresentar-se ao Comando

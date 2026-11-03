@@ -1,4 +1,4 @@
-// Server functions for the CMF enrollment system.
+// Server functions for the 2ª DE enrollment system.
 // Reads/updates are gated by a shared admin key (ACCESS_KEY env).
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";

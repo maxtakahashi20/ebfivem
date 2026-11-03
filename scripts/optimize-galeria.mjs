@@ -21,17 +21,17 @@ const EXCLUIR_GALERIA = new Set([
   "batalhoes-3.png",
   "batalhoes-4.png",
   "batalhoes-5.png",
-  "cmf-banner.jpg",
-  "cmf-logo.png",
+  "banner-2de.jpg",
+  "logo-2de.png",
 ]);
 
 const LEGENDAS = {
-  INFANTARIA_CMF1: "Infantaria · CMF",
-  PREC_VIEIRA: "Precursores · CMF",
+  INFANTARIA_2DE1: "Infantaria · 2ª DE",
+  PREC_VIEIRA: "Precursores · 2ª DE",
   vieirasniper: "Operador · Precursor",
   vieiracmds: "Comandos · Operações Especiais",
-  veieeiraaaa: "Operações · CMF",
-  mec3: "Equipe tática · CMF",
+  veieeiraaaa: "Operações · 2ª DE",
+  mec3: "Equipe tática · 2ª DE",
   content: "Operação conjunta",
   FullSizeRender: "Registro de campo",
   "Captura_de_tela_2024-07-03_193945": "Instrução · 2024",
@@ -42,7 +42,7 @@ const IMG_EXT = /\.(png|jpe?g|webp)$/i;
 function legenda(base) {
   if (LEGENDAS[base]) return LEGENDAS[base];
   if (/^[0-9]+$/.test(base)) return "Registro operacional";
-  if (/^A[0-9A-F-]{30,}$/i.test(base)) return "Operação CMF";
+  if (/^A[0-9A-F-]{30,}$/i.test(base)) return "Operação 2ª DE";
   return base
     .replace(/_/g, " ")
     .replace(/([a-z])([A-Z])/g, "$1 $2")

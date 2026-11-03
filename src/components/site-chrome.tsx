@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import logo from "@/assets/cmf-logo.png";
+import logo from "@/assets/logo-2de.png";
 import { SfxToggle } from "@/components/SfxToggle";
 import { AdminThemeToggle } from "@/components/admin/AdminThemeToggle";
 
@@ -16,24 +16,24 @@ const links = [
 ];
 
 export function isPainelPath(pathname: string) {
-  return /^\/admcmf(\/|$)/i.test(pathname);
+  return /^\/adm2de(\/|$)/i.test(pathname);
 }
 
 function BrandMark() {
   return (
     <Link to="/" className="flex items-center gap-3">
-      <img src={logo} alt="CMF" className="h-12 w-12 object-contain drop-shadow" />
+      <img src={logo} alt="2ª DE" className="h-12 w-12 object-contain drop-shadow" />
       <div className="leading-tight">
         <div className="font-display text-xl tracking-widest text-(--color-olive-deep)">
-          CMF
+          2ª DE
         </div>
-        <div className="stencil text-[10px]">COMANDO MILITAR DO FIVEM</div>
+        <div className="stencil text-[10px]">2ª DIVISÃO DO EXÉRCITO</div>
       </div>
     </Link>
   );
 }
 
-/** Painel /ADMCMF: logo + título + toggle de tema. */
+/** Painel /ADM2DE: logo + título + toggle de tema. */
 export function PanelBrandHeader() {
   return (
     <motion.header
@@ -76,7 +76,7 @@ export function Header() {
             );
           })}
           <Link
-            to="/ADMCMF"
+            to="/ADM2DE"
             className="ml-2 tag-rank bg-(--color-olive-bright) hover:opacity-90 shrink-0"
           >
             ◆ Painel
@@ -96,7 +96,7 @@ export function Footer({ pathname }: { pathname: string }) {
       <div className="mx-auto max-w-6xl px-6 py-10 grid md:grid-cols-2 gap-8 text-sm">
         <div>
           <div className="font-display tracking-widest text-(--color-gold) mb-2">
-            CMF · COMANDO MILITAR DO FIVEM
+            2ª DE · 2ª DIVISÃO DO EXÉRCITO
           </div>
           <p className="opacity-80">
             Comunidade milsim brasileira dentro do FiveM. Fundada em 8 de outubro de 2023.
@@ -117,7 +117,7 @@ export function Footer({ pathname }: { pathname: string }) {
           <SfxToggle />
         </div>
         <p>
-          © {new Date().getFullYear()} CMF · COMANDO MILITAR DO FIVEM · DIREITOS RESERVADOS · USO
+          © {new Date().getFullYear()} 2ª DE · 2ª DIVISÃO DO EXÉRCITO · DIREITOS RESERVADOS · USO
           FICTÍCIO
         </p>
       </div>

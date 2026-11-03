@@ -121,7 +121,7 @@ export function IdentidadeMilitarDigital({ dados, aprovado = true }: Props) {
               <span className="stencil">VALIDADE:</span> {id.validadeDe} → {id.validadeAte}
             </p>
             <p className="opacity-80">
-              O QR Code valida os dados no ambiente fictício CMF/FiveM. Adicione sua foto oficial
+              O QR Code valida os dados no ambiente fictício 2ª DE/FiveM. Adicione sua foto oficial
               (3×4) para personalizar a carteira.
             </p>
           </div>

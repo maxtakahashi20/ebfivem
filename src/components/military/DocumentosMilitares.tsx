@@ -30,7 +30,7 @@ export function DocumentosMilitares({ militarDefault }: Props) {
   const [destinatario, setDestinatario] = useState("");
   const [referencia, setReferencia] = useState("");
   const [corpo, setCorpo] = useState("");
-  const [autoridade, setAutoridade] = useState("COMANDO MILITAR DO FIVEM");
+  const [autoridade, setAutoridade] = useState("2ª DIVISÃO DO EXÉRCITO");
   const [nomeMilitar, setNomeMilitar] = useState(
     militarDefault ? `${militarDefault.nome} ${militarDefault.sobrenome}`.trim() : "",
   );

@@ -3,8 +3,8 @@ import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/historia")({
   head: () => ({
     meta: [
-      { title: "História · CMF" },
-      { name: "description", content: "História do Comando Militar do Fivem — fundado em 8 de outubro de 2023." },
+      { title: "História · 2ª DE" },
+      { name: "description", content: "História da 2ª Divisão do Exército — fundada em 8 de outubro de 2023." },
     ],
   }),
   component: Historia,
@@ -13,11 +13,11 @@ export const Route = createFileRoute("/historia")({
 const cap = [
   {
     ano: "08 OUT 2023 — Fundação",
-    txt: "O Comando Militar do Fivem (CMF) é fundado com o propósito de trazer o milsim para dentro do FiveM e aproximar jovens e adultos do militarismo com o máximo de imersão possível.",
+    txt: "A 2ª Divisão do Exército (2ª DE) é fundada com o propósito de trazer o milsim para dentro do FiveM e aproximar jovens e adultos do militarismo com o máximo de imersão possível.",
   },
   {
     ano: "Estruturação — Hierarquia",
-    txt: "Definição do regulamento interno, da cadeia de comando e das doutrinas de instrução. O CMF adota a hierarquia e os valores do Exército Brasileiro como base de conduta.",
+    txt: "Definição do regulamento interno, da cadeia de comando e das doutrinas de instrução. A 2ª DE adota a hierarquia e os valores do Exército Brasileiro como base de conduta.",
   },
   {
     ano: "Primeiras Operações",
@@ -29,17 +29,17 @@ const cap = [
   },
   {
     ano: "Hoje — Imersão Total",
-    txt: "O CMF segue ativo, com operações regulares, formação contínua e uma comunidade que respeita a hierarquia, a disciplina e a camaradagem militar.",
+    txt: "A 2ª DE segue ativa, com operações regulares, formação contínua e uma comunidade que respeita a hierarquia, a disciplina e a camaradagem militar.",
   },
 ];
 
 function Historia() {
   return (
     <div className="mx-auto max-w-4xl px-6 py-16">
-      <div className="stencil text-xs mb-2">DOCUMENTO HISTÓRICO · CMF</div>
-      <h1 className="text-4xl md:text-5xl mb-2">História do CMF</h1>
+      <div className="stencil text-xs mb-2">DOCUMENTO HISTÓRICO · 2ª DE</div>
+      <h1 className="text-4xl md:text-5xl mb-2">História da 2ª DE</h1>
       <p className="text-[color:var(--color-stencil)] mb-8 max-w-2xl">
-        Comando Militar do Fivem — fundado em 8 de outubro de 2023.
+        2ª Divisão do Exército — fundada em 8 de outubro de 2023.
       </p>
       <div className="field-paper p-8 space-y-6">
         {cap.map((c, i) => (

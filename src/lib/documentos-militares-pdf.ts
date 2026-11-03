@@ -35,7 +35,7 @@ function headerBand(doc: jsPDF, W: number, M: number, title: string, subtitle: s
   doc.setTextColor(220, 215, 170);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
-  doc.text("CMF · COMANDO MILITAR DO FIVEM", W / 2, M + 2, { align: "center" });
+  doc.text("2ª DE · 2ª DIVISÃO DO EXÉRCITO", W / 2, M + 2, { align: "center" });
   doc.setFontSize(11);
   doc.text(title, W / 2, M + 9, { align: "center" });
   doc.setFont("helvetica", "normal");
@@ -78,7 +78,7 @@ function footer(doc: jsPDF, W: number, H: number, M: number, ref: string) {
   doc.setFontSize(7);
   doc.setFont("helvetica", "normal");
   doc.text(
-    `CMF · DOC ${ref} · USO FICTÍCIO FIVEM · ${new Date().toLocaleString("pt-BR")}`,
+    `2ª DE · DOC ${ref} · USO FICTÍCIO FIVEM · ${new Date().toLocaleString("pt-BR")}`,
     W / 2,
     H - M - 2,
     { align: "center" },
@@ -180,7 +180,7 @@ export function gerarDocumentoMilitarPdf(input: DocumentoMilitarInput): jsPDF {
   doc.line(W - M - 60, y, W - M, y);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
-  doc.text(input.autoridade ?? "COMANDO MILITAR DO FIVEM", M, y + 4);
+  doc.text(input.autoridade ?? "2ª DIVISÃO DO EXÉRCITO", M, y + 4);
   doc.text("CARIMBO / PROTOCOLO", W - M - 60, y + 4);
 
   const ref =
@@ -193,7 +193,7 @@ export function baixarDocumentoMilitar(input: DocumentoMilitarInput) {
   const ref =
     input.referencia ?? `${input.tipo}-${new Date().toISOString().slice(0, 10)}`;
   const pdf = gerarDocumentoMilitarPdf(input);
-  pdf.save(`CMF-${input.tipo}-${ref}.pdf`);
+  pdf.save(`2DE-${input.tipo}-${ref}.pdf`);
 }
 
 /** ISO ID-1 horizontal — título de eleitor (~86 × 54 mm) com margem interna extra. */
@@ -265,7 +265,7 @@ export async function gerarCarteiraMilitarPdf(
   doc.setTextColor(220, 215, 170);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(3.8);
-  doc.text("REPUBLICA - CMF - FIVEM", W / 2, INSET + 3.2, { align: "center" });
+  doc.text("REPUBLICA - 2ª DE - FIVEM", W / 2, INSET + 3.2, { align: "center" });
   doc.setFontSize(5.4);
   doc.text("IDENTIDADE MILITAR", W / 2, INSET + 7, { align: "center" });
 
@@ -342,7 +342,7 @@ export async function gerarCarteiraMilitarPdf(
   doc.setTextColor(80, 90, 60);
   const footLeft = pdfSafe(`PROTOCOLO ${id.protocolo}`, 28);
   doc.text(footLeft, INSET + 1, footerTop + 3.6, { maxWidth: infoW });
-  doc.text("DOC. FICTICIO - CMF", W - INSET - 1, footerTop + 3.6, { align: "right" });
+  doc.text("DOC. FICTICIO - 2ª DE", W - INSET - 1, footerTop + 3.6, { align: "right" });
 
   doc.setDrawColor(OLIVE.r, OLIVE.g, OLIVE.b);
   doc.setLineWidth(0.35);
@@ -356,5 +356,5 @@ export async function baixarCarteiraMilitar(
   qrDataUrl: string,
 ) {
   const pdf = await gerarCarteiraMilitarPdf(id, qrDataUrl);
-  pdf.save(`CMF-carteira-${id.matricula}.pdf`);
+  pdf.save(`2ª DE-carteira-${id.matricula}.pdf`);
 }

@@ -20,7 +20,7 @@ import { AdminThemeProvider } from "@/components/admin/AdminThemeProvider";
 import { ADMIN_THEME_KEY } from "@/lib/admin-theme";
 
 import appCss from "../styles.css?url";
-import favicon from "../assets/cmf-logo.png?url";
+import favicon from "../assets/logo-2de.png?url";
 
 function NotFoundComponent() {
   return (
@@ -62,13 +62,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Exército Brasileiro · Portal Oficial de Alistamento" },
-      { name: "description", content: "Portal oficial do Exército Brasileiro. História, valores, missão e alistamento operacional." },
-      { property: "og:title", content: "Exército Brasileiro · Portal Oficial de Alistamento" },
-      { property: "og:description", content: "Portal oficial do Exército Brasileiro. História, valores, missão e alistamento operacional." },
+      { title: "2ª Divisão do Exército · Alistamento no FiveM" },
+      { name: "description", content: "Comunidade fictícia de roleplay militar no FiveM. História, valores, missão e alistamento operacional." },
+      { property: "og:title", content: "2ª Divisão do Exército · Alistamento no FiveM" },
+      { property: "og:description", content: "Comunidade fictícia de roleplay militar no FiveM. História, valores, missão e alistamento operacional." },
       { property: "og:type", content: "website" },
-      { name: "twitter:title", content: "Exército Brasileiro · Portal Oficial de Alistamento" },
-      { name: "twitter:description", content: "Portal oficial do Exército Brasileiro. História, valores, missão e alistamento operacional." },
+      { name: "twitter:title", content: "2ª Divisão do Exército · Alistamento no FiveM" },
+      { name: "twitter:description", content: "Comunidade fictícia de roleplay militar no FiveM. História, valores, missão e alistamento operacional." },
       { name: "twitter:card", content: "summary" },
     ],
     links: [
@@ -87,7 +87,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: React.ReactNode }) {
-  const themeBootScript = `(function(){try{if(/^\\/admcmf(\\/|$)/i.test(location.pathname)&&localStorage.getItem("${ADMIN_THEME_KEY}")==="dark"){document.documentElement.classList.add("dark")}}catch(e){}})()`;
+  const themeBootScript = `(function(){try{if(/^\\/adm2de(\\/|$)/i.test(location.pathname)&&localStorage.getItem("${ADMIN_THEME_KEY}")==="dark"){document.documentElement.classList.add("dark")}}catch(e){}})()`;
 
   return (
     <html lang="pt-BR">

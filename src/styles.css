@@ -268,7 +268,7 @@
     transform: rotate(-6deg);
     opacity: 0.85;
   }
-  .stamp-cmf {
+  .stamp-2de {
     display: inline-block;
     border: 4px solid #0a0a0a;
     padding: 0.4rem 1.4rem;
@@ -417,7 +417,7 @@
     animation: galeria-lightbox-in 0.35s ease-out both;
   }
 
-  /* ─── HUD militar — painel /ADMCMF ─────────────────────────── */
+  /* ─── HUD militar — painel /ADM2DE ─────────────────────────── */
   .hud-border {
     border: 1px solid oklch(0.30 0.08 140 / 60%);
     position: relative;
@@ -450,7 +450,7 @@
     color: oklch(0.80 0.12 140);
   }
 
-  /* Scanline overlay for /ADMCMF terminal aesthetic */
+  /* Scanline overlay for /ADM2DE terminal aesthetic */
   .scanlines-overlay {
     background: repeating-linear-gradient(
       0deg,
@@ -473,26 +473,26 @@
   }
   .terminal-flash { animation: terminal-flash 2s ease infinite; }
 
-  /* Sidebar colapsada — ícones centralizados sem corte (/ADMCMF) */
-  .admcmf-shell .group[data-collapsible="icon"] [data-sidebar="sidebar"] {
+  /* Sidebar colapsada — ícones centralizados sem corte (/ADM2DE) */
+  .adm2de-shell .group[data-collapsible="icon"] [data-sidebar="sidebar"] {
     overflow: visible;
   }
-  .admcmf-shell .group[data-collapsible="icon"] [data-sidebar="content"] {
+  .adm2de-shell .group[data-collapsible="icon"] [data-sidebar="content"] {
     overflow: visible;
   }
-  .admcmf-shell .group[data-collapsible="icon"] [data-sidebar="group"] {
+  .adm2de-shell .group[data-collapsible="icon"] [data-sidebar="group"] {
     align-items: center;
   }
-  .admcmf-shell .group[data-collapsible="icon"] [data-sidebar="menu"] {
+  .adm2de-shell .group[data-collapsible="icon"] [data-sidebar="menu"] {
     align-items: center;
     width: 100%;
   }
-  .admcmf-shell .group[data-collapsible="icon"] [data-sidebar="menu-item"] {
+  .adm2de-shell .group[data-collapsible="icon"] [data-sidebar="menu-item"] {
     width: 100%;
     display: flex;
     justify-content: center;
   }
-  .admcmf-shell .group[data-collapsible="icon"] [data-sidebar="menu-button"] {
+  .adm2de-shell .group[data-collapsible="icon"] [data-sidebar="menu-button"] {
     justify-content: center;
     align-items: center;
     width: 2.25rem !important;
@@ -501,10 +501,10 @@
     padding: 0 !important;
     margin-inline: auto;
   }
-  .admcmf-shell .group[data-collapsible="icon"] [data-sidebar="menu-button"] > span {
+  .adm2de-shell .group[data-collapsible="icon"] [data-sidebar="menu-button"] > span {
     display: none;
   }
-  .admcmf-shell .group[data-collapsible="icon"] [data-sidebar="group-label"] {
+  .adm2de-shell .group[data-collapsible="icon"] [data-sidebar="group-label"] {
     display: none;
   }
 
@@ -583,7 +583,7 @@
     background: oklch(0.12 0.018 110) !important;
     border-color: oklch(0.92 0.02 90 / 15%) !important;
   }
-  .dark .admcmf-shell {
+  .dark .adm2de-shell {
     background: var(--color-background);
   }
   .dark .adm-nav-active {

@@ -18,7 +18,7 @@ export function CarteiraMilitarVisual({
       <div className="id-militar-holo" aria-hidden />
       <div className="id-militar-inner">
         <div className="id-militar-header">
-          <span className="text-[8px] tracking-[0.2em] opacity-90">REPÚBLICA · CMF · FIVEM</span>
+          <span className="text-[8px] tracking-[0.2em] opacity-90">REPÚBLICA · 2ª DE · FIVEM</span>
           <span className="text-[9px] font-display tracking-widest">IDENTIDADE MILITAR</span>
         </div>
         <div className="id-militar-body">
@@ -77,13 +77,13 @@ export function CarteiraMilitarVisual({
           </div>
           <img
             src={qrUrl}
-            alt="QR Code identidade CMF"
+            alt="QR Code identidade 2ª DE"
             className="size-[72px] shrink-0 border border-(--color-olive-deep)/40"
           />
         </div>
         <div className="id-militar-footer font-mono text-[7px] opacity-80 flex justify-between gap-2">
           <span className="truncate">PROTOCOLO {id.protocolo}</span>
-          <span className="shrink-0">DOC. FICTÍCIO · CMF</span>
+          <span className="shrink-0">DOC. FICTÍCIO · 2ª DE</span>
         </div>
       </div>
     </div>
