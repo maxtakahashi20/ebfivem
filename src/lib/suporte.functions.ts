@@ -1,4 +1,5 @@
 import { exigirHumano, exigirLimite } from "@/lib/limite.server";
+import { registrarAuditoria } from "@/lib/auditoria.server";
 import { exigirPapel } from "@/lib/painel-auth.server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
@@ -314,6 +315,7 @@ export const encerrarTicketAdmin = createServerFn({ method: "POST" })
       autor_discord_id: profile.id,
       mensagem: `Atendimento encerrado por ${profile.displayName}.`,
     });
+    await registrarAuditoria(profile, "Chamado encerrado", data.ticketId);
 
     return { ok: true };
   });

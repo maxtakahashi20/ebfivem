@@ -3,6 +3,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { exigirHumano, exigirLimite } from "@/lib/limite.server";
+import { registrarAuditoria } from "@/lib/auditoria.server";
 import { exigirPapel } from "@/lib/painel-auth.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
@@ -193,15 +194,19 @@ export const atualizarInscricao = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    await exigirPapel(data.session, "instrutor");
-    const { error } = await supabaseAdmin
+    const autor = await exigirPapel(data.session, "instrutor");
+    const { data: atualizada, error } = await supabaseAdmin
       .from("inscricoes")
       .update({
         status: data.status,
         observacoes_instrutor: data.observacoes_instrutor ?? null,
       })
-      .eq("id", data.id);
+      .eq("id", data.id)
+      .select("protocolo")
+      .maybeSingle();
     if (error) throw new Error(error.message);
+    if (!atualizada) throw new Error("Inscrição não encontrada.");
+    await registrarAuditoria(autor, `Inscrição → ${data.status}`, atualizada.protocolo);
 
     if (data.status === "aprovado") {
       const { data: row } = await supabaseAdmin
@@ -245,7 +250,7 @@ export const excluirInscricao = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    await exigirPapel(data.session, "instrutor");
+    const autor = await exigirPapel(data.session, "instrutor");
 
     const { data: row, error: fetchErr } = await supabaseAdmin
       .from("inscricoes")
@@ -257,6 +262,11 @@ export const excluirInscricao = createServerFn({ method: "POST" })
 
     const { error } = await supabaseAdmin.from("inscricoes").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
+    await registrarAuditoria(
+      autor,
+      "Inscrição excluída",
+      `${row.protocolo} (${row.nome} ${row.sobrenome})`,
+    );
 
     enviarLogOperacional({
       acao: "EXCLUSAO",

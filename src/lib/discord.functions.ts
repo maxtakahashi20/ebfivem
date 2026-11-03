@@ -1,3 +1,4 @@
+import { registrarAuditoria } from "@/lib/auditoria.server";
 import { exigirPapel } from "@/lib/painel-auth.server";
 // Discord webhook integration for 2ª DE admin panel.
 // Reads DISCORD_WEBHOOK_URL (general / inscriptions) and DISCORD_WEBHOOK_LOG_URL (admin logs).
@@ -249,7 +250,7 @@ export const enviarComunicadoDiscord = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    await exigirPapel(data.session, "alto-comando");
+    const autor = await exigirPapel(data.session, "alto-comando");
 
     const url = assertWebhookConfigured(process.env.DISCORD_WEBHOOK_URL);
 
@@ -275,6 +276,7 @@ export const enviarComunicadoDiscord = createServerFn({ method: "POST" })
       throw new Error(discordErrorMessage(result));
     }
 
+    await registrarAuditoria(autor, "Comunicado enviado", `[${meta.label}] ${data.titulo}`);
     await enviarLogOperacional({
       acao: "COMUNICADO",
       descricao: `[${meta.label}] ${data.titulo}`,

@@ -1,3 +1,4 @@
+import { registrarAuditoria } from "@/lib/auditoria.server";
 import { exigirPapel } from "@/lib/painel-auth.server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
@@ -232,7 +233,7 @@ export const criarRegistroModulo = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const view = data.view as AdminView;
-    await exigirPapel(data.session, papelDaView(view));
+    const autor = await exigirPapel(data.session, papelDaView(view));
 
     const form = getModuloForm(view);
     const db = MODULO_DB[view];
@@ -260,7 +261,7 @@ export const criarRegistroModulo = createServerFn({ method: "POST" })
       .maybeSingle();
     if (error) throw new Error(error.message);
 
-    await registrarLogAdmin(`Registro criado em ${db.table}`, view);
+    await registrarAuditoria(autor, `Registro criado em ${db.table}`, JSON.stringify(data.valores));
     return { ok: true, id: (inserted?.id as string | undefined) ?? null };
   });
 
@@ -270,7 +271,7 @@ export const executarAcaoEspecial = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const view = data.view as AdminView;
-    await exigirPapel(data.session, papelDaView(view));
+    const autor = await exigirPapel(data.session, papelDaView(view));
     const acao = getAcaoEspecial(view);
     if (!acao) throw new Error("Ação não disponível");
 
@@ -288,7 +289,7 @@ export const executarAcaoEspecial = createServerFn({ method: "POST" })
         .update({ latencia_ms: 35 + Math.floor(Math.random() * 30), online: true })
         .eq("id", 1);
 
-      await registrarLogAdmin("Sincronização Discord executada", view);
+      await registrarAuditoria(autor, "Sincronização Discord executada", view);
       return { ok: true, mensagem: "Sincronização concluída" };
     }
 
@@ -303,7 +304,7 @@ export const executarAcaoEspecial = createServerFn({ method: "POST" })
       });
       if (error) throw new Error(error.message);
 
-      await registrarLogAdmin(`Backup registrado: ${backupId}`, view);
+      await registrarAuditoria(autor, `Backup registrado: ${backupId}`, view);
       return { ok: true, mensagem: `Backup ${backupId} registrado` };
     }
 
@@ -315,25 +316,16 @@ export const atualizarStatusDiscordBot = createServerFn({ method: "POST" })
     z.object({ session: z.string() }).parse(input),
   )
   .handler(async ({ data }) => {
-    await exigirPapel(data.session, papelDaView("discord-bot"));
+    const autor = await exigirPapel(data.session, papelDaView("discord-bot"));
     const latencia = 30 + Math.floor(Math.random() * 50);
     const { error } = await supabaseAdmin
       .from("discord_bot_status")
       .update({ online: true, latencia_ms: latencia, uptime_pct: "99.8%" })
       .eq("id", 1);
     if (error) throw new Error(error.message);
-    await registrarLogAdmin("Status do bot atualizado", "discord-bot");
+    await registrarAuditoria(autor, "Status do bot atualizado", "discord-bot");
     return { ok: true, latencia_ms: latencia };
   });
-
-async function registrarLogAdmin(acao: string, view: string) {
-  await supabaseAdmin.from("logs").insert({
-    tipo: "admin",
-    usuario: "Painel ADM2DE",
-    acao,
-    detalhe: view,
-  });
-}
 
 async function carregarDiscordBot(): Promise<ModuloAdminPayload> {
   const { data, error } = await supabaseAdmin
@@ -389,7 +381,7 @@ export const uploadPdfRestrito = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const view = data.view as AdminView;
     ensurePdfView(view);
-    await exigirPapel(data.session, papelDaView(view));
+    const autor = await exigirPapel(data.session, papelDaView(view));
 
     const bytes = base64ToUint8Array(data.base64);
     if (bytes.length > 25 * 1024 * 1024) {
@@ -414,7 +406,7 @@ export const uploadPdfRestrito = createServerFn({ method: "POST" })
       .eq("id", data.recordId);
     if (dbErr) throw new Error(dbErr.message);
 
-    await registrarLogAdmin(`PDF anexado a ${view} (${data.filename})`, view);
+    await registrarAuditoria(autor, `PDF anexado a ${view} (${data.filename})`, view);
     return { ok: true, path };
   });
 
@@ -428,7 +420,7 @@ export const baixarPdfRestrito = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    await exigirPapel(data.session, "alto-comando");
+    const autor = await exigirPapel(data.session, "alto-comando");
 
     const { data: rec, error } = await supabaseAdmin
       .from("documentos_restritos")
@@ -443,7 +435,7 @@ export const baixarPdfRestrito = createServerFn({ method: "POST" })
       .createSignedUrl(rec.pdf_path, 60);
     if (signErr || !signed) throw new Error(signErr?.message ?? "Falha ao gerar URL");
 
-    await registrarLogAdmin(`PDF baixado (${rec.pdf_filename ?? rec.pdf_path})`, "restrito");
+    await registrarAuditoria(autor, `PDF baixado (${rec.pdf_filename ?? rec.pdf_path})`, "restrito");
     return { url: signed.signedUrl, filename: rec.pdf_filename ?? "documento.pdf" };
   });
 
@@ -457,7 +449,7 @@ export const removerPdfRestrito = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    await exigirPapel(data.session, "alto-comando");
+    const autor = await exigirPapel(data.session, "alto-comando");
 
     const { data: rec, error } = await supabaseAdmin
       .from("documentos_restritos")
@@ -484,6 +476,6 @@ export const removerPdfRestrito = createServerFn({ method: "POST" })
       descricao: `PDF removido de documento restrito ${data.recordId}`,
     }).catch(() => {});
 
-    await registrarLogAdmin(`PDF removido (${rec.pdf_path})`, "restrito");
+    await registrarAuditoria(autor, `PDF removido (${rec.pdf_path})`, "restrito");
     return { ok: true };
   });
