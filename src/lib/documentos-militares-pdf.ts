@@ -368,5 +368,5 @@ export async function baixarCarteiraMilitar(
   options?: CarteiraPdfOptions,
 ) {
   const pdf = await gerarCarteiraMilitarPdf(id, qrDataUrl, options);
-  pdf.save(`2ª DE-carteira-${id.matricula}.pdf`);
+  pdf.save(`2DE-carteira-${id.matricula}.pdf`);
 }
