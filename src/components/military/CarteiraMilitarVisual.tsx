@@ -1,24 +1,17 @@
 import type { IdentidadeGerada } from "@/lib/militar-identidade";
-import type { DiscordProfile } from "@/lib/discord-oauth";
-import { DiscordRoleTags } from "@/components/military/DiscordRoleTags";
 
 type Props = {
   id: IdentidadeGerada;
   qrUrl: string;
-  discordProfile?: DiscordProfile | null;
   onUpload?: () => void;
-  footerLeft?: string;
 };
 
 export function CarteiraMilitarVisual({
   id,
   qrUrl,
-  discordProfile,
   onUpload,
-  footerLeft,
 }: Props) {
-  const nome =
-    discordProfile?.displayName?.toUpperCase() ?? `${id.nome} ${id.sobrenome}`.toUpperCase();
+  const nome = `${id.nome} ${id.sobrenome}`.toUpperCase();
 
   return (
     <div className="id-militar-card relative w-full max-w-md select-none">
@@ -81,12 +74,6 @@ export function CarteiraMilitarVisual({
                 {id.validadeDe} — {id.validadeAte}
               </div>
             </div>
-            {discordProfile && discordProfile.roles.length > 0 && (
-              <div className="pt-1">
-                <div className="stencil text-[7px] opacity-70 mb-0.5">CARGOS</div>
-                <DiscordRoleTags roles={discordProfile.roles} />
-              </div>
-            )}
           </div>
           <img
             src={qrUrl}
@@ -95,7 +82,7 @@ export function CarteiraMilitarVisual({
           />
         </div>
         <div className="id-militar-footer font-mono text-[7px] opacity-80 flex justify-between gap-2">
-          <span className="truncate">{footerLeft ?? `PROTOCOLO ${id.protocolo}`}</span>
+          <span className="truncate">PROTOCOLO {id.protocolo}</span>
           <span className="shrink-0">DOC. FICTÍCIO · CMF</span>
         </div>
       </div>

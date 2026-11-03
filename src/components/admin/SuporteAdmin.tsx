@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { useDiscordSession } from "@/hooks/useDiscordSession";
-import { DISCORD_SESSION_KEY } from "@/lib/discord-oauth";
 import {
   encerrarTicketAdmin,
   enviarMensagemAdmin,
@@ -19,13 +17,7 @@ const MAX_LEN = 2000;
 
 type StatusFilter = "todos" | "aberto" | "em_atendimento" | "encerrado";
 
-function getSessionToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(DISCORD_SESSION_KEY);
-}
-
 export function SuporteAdmin({ accessKey }: { accessKey: string }) {
-  const { altoComando } = useDiscordSession();
   const listarTickets = useServerFn(listarTicketsAdmin);
   const listarMensagens = useServerFn(listarMensagensAdmin);
   const enviar = useServerFn(enviarMensagemAdmin);
@@ -44,14 +36,11 @@ export function SuporteAdmin({ accessKey }: { accessKey: string }) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const reloadTickets = useCallback(async () => {
-    const session = getSessionToken();
-    if (!session) return;
     setLoadingTickets(true);
     try {
       const res = await listarTickets({
         data: {
           accessKey,
-          session,
           status: filter === "todos" ? undefined : filter,
         },
       });
@@ -64,11 +53,10 @@ export function SuporteAdmin({ accessKey }: { accessKey: string }) {
   }, [accessKey, filter, listarTickets]);
 
   const reloadMensagens = useCallback(async () => {
-    const session = getSessionToken();
-    if (!session || !selected) return;
+    if (!selected) return;
     try {
       const res = await listarMensagens({
-        data: { accessKey, session, ticketId: selected },
+        data: { accessKey, ticketId: selected },
       });
       setTicket(res.ticket);
       setMensagens(res.mensagens);
@@ -78,11 +66,10 @@ export function SuporteAdmin({ accessKey }: { accessKey: string }) {
   }, [accessKey, listarMensagens, selected]);
 
   useEffect(() => {
-    if (!altoComando) return;
     void reloadTickets();
     const id = setInterval(reloadTickets, POLL_MS * 2);
     return () => clearInterval(id);
-  }, [altoComando, reloadTickets]);
+  }, [reloadTickets]);
 
   useEffect(() => {
     if (!selected) return;
@@ -102,15 +89,10 @@ export function SuporteAdmin({ accessKey }: { accessKey: string }) {
 
   const handleSend = async () => {
     if (!selected || !novaMensagem.trim() || sending) return;
-    const session = getSessionToken();
-    if (!session) {
-      toast.error("Sessão Discord necessária.");
-      return;
-    }
     setSending(true);
     try {
       const res = await enviar({
-        data: { accessKey, session, ticketId: selected, mensagem: novaMensagem.trim() },
+        data: { accessKey, ticketId: selected, mensagem: novaMensagem.trim() },
       });
       setMensagens((prev) => [...prev, res.mensagem]);
       setNovaMensagem("");
@@ -124,12 +106,10 @@ export function SuporteAdmin({ accessKey }: { accessKey: string }) {
 
   const handleEncerrar = async () => {
     if (!selected) return;
-    const session = getSessionToken();
-    if (!session) return;
     const ok = window.confirm("Encerrar este atendimento?");
     if (!ok) return;
     try {
-      await encerrar({ data: { accessKey, session, ticketId: selected } });
+      await encerrar({ data: { accessKey, ticketId: selected } });
       toast.success("Atendimento encerrado");
       void reloadTickets();
       void reloadMensagens();
@@ -137,31 +117,6 @@ export function SuporteAdmin({ accessKey }: { accessKey: string }) {
       toast.error(e instanceof Error ? e.message : "Falha ao encerrar");
     }
   };
-
-  if (!altoComando) {
-    return (
-      <div>
-        <AdminPageHeader
-          tag="SUPORTE"
-          title="Suporte ao conscrito"
-          sub="Chat ao vivo com candidatos do CMF."
-        />
-        <Card className="field-paper border-0 shadow-none">
-          <CardContent className="py-10 text-center space-y-3">
-            <div className="tag-rank bg-(--color-destructive) text-[10px] inline-block">
-              RESTRITO · ALTO COMANDO
-            </div>
-            <p className="font-display tracking-widest text-(--color-olive-deep)">
-              Acesso negado
-            </p>
-            <p className="text-xs font-mono text-(--color-stencil) max-w-md mx-auto">
-              Apenas o Alto Comando atende o suporte ao conscrito.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div>

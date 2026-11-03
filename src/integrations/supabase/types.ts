@@ -14,61 +14,11 @@ export type Database = {
   }
   public: {
     Tables: {
-      discord_membros: {
-        Row: {
-          avatar_url: string | null
-          created_at: string
-          discord_user_id: string
-          display_name: string
-          global_name: string | null
-          inscricao_id: string | null
-          nick: string | null
-          roles_json: Json
-          ultimo_login: string
-          updated_at: string
-          username: string
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string
-          discord_user_id: string
-          display_name: string
-          global_name?: string | null
-          inscricao_id?: string | null
-          nick?: string | null
-          roles_json?: Json
-          ultimo_login?: string
-          updated_at?: string
-          username: string
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string
-          discord_user_id?: string
-          display_name?: string
-          global_name?: string | null
-          inscricao_id?: string | null
-          nick?: string | null
-          roles_json?: Json
-          ultimo_login?: string
-          updated_at?: string
-          username?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "discord_membros_inscricao_id_fkey"
-            columns: ["inscricao_id"]
-            isOneToOne: false
-            referencedRelation: "inscricoes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       documentos_emitidos: {
         Row: {
           created_at: string
           destinatario: string | null
-          emitido_por_discord_id: string | null
+          emitido_por: string | null
           id: string
           inscricao_id: string | null
           metadata: Json | null
@@ -79,7 +29,7 @@ export type Database = {
         Insert: {
           created_at?: string
           destinatario?: string | null
-          emitido_por_discord_id?: string | null
+          emitido_por?: string | null
           id?: string
           inscricao_id?: string | null
           metadata?: Json | null
@@ -90,7 +40,7 @@ export type Database = {
         Update: {
           created_at?: string
           destinatario?: string | null
-          emitido_por_discord_id?: string | null
+          emitido_por?: string | null
           id?: string
           inscricao_id?: string | null
           metadata?: Json | null
@@ -112,7 +62,6 @@ export type Database = {
         Row: {
           ativa: boolean
           created_at: string
-          discord_user_id: string | null
           foto_url: string | null
           id: string
           inscricao_id: string
@@ -126,7 +75,6 @@ export type Database = {
         Insert: {
           ativa?: boolean
           created_at?: string
-          discord_user_id?: string | null
           foto_url?: string | null
           id?: string
           inscricao_id: string
@@ -140,7 +88,6 @@ export type Database = {
         Update: {
           ativa?: boolean
           created_at?: string
-          discord_user_id?: string | null
           foto_url?: string | null
           id?: string
           inscricao_id?: string
@@ -153,13 +100,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "identidades_militares_discord_user_id_fkey"
-            columns: ["discord_user_id"]
-            isOneToOne: false
-            referencedRelation: "discord_membros"
-            referencedColumns: ["discord_user_id"]
-          },
-          {
             foreignKeyName: "identidades_militares_inscricao_id_fkey"
             columns: ["inscricao_id"]
             isOneToOne: true
@@ -171,8 +111,6 @@ export type Database = {
       inscricoes: {
         Row: {
           created_at: string
-          discord_id: string
-          discord_user_id: string | null
           id: string
           motivacao: string
           nome: string
@@ -186,8 +124,6 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          discord_id: string
-          discord_user_id?: string | null
           id?: string
           motivacao: string
           nome: string
@@ -201,8 +137,6 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          discord_id?: string
-          discord_user_id?: string | null
           id?: string
           motivacao?: string
           nome?: string

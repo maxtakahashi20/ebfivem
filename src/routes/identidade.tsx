@@ -1,9 +1,16 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
-import { queuePainelView } from "@/lib/painel-nav";
+import { createFileRoute } from "@tanstack/react-router";
+import { PerfilMilitar } from "@/components/military/PerfilMilitar";
 
 export const Route = createFileRoute("/identidade")({
-  beforeLoad: () => {
-    queuePainelView("perfil");
-    throw redirect({ to: "/ADMCMF" });
-  },
+  head: () => ({
+    meta: [
+      { title: "Identidade Militar · CMF" },
+      { name: "description", content: "Consulte sua carteira militar digital com protocolo e RG." },
+    ],
+  }),
+  component: () => (
+    <div className="mx-auto max-w-3xl px-6 py-16">
+      <PerfilMilitar />
+    </div>
+  ),
 });

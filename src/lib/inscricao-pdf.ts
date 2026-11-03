@@ -7,7 +7,6 @@ export type InscricaoPdfData = {
   sobrenome: string;
   rg: string;
   telefone: string;
-  discord_id: string;
   created_at?: string;
 };
 
@@ -58,8 +57,6 @@ export function gerarComprovantePdf(d: InscricaoPdfData): jsPDF {
   y += 10;
   drawField(doc, MARGIN, y, "RG (IDENTIDADE)", d.rg);
   drawField(doc, MARGIN + (W - MARGIN * 2) / 2, y, "TELEFONE", d.telefone);
-  y += 10;
-  drawField(doc, MARGIN, y, "ID DO DISCORD", d.discord_id);
   y += 14;
 
   // Section: registro

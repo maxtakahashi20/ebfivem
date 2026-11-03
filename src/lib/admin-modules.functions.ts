@@ -1,46 +1,17 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import type { AdminView } from "@/config/admin-nav";
-import { ALTO_COMANDO_VIEWS } from "@/config/admin-nav";
 import { getAcaoEspecial, getModuloForm } from "@/config/admin-module-forms";
 import { MODULO_DB, PDF_RESTRITO_VIEWS, TABELAS_SISTEMA } from "@/config/admin-modules-db";
-import { enviarLogOperacional } from "@/lib/discord.functions";
-import { sincronizarTodosDiscordNoEfetivo } from "@/lib/identidade-db";
-import { patenteFromDiscordRoles } from "@/lib/militar-identidade";
-import type { DiscordProfile, DiscordRoleTag } from "@/lib/discord-oauth";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { verifyDiscordSession } from "@/lib/discord-session";
-import { hasFullAccess } from "@/lib/access-control";
+import { assertAccessKey } from "@/lib/access-key.server";
+import { registrarLog } from "@/lib/logs.server";
 
-const ACCESS_KEY = () => process.env.ACCESS_KEY || "26L5";
 const RESTRITO_BUCKET = "area-restrita";
-
-function assertAccess(key: string) {
-  if (key !== ACCESS_KEY()) throw new Error("Chave de acesso inválida");
-}
-
-async function ensureAltoComandoForView(
-  view: AdminView,
-  session: string | undefined,
-): Promise<DiscordProfile | null> {
-  if (!ALTO_COMANDO_VIEWS.has(view)) {
-    if (!session) return null;
-    const p = await verifyDiscordSession(session);
-    return p ?? null;
-  }
-  if (!session) throw new Error("Acesso restrito ao Alto Comando.");
-  const profile = await verifyDiscordSession(session);
-  if (!profile || !hasFullAccess(profile)) {
-    throw new Error("Acesso restrito ao Alto Comando.");
-  }
-  return profile;
-}
 
 export type ModuloAdminPayload = {
   rows: Record<string, string>[];
   stats: { label: string; value: string | number; sub?: string }[];
-  /** Dados extras para painéis especiais */
-  extra?: Record<string, unknown>;
 };
 
 export const carregarModuloAdmin = createServerFn({ method: "POST" })
@@ -49,14 +20,12 @@ export const carregarModuloAdmin = createServerFn({ method: "POST" })
       .object({
         accessKey: z.string(),
         view: z.string(),
-        session: z.string().optional(),
       })
       .parse(input),
   )
   .handler(async ({ data }): Promise<ModuloAdminPayload> => {
-    assertAccess(data.accessKey);
+    assertAccessKey(data.accessKey);
     const view = data.view as AdminView;
-    await ensureAltoComandoForView(view, data.session);
 
     if (view === "sys-db") {
       return carregarSysDb();
@@ -66,12 +35,6 @@ export const carregarModuloAdmin = createServerFn({ method: "POST" })
     }
     if (view === "sys-seguranca") {
       return carregarSysSeguranca();
-    }
-    if (view === "discord-bot") {
-      return carregarDiscordBot();
-    }
-    if (view === "efetivo-ativos") {
-      return carregarEfetivoMilitares();
     }
 
     const spec = MODULO_DB[view];
@@ -114,74 +77,6 @@ export const carregarModuloAdmin = createServerFn({ method: "POST" })
     };
   });
 
-async function carregarEfetivoMilitares(): Promise<ModuloAdminPayload> {
-  await sincronizarTodosDiscordNoEfetivo();
-
-  const spec = MODULO_DB["efetivo-ativos"];
-  if (!spec) return { rows: [], stats: [{ label: "Registros", value: 0 }] };
-
-  const { data: militares, error } = await supabaseAdmin
-    .from(spec.table)
-    .select("*")
-    .eq("categoria", "ativo")
-    .order("updated_at", { ascending: false })
-    .limit(500);
-
-  if (!error && militares && militares.length > 0) {
-    const rows = militares.map((r) => spec.rowMap(r as Record<string, unknown>));
-    const comDiscord = militares.filter((r) => r.discord_user_id).length;
-    return {
-      rows,
-      stats: [
-        { label: "Militares", value: rows.length },
-        { label: "Via Discord", value: comDiscord },
-      ],
-    };
-  }
-
-  if (error) console.error("[efetivo-ativos militares]", error.message);
-
-  const { data: membros, error: errMembros } = await supabaseAdmin
-    .from("discord_membros")
-    .select("discord_user_id, username, display_name, roles_json, ultimo_login")
-    .order("ultimo_login", { ascending: false })
-    .limit(500);
-
-  if (errMembros || !membros?.length) {
-    return {
-      rows: [],
-      stats: [
-        { label: "Militares", value: 0 },
-        {
-          label: "Aviso",
-          value: error?.message?.includes("discord_user_id")
-            ? "Rode o SQL da coluna discord_user_id no Supabase"
-            : "Faça login Discord no painel",
-        },
-      ],
-    };
-  }
-
-  const rows = membros.map((m) => {
-    const roles = (Array.isArray(m.roles_json) ? m.roles_json : []) as DiscordRoleTag[];
-    return {
-      id: `CMF-${m.discord_user_id.slice(-6)}`,
-      nome: m.display_name,
-      patente: patenteFromDiscordRoles(roles),
-      discord: `@${m.username}`,
-      status: "Autenticado",
-    };
-  });
-
-  return {
-    rows,
-    stats: [
-      { label: "Militares", value: rows.length },
-      { label: "Fonte", value: "Discord" },
-    ],
-  };
-}
-
 async function carregarSysDb(): Promise<ModuloAdminPayload> {
   const counts: Record<string, number> = {};
 
@@ -214,34 +109,27 @@ async function carregarSysDb(): Promise<ModuloAdminPayload> {
 
 function carregarSysApi(): ModuloAdminPayload {
   const hasSupabase = !!(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL);
-  const hasDiscord = !!process.env.DISCORD_WEBHOOK_URL?.trim();
 
   return {
     rows: [
       { rota: "inscricoes.*", metodo: "POST", status: hasSupabase ? "200 OK" : "Indisponível" },
       { rota: "admin.modulos", metodo: "POST", status: hasSupabase ? "200 OK" : "Indisponível" },
-      { rota: "discord.webhook", metodo: "POST", status: hasDiscord ? "200 OK" : "Não configurado" },
     ],
-    stats: [{ label: "Integrações", value: (hasSupabase ? 1 : 0) + (hasDiscord ? 1 : 0) }],
+    stats: [{ label: "Integrações", value: hasSupabase ? 1 : 0 }],
   };
 }
 
 function carregarSysSeguranca(): ModuloAdminPayload {
   const hasKey = !!process.env.ACCESS_KEY?.trim();
   const hasService = !!process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
-  const hasAltoComando = !!process.env.DISCORD_ALTO_COMANDO_ROLE_IDS?.trim();
 
   return {
     rows: [
-      { item: "ACCESS_KEY painel", status: hasKey ? "Configurado" : "Padrão local" },
+      { item: "ACCESS_KEY painel", status: hasKey ? "Configurado" : "Ausente" },
       { item: "Service role Supabase", status: hasService ? "Configurado" : "Ausente" },
-      {
-        item: "Alto Comando (roles)",
-        status: hasAltoComando ? "Configurado" : "DISCORD_ALTO_COMANDO_ROLE_IDS vazio",
-      },
       { item: "RLS Supabase", status: "Ativo" },
     ],
-    stats: [{ label: "Nível", value: hasService && hasKey && hasAltoComando ? "Alto" : "Médio" }],
+    stats: [{ label: "Nível", value: hasService && hasKey ? "Alto" : "Médio" }],
   };
 }
 
@@ -252,14 +140,12 @@ export const criarRegistroModulo = createServerFn({ method: "POST" })
         accessKey: z.string(),
         view: z.string(),
         valores: z.record(z.string()),
-        session: z.string().optional(),
       })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    assertAccess(data.accessKey);
+    assertAccessKey(data.accessKey);
     const view = data.view as AdminView;
-    await ensureAltoComandoForView(view, data.session);
 
     const form = getModuloForm(view);
     const db = MODULO_DB[view];
@@ -293,32 +179,13 @@ export const criarRegistroModulo = createServerFn({ method: "POST" })
 
 export const executarAcaoEspecial = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
-    z.object({ accessKey: z.string(), view: z.string(), session: z.string().optional() }).parse(input),
+    z.object({ accessKey: z.string(), view: z.string() }).parse(input),
   )
   .handler(async ({ data }) => {
-    assertAccess(data.accessKey);
+    assertAccessKey(data.accessKey);
     const view = data.view as AdminView;
-    await ensureAltoComandoForView(view, data.session);
     const acao = getAcaoEspecial(view);
     if (!acao) throw new Error("Ação não disponível");
-
-    if (acao === "discord-sync") {
-      const itens = [
-        { item: "Cargos por patente", status: "Sincronizado" },
-        { item: "Nicknames CMF", status: "Sincronizado" },
-        { item: "Webhooks operacionais", status: "Sincronizado" },
-      ];
-      const { error } = await supabaseAdmin.from("discord_sync_eventos").insert(itens);
-      if (error) throw new Error(error.message);
-
-      await supabaseAdmin
-        .from("discord_bot_status")
-        .update({ latencia_ms: 35 + Math.floor(Math.random() * 30), online: true })
-        .eq("id", 1);
-
-      await registrarLogAdmin("Sincronização Discord executada", view);
-      return { ok: true, mensagem: "Sincronização concluída" };
-    }
 
     if (acao === "sys-backup") {
       const agora = new Date();
@@ -338,49 +205,8 @@ export const executarAcaoEspecial = createServerFn({ method: "POST" })
     throw new Error("Ação desconhecida");
   });
 
-export const atualizarStatusDiscordBot = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) =>
-    z.object({ accessKey: z.string(), session: z.string().optional() }).parse(input),
-  )
-  .handler(async ({ data }) => {
-    assertAccess(data.accessKey);
-    await ensureAltoComandoForView("discord-bot", data.session);
-    const latencia = 30 + Math.floor(Math.random() * 50);
-    const { error } = await supabaseAdmin
-      .from("discord_bot_status")
-      .update({ online: true, latencia_ms: latencia, uptime_pct: "99.8%" })
-      .eq("id", 1);
-    if (error) throw new Error(error.message);
-    await registrarLogAdmin("Status do bot atualizado", "discord-bot");
-    return { ok: true, latencia_ms: latencia };
-  });
-
-async function registrarLogAdmin(acao: string, view: string) {
-  await supabaseAdmin.from("logs").insert({
-    tipo: "admin",
-    usuario: "Painel ADMCMF",
-    acao,
-    detalhe: view,
-  });
-}
-
-async function carregarDiscordBot(): Promise<ModuloAdminPayload> {
-  const { data, error } = await supabaseAdmin
-    .from("discord_bot_status")
-    .select("online, latencia_ms, uptime_pct")
-    .eq("id", 1)
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-
-  return {
-    rows: [],
-    stats: [
-      { label: "Status", value: data?.online ? "Online" : "Offline" },
-      { label: "Latência", value: `${data?.latencia_ms ?? 0}ms` },
-      { label: "Uptime", value: data?.uptime_pct ?? "—" },
-    ],
-    extra: data ?? {},
-  };
+function registrarLogAdmin(acao: string, view: string) {
+  return registrarLog("admin", acao, view);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -407,7 +233,6 @@ export const uploadPdfRestrito = createServerFn({ method: "POST" })
     z
       .object({
         accessKey: z.string(),
-        session: z.string().min(1),
         view: z.string(),
         recordId: z.string().uuid(),
         base64: z.string().min(1),
@@ -417,10 +242,9 @@ export const uploadPdfRestrito = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    assertAccess(data.accessKey);
+    assertAccessKey(data.accessKey);
     const view = data.view as AdminView;
     ensurePdfView(view);
-    await ensureAltoComandoForView(view, data.session);
 
     const bytes = base64ToUint8Array(data.base64);
     if (bytes.length > 25 * 1024 * 1024) {
@@ -454,17 +278,12 @@ export const baixarPdfRestrito = createServerFn({ method: "POST" })
     z
       .object({
         accessKey: z.string(),
-        session: z.string().min(1),
         recordId: z.string().uuid(),
       })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    assertAccess(data.accessKey);
-    const profile = await verifyDiscordSession(data.session);
-    if (!profile || !hasFullAccess(profile)) {
-      throw new Error("Acesso restrito ao Alto Comando.");
-    }
+    assertAccessKey(data.accessKey);
 
     const { data: rec, error } = await supabaseAdmin
       .from("documentos_restritos")
@@ -488,17 +307,12 @@ export const removerPdfRestrito = createServerFn({ method: "POST" })
     z
       .object({
         accessKey: z.string(),
-        session: z.string().min(1),
         recordId: z.string().uuid(),
       })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    assertAccess(data.accessKey);
-    const profile = await verifyDiscordSession(data.session);
-    if (!profile || !hasFullAccess(profile)) {
-      throw new Error("Acesso restrito ao Alto Comando.");
-    }
+    assertAccessKey(data.accessKey);
 
     const { data: rec, error } = await supabaseAdmin
       .from("documentos_restritos")
@@ -519,11 +333,6 @@ export const removerPdfRestrito = createServerFn({ method: "POST" })
       })
       .eq("id", data.recordId);
     if (updErr) throw new Error(updErr.message);
-
-    enviarLogOperacional({
-      acao: "EXCLUSAO",
-      descricao: `PDF removido de documento restrito ${data.recordId}`,
-    }).catch(() => {});
 
     await registrarLogAdmin(`PDF removido (${rec.pdf_path})`, "restrito");
     return { ok: true };

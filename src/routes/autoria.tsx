@@ -59,21 +59,6 @@ function Autoria() {
 
         <div className="divider-tape opacity-60" />
 
-        <section>
-          <div className="stencil text-xs mb-1">CONTATO OFICIAL</div>
-          <p className="leading-relaxed">
-            Canal oficial do CMF:{" "}
-            <a
-              href="https://discord.gg/F2T248Ytpj"
-              target="_blank"
-              rel="noreferrer"
-              className="underline text-[color:var(--color-olive-deep)] hover:text-[color:var(--color-olive-bright)]"
-            >
-              discord.gg/F2T248Ytpj
-            </a>
-          </p>
-        </section>
-
         <div className="text-[10px] stencil text-right pt-4 border-t border-[color:var(--color-border)]">
           © {new Date().getFullYear()} CMF · TODOS OS DIREITOS RESERVADOS
         </div>

@@ -6,7 +6,6 @@ import { z } from "zod";
 import { consultarPorProtocolo, consultarPorRg } from "@/lib/inscricoes.functions";
 import { IdentidadeMilitarDigital } from "@/components/military/IdentidadeMilitarDigital";
 import { Link } from "@tanstack/react-router";
-import { useDiscordSession } from "@/hooks/useDiscordSession";
 import { goToPainel } from "@/lib/painel-nav";
 
 const searchSchema = z.object({
@@ -190,7 +189,6 @@ function Acompanhar() {
                 <div className="mt-6 pt-6 border-t border-(--color-border)">
                   <IdentidadeMilitarDigital
                     aprovado
-                    discordProfile={discordProfile}
                     dados={{
                       protocolo: r.protocolo,
                       nome: r.nome,

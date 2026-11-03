@@ -1,16 +1,11 @@
 // Server functions for the CMF enrollment system.
-// Reads/updates are gated by a shared admin key (ACCESS_KEY env, default "26L5").
+// Reads/updates are gated by a shared admin key (ACCESS_KEY env).
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import {
-  notificarNovaInscricao,
-  notificarMudancaStatus,
-  enviarLogOperacional,
-} from "@/lib/discord.functions";
+import { assertAccessKey } from "@/lib/access-key.server";
 import { sincronizarIdentidadeMilitar } from "@/lib/identidade-db";
-
-const ACCESS_KEY = () => process.env.ACCESS_KEY || "26L5";
+import { registrarLog } from "@/lib/logs.server";
 
 const StatusEnum = z.enum(["pendente", "em_analise", "aprovado", "reprovado"]);
 
@@ -19,13 +14,11 @@ const InscricaoSchema = z.object({
   sobrenome: z.string().trim().min(1).max(80),
   rg: z.string().trim().regex(/^\d{1,8}$/, "RG deve conter até 8 dígitos"),
   telefone: z.string().trim().min(1).max(20),
-  discord_id: z.string().trim().min(1).max(64),
 });
 
 export const criarInscricao = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => InscricaoSchema.parse(input))
   .handler(async ({ data }) => {
-    const discordUserId = /^\d{17,20}$/.test(data.discord_id) ? data.discord_id : null;
     const { data: row, error } = await supabaseAdmin
       .from("inscricoes")
       .insert({
@@ -33,23 +26,11 @@ export const criarInscricao = createServerFn({ method: "POST" })
         sobrenome: data.sobrenome,
         rg: data.rg,
         telefone: data.telefone,
-        discord_id: data.discord_id,
-        discord_user_id: discordUserId,
         motivacao: "",
       })
       .select("id, protocolo, rg, status, created_at")
       .single();
     if (error) throw new Error(error.message);
-
-    // Notifica Discord em background (falha silenciosa — não bloqueia o recruta)
-    notificarNovaInscricao({
-      nome: data.nome,
-      sobrenome: data.sobrenome,
-      protocolo: row.protocolo,
-      rg: data.rg,
-      discord_id: data.discord_id,
-      created_at: row.created_at,
-    }).catch(() => {});
 
     return row;
   });
@@ -94,6 +75,27 @@ export const consultarPorProtocolo = createServerFn({ method: "POST" })
     return row ? [row] : [];
   });
 
+/** Carteira militar: exige protocolo E RG, para não abrir a ficha de terceiros. */
+export const consultarIdentidade = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        protocolo: z.string().trim().regex(/^EB-[0-9A-F]{8}$/i, "Protocolo no formato EB-XXXXXXXX"),
+        rg: z.string().trim().regex(/^\d{1,8}$/, "RG deve conter até 8 dígitos"),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { data: row, error } = await supabaseAdmin
+      .from("inscricoes")
+      .select(camposConsultaConscrito)
+      .eq("protocolo", data.protocolo.toUpperCase())
+      .eq("rg", data.rg)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return row;
+  });
+
 export const listarInscricoes = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z
@@ -105,13 +107,11 @@ export const listarInscricoes = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    if (data.accessKey !== ACCESS_KEY()) {
-      throw new Error("Chave de acesso inválida");
-    }
+    assertAccessKey(data.accessKey);
     let q = supabaseAdmin
       .from("inscricoes")
       .select(
-        "id, protocolo, nome, sobrenome, rg, telefone, discord_id, status, observacoes_instrutor, created_at, updated_at",
+        "id, protocolo, nome, sobrenome, rg, telefone, status, observacoes_instrutor, created_at, updated_at",
       )
       .order("created_at", { ascending: false })
       .limit(500);
@@ -119,7 +119,7 @@ export const listarInscricoes = createServerFn({ method: "POST" })
     if (data.search) {
       const s = data.search.replace(/[%_]/g, "");
       q = q.or(
-        `nome.ilike.%${s}%,sobrenome.ilike.%${s}%,rg.ilike.%${s}%,protocolo.ilike.%${s}%,discord_id.ilike.%${s}%`,
+        `nome.ilike.%${s}%,sobrenome.ilike.%${s}%,rg.ilike.%${s}%,protocolo.ilike.%${s}%`,
       );
     }
     const { data: rows, error } = await q;
@@ -132,9 +132,7 @@ export const obterEstatisticas = createServerFn({ method: "POST" })
     z.object({ accessKey: z.string() }).parse(input),
   )
   .handler(async ({ data }) => {
-    if (data.accessKey !== ACCESS_KEY()) {
-      throw new Error("Chave de acesso inválida");
-    }
+    assertAccessKey(data.accessKey);
 
     const { data: rows, error } = await supabaseAdmin
       .from("inscricoes")
@@ -176,9 +174,7 @@ export const atualizarInscricao = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    if (data.accessKey !== ACCESS_KEY()) {
-      throw new Error("Chave de acesso inválida");
-    }
+    assertAccessKey(data.accessKey);
     const { error } = await supabaseAdmin
       .from("inscricoes")
       .update({
@@ -192,29 +188,21 @@ export const atualizarInscricao = createServerFn({ method: "POST" })
       const { data: row } = await supabaseAdmin
         .from("inscricoes")
         .select(
-          "id, protocolo, nome, sobrenome, rg, status, created_at, discord_id, discord_user_id",
+          "id, protocolo, nome, sobrenome, rg, status, created_at",
         )
         .eq("id", data.id)
         .maybeSingle();
       if (row) {
-        await sincronizarIdentidadeMilitar(row, row.discord_user_id ?? null);
+        await sincronizarIdentidadeMilitar(row);
       }
     }
 
-    // Notifica Discord em background
-    if (data.nome && data.sobrenome && data.protocolo) {
-      notificarMudancaStatus({
-        nome: data.nome,
-        sobrenome: data.sobrenome,
-        protocolo: data.protocolo,
-        status: data.status,
-        observacoes: data.observacoes_instrutor,
-      }).catch(() => {});
-
-      enviarLogOperacional({
-        acao: data.status,
-        descricao: `Inscrição ${data.protocolo} (${data.nome} ${data.sobrenome}) → ${data.status.toUpperCase()}`,
-      }).catch(() => {});
+    if (data.protocolo) {
+      await registrarLog(
+        "operacional",
+        data.status,
+        `Inscrição ${data.protocolo} (${data.nome ?? ""} ${data.sobrenome ?? ""}) → ${data.status.toUpperCase()}`,
+      );
     }
 
     return { ok: true };
@@ -230,9 +218,7 @@ export const excluirInscricao = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    if (data.accessKey !== ACCESS_KEY()) {
-      throw new Error("Chave de acesso inválida");
-    }
+    assertAccessKey(data.accessKey);
 
     const { data: row, error: fetchErr } = await supabaseAdmin
       .from("inscricoes")
@@ -245,10 +231,11 @@ export const excluirInscricao = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin.from("inscricoes").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
 
-    enviarLogOperacional({
-      acao: "EXCLUSAO",
-      descricao: `Inscrição ${row.protocolo} (${row.nome} ${row.sobrenome}) removida do sistema`,
-    }).catch(() => {});
+    await registrarLog(
+      "operacional",
+      "EXCLUSAO",
+      `Inscrição ${row.protocolo} (${row.nome} ${row.sobrenome}) removida do sistema`,
+    );
 
     return { ok: true };
   });

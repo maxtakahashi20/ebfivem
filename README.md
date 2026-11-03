@@ -95,55 +95,30 @@ Copie `.env.example` para `.env` e preencha.
 | `SUPABASE_SERVICE_ROLE_KEY` | **Obrigatória** para `criarInscricao`, consultas admin e painel — **nunca** exponha no cliente nem em `VITE_*`. |
 | `SUPABASE_URL` | Opcional se já existir `VITE_SUPABASE_URL` (há fallback no código). |
 | `SUPABASE_PUBLISHABLE_KEY` | Usada pelo middleware de auth; pode repetir o valor publishable do dashboard. |
-| `ACCESS_KEY` | Chave compartilhada para `/ADMCMF` e operações restritas nas server functions; se vazio, o código pode usar um padrão local (ver `src/lib/inscricoes.functions.ts`). |
-| `DISCORD_ALTO_COMANDO_ROLE_IDS` | Lista de IDs de cargos Discord que liberam Alto Comando — separados por vírgula. Quem **não** tem esses cargos não vê **Logs em geral**, **Sistema**, **Área Restrita** e a aba **Suporte** do painel. |
-| `DISCORD_DESENVOLVEDOR_ROLE_IDS` | Lista de IDs de cargos Discord com **acesso pleno** ao painel (mesmo que Alto Comando + badge "MODO DESENVOLVEDOR"). Use apenas para o cargo de dev. |
+| `ACCESS_KEY` | **Obrigatória.** Chave única do painel `/ADMCMF` e das operações restritas. Sem ela, ninguém entra. Use um valor longo e aleatório: quem tem a chave vê tudo. |
 
 Consulte sempre `.env.example` para comentários atualizados.
 
-### Alto Comando
-
-Para identificar quais cargos do Discord pertencem ao Alto Comando:
-
-1. No Discord, ative o **Modo Desenvolvedor** (Configurações → Avançado).
-2. Clique com o botão direito no cargo do servidor CMF e copie o **ID**.
-3. Cole o ID em `DISCORD_ALTO_COMANDO_ROLE_IDS` (separe múltiplos por vírgula).
-4. Reinicie `npm run dev` ou redeploy.
-
-A checagem é feita em `src/lib/access-control.ts` comparando `profile.roles[].id` com os IDs do env. Sem variável configurada, **ninguém** é Alto Comando.
-
-### Desenvolvedor
-
-`DISCORD_DESENVOLVEDOR_ROLE_IDS` aceita os mesmos formatos. Quem tem um desses cargos é tratado como **Alto Comando + DEV**: vê todas as áreas restritas e ganha uma pílula **MODO DESENVOLVEDOR** no rodapé do sidebar. Funciona em paralelo ao Alto Comando — basta possuir **um** cargo de qualquer um dos dois grupos.
-
 ### Suporte ao conscrito
 
-- **Conscrito (público):** `/suporte` — abre o ticket informando **protocolo + RG** da inscrição.
-- **Atendente (Alto Comando):** aba **Suporte** dentro de `/ADMCMF` (visível somente para membros com cargo de Alto Comando).
+- **Conscrito (público):** `/suporte` — abre o ticket informando um título.
+- **Atendente:** aba **Suporte** dentro de `/ADMCMF`.
 - Chat é "ao vivo" via polling a cada 3 segundos.
 
 ---
 
 ## Banco de dados (Supabase)
 
-1. No **SQL Editor** do projeto Supabase, cole e execute o arquivo inteiro:
+- **Banco vazio:** cole `supabase/migrations/20261103162912_schema_completo_cmf.sql` no **SQL Editor**, ou rode `npm run db:migrate`.
+- **Banco com outras tabelas:** `supabase/reset-banco.sql` **apaga todo o schema `public`** e recria as tabelas. Não tem volta.
 
-   **`supabase/schema.sql`**
-
-   Isso cria o enum `status_inscricao`, a tabela `public.inscricoes`, índices, RLS (INSERT para `anon`/`authenticated`), trigger de `updated_at`, etc. Pode rodar mais de uma vez.
-
-2. Alternativa: `npm run db:migrate` ou migrações em **`supabase/migrations/`**.
+Os dois criam o enum `status_inscricao`, as tabelas, índices, RLS, triggers de `updated_at` e o bucket privado `area-restrita`.
 
 Leituras sensíveis e updates são feitos no servidor com **`SUPABASE_SERVICE_ROLE_KEY`** (cliente admin Supabase), não via políticas públicas de `SELECT`.
 
 ### Storage para Área Restrita (PDF)
 
-Os itens da **Área Restrita** suportam anexar PDFs. Crie um bucket **privado** no Supabase para armazenar os arquivos:
-
-1. **Storage → New bucket** → nome `area-restrita` → privado.
-2. Não é preciso criar policies — o servidor usa a service role para upload/download.
-
-Sem o bucket, criar registros funciona; só os anexos falham.
+Os itens da **Área Restrita** suportam anexar PDFs no bucket privado `area-restrita`, criado pelo SQL acima. O servidor usa a service role para upload/download.
 
 Tipos TypeScript gerados / alinhados estão em `src/integrations/supabase/types.ts`.
 
@@ -159,7 +134,8 @@ Tipos TypeScript gerados / alinhados estão em `src/integrations/supabase/types.
 | `/inscricao` | `src/routes/inscricao.tsx` | Envio da ficha |
 | `/acompanhar` | `src/routes/acompanhar.tsx` | Consulta RG/protocolo |
 | `/suporte` | `src/routes/suporte.tsx` | Chat de suporte ao conscrito (protocolo + RG) |
-| `/ADMCMF` | `src/routes/ADMCMF.tsx` | Painel (Discord OAuth + `ACCESS_KEY`) |
+| `/identidade` | `src/routes/identidade.tsx` | Carteira militar digital (protocolo + RG) |
+| `/ADMCMF` | `src/routes/ADMCMF.tsx` | Painel (`ACCESS_KEY`) |
 | `/autoria` | `src/routes/autoria.tsx` | Créditos |
 
 A árvore gerada pelo TanStack Router fica em `src/routeTree.gen.ts` (não editar manualmente).
@@ -208,9 +184,8 @@ src/
 
 1. Conecte o repositório em [vercel.com](https://vercel.com).
 2. **Build Command:** `npm run build` (padrão).
-3. **Variáveis de ambiente:** copie de `.env.example` (Supabase, Discord, `ACCESS_KEY`, webhooks).
-4. **Discord OAuth:** `DISCORD_REDIRECT_URI` = `https://SEU-DOMINIO.vercel.app/auth/discord/callback` (e cadastre a mesma URL no Discord Developer Portal).
-5. Deploy — o preset Nitro `vercel` é aplicado automaticamente quando `VERCEL=1` no build.
+3. **Variáveis de ambiente:** copie de `.env.example` (Supabase e `ACCESS_KEY`).
+4. Deploy — o preset Nitro `vercel` é aplicado automaticamente quando `VERCEL=1` no build.
 
 Documentação: [TanStack Start on Vercel](https://vercel.com/docs/frameworks/full-stack/tanstack-start)
 
@@ -240,4 +215,4 @@ Documentação: [TanStack Start](https://tanstack.com/start)
 
 Este repositório é **privado** conforme `package.json`. O conteúdo institucional e militar é **ficcional / temático para comunidade de roleplay** e não substitui canais oficiais das Forças Armadas brasileiras.
 
-Para dúvidas sobre schema ou fluxo de inscrição, consulte `src/lib/inscricoes.functions.ts` e `supabase/schema.sql`.
+Para dúvidas sobre schema ou fluxo de inscrição, consulte `src/lib/inscricoes.functions.ts` e `supabase/migrations/`.

@@ -1,7 +1,25 @@
 -- =============================================================================
--- CMF — schema enxuto (painel ADMCMF + Painel Membro + Identidade + Suporte)
--- Cole INTEIRO no Supabase → SQL Editor → Run (idempotente)
+-- ⚠️  APAGA TODO O SCHEMA public DO BANCO E RECRIA AS TABELAS DO CMF. SEM VOLTA.
+--
+-- Rode no projeto certo: Supabase → SQL Editor → cole INTEIRO → Run.
+-- Fica fora de supabase/migrations/ de propósito, para o `npm run db:migrate`
+-- nunca executar isto sozinho.
+--
+-- Não mexe em auth (usuários) nem em storage (arquivos e buckets já existentes),
+-- que são gerenciados pelo Supabase.
+-- Se algo der erro, a transação inteira é desfeita e nada é apagado.
 -- =============================================================================
+BEGIN;
+
+DROP SCHEMA IF EXISTS public CASCADE;
+CREATE SCHEMA public;
+
+-- O DROP leva junto as permissões padrão do Supabase: restaura.
+GRANT USAGE ON SCHEMA public TO postgres, anon, authenticated, service_role;
+GRANT ALL ON SCHEMA public TO postgres;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO postgres, anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO postgres, anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO postgres, anon, authenticated, service_role;
 
 -- ── Enums ────────────────────────────────────────────────────────────────────
 DO $$ BEGIN
@@ -13,7 +31,7 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 DO $$ BEGIN
-  CREATE TYPE public.tipo_log AS ENUM ('admin', 'discord', 'operacional', 'sistema');
+  CREATE TYPE public.tipo_log AS ENUM ('admin', 'operacional', 'sistema');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 DO $$ BEGIN
@@ -32,29 +50,6 @@ DO $$ BEGIN
   CREATE TYPE public.autor_mensagem_suporte AS ENUM ('conscrito', 'militar', 'sistema');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
--- ── Drop de tabelas removidas do escopo (idempotente) ───────────────────────
-DROP TABLE IF EXISTS public.treinamentos CASCADE;
-DROP TABLE IF EXISTS public.cursos CASCADE;
-DROP TABLE IF EXISTS public.presencas_treino CASCADE;
-DROP TABLE IF EXISTS public.instrutores_escala CASCADE;
-DROP TABLE IF EXISTS public.agenda_eventos CASCADE;
-DROP TABLE IF EXISTS public.bases_taticas CASCADE;
-DROP TABLE IF EXISTS public.zonas_vermelhas CASCADE;
-DROP TABLE IF EXISTS public.patrulhas CASCADE;
-DROP TABLE IF EXISTS public.briefings CASCADE;
-DROP TABLE IF EXISTS public.missoes CASCADE;
-DROP TABLE IF EXISTS public.patentes CASCADE;
-DROP TABLE IF EXISTS public.medalhas CASCADE;
-DROP TABLE IF EXISTS public.promocoes CASCADE;
-DROP TABLE IF EXISTS public.honrarias CASCADE;
-DROP TABLE IF EXISTS public.avisos CASCADE;
-DROP TABLE IF EXISTS public.alertas CASCADE;
-DROP TABLE IF EXISTS public.defcon_config CASCADE;
-DROP TABLE IF EXISTS public.protocolos_emergencia CASCADE;
-DROP TABLE IF EXISTS public.broadcasts CASCADE;
-DROP TYPE  IF EXISTS public.tipo_agenda;
-DROP TYPE  IF EXISTS public.tipo_treinamento;
-
 -- ── Trigger updated_at ───────────────────────────────────────────────────────
 CREATE OR REPLACE FUNCTION public.touch_updated_at()
 RETURNS TRIGGER LANGUAGE plpgsql SET search_path = public AS $$
@@ -67,7 +62,6 @@ CREATE TABLE IF NOT EXISTS public.inscricoes (
   sobrenome TEXT NOT NULL,
   rg TEXT NOT NULL,
   telefone TEXT NOT NULL,
-  discord_id TEXT NOT NULL,
   motivacao TEXT NOT NULL DEFAULT '',
   status public.status_inscricao NOT NULL DEFAULT 'pendente',
   observacoes_instrutor TEXT,
@@ -109,7 +103,6 @@ CREATE TABLE IF NOT EXISTS public.operacoes (
 CREATE TABLE IF NOT EXISTS public.militares (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   codigo TEXT,
-  discord_user_id TEXT UNIQUE,
   nome TEXT NOT NULL,
   patente TEXT,
   posto TEXT,
@@ -203,44 +196,6 @@ CREATE TABLE IF NOT EXISTS public.logs (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- ── Discord ──────────────────────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS public.discord_webhooks (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  nome TEXT NOT NULL,
-  url TEXT,
-  uso TEXT,
-  status TEXT DEFAULT 'Ativo',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS public.discord_cargos (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  patente_rp TEXT NOT NULL,
-  cargo_discord TEXT NOT NULL,
-  auto_sync TEXT DEFAULT 'Sim',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS public.discord_bot_status (
-  id SMALLINT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
-  online BOOLEAN DEFAULT true,
-  latencia_ms INTEGER DEFAULT 0,
-  uptime_pct TEXT DEFAULT '99.8%',
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-INSERT INTO public.discord_bot_status (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
-
-CREATE TABLE IF NOT EXISTS public.discord_sync_eventos (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  item TEXT NOT NULL,
-  status TEXT DEFAULT 'Sincronizado',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
 -- ── Disciplina ───────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.disciplina_advertencias (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -328,27 +283,10 @@ CREATE TABLE IF NOT EXISTS public.backups_registro (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- ── Painel Membro · Discord OAuth · Identidade militar digital ───────────────
-ALTER TABLE public.inscricoes ADD COLUMN IF NOT EXISTS discord_user_id TEXT;
-
-CREATE TABLE IF NOT EXISTS public.discord_membros (
-  discord_user_id TEXT PRIMARY KEY,
-  username TEXT NOT NULL,
-  global_name TEXT,
-  display_name TEXT NOT NULL,
-  avatar_url TEXT,
-  nick TEXT,
-  roles_json JSONB NOT NULL DEFAULT '[]'::jsonb,
-  inscricao_id UUID REFERENCES public.inscricoes(id) ON DELETE SET NULL,
-  ultimo_login TIMESTAMPTZ NOT NULL DEFAULT now(),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
+-- ── Identidade militar digital ───────────────
 CREATE TABLE IF NOT EXISTS public.identidades_militares (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   inscricao_id UUID NOT NULL REFERENCES public.inscricoes(id) ON DELETE CASCADE,
-  discord_user_id TEXT REFERENCES public.discord_membros(discord_user_id) ON DELETE SET NULL,
   matricula TEXT NOT NULL UNIQUE,
   validade_de DATE NOT NULL,
   validade_ate DATE NOT NULL,
@@ -366,7 +304,7 @@ CREATE TABLE IF NOT EXISTS public.documentos_emitidos (
   tipo TEXT NOT NULL CHECK (char_length(tipo) BETWEEN 2 AND 32),
   referencia TEXT,
   titulo TEXT,
-  emitido_por_discord_id TEXT,
+  emitido_por TEXT,
   inscricao_id UUID REFERENCES public.inscricoes(id) ON DELETE SET NULL,
   destinatario TEXT,
   metadata JSONB DEFAULT '{}'::jsonb,
@@ -383,7 +321,6 @@ CREATE TABLE IF NOT EXISTS public.suporte_tickets (
   sobrenome TEXT,
   acesso_token UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
   status public.status_ticket_suporte NOT NULL DEFAULT 'aberto',
-  atendente_discord_id TEXT,
   atendente_nome TEXT,
   ultima_mensagem_em TIMESTAMPTZ NOT NULL DEFAULT now(),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -402,7 +339,6 @@ CREATE TABLE IF NOT EXISTS public.suporte_mensagens (
   ticket_id UUID NOT NULL REFERENCES public.suporte_tickets(id) ON DELETE CASCADE,
   autor public.autor_mensagem_suporte NOT NULL,
   autor_nome TEXT,
-  autor_discord_id TEXT,
   mensagem TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -410,18 +346,13 @@ CREATE TABLE IF NOT EXISTS public.suporte_mensagens (
 -- ── Índices ────────────────────────────────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS inscricoes_rg_idx ON public.inscricoes (rg);
 CREATE INDEX IF NOT EXISTS inscricoes_status_idx ON public.inscricoes (status);
-CREATE INDEX IF NOT EXISTS inscricoes_discord_user_id_idx ON public.inscricoes (discord_user_id);
 CREATE INDEX IF NOT EXISTS inscricoes_protocolo_idx ON public.inscricoes (protocolo);
-CREATE INDEX IF NOT EXISTS discord_membros_inscricao_idx ON public.discord_membros (inscricao_id);
 CREATE INDEX IF NOT EXISTS identidades_matricula_idx ON public.identidades_militares (matricula);
-CREATE INDEX IF NOT EXISTS identidades_discord_user_idx ON public.identidades_militares (discord_user_id);
 CREATE INDEX IF NOT EXISTS documentos_emitidos_tipo_idx ON public.documentos_emitidos (tipo);
 CREATE INDEX IF NOT EXISTS documentos_emitidos_inscricao_idx ON public.documentos_emitidos (inscricao_id);
 CREATE INDEX IF NOT EXISTS operacoes_situacao_idx ON public.operacoes (situacao);
 CREATE INDEX IF NOT EXISTS militares_categoria_idx ON public.militares (categoria);
-CREATE INDEX IF NOT EXISTS militares_discord_user_id_idx ON public.militares (discord_user_id);
 
-ALTER TABLE public.militares ADD COLUMN IF NOT EXISTS discord_user_id TEXT UNIQUE;
 CREATE INDEX IF NOT EXISTS logs_tipo_idx ON public.logs (tipo);
 CREATE INDEX IF NOT EXISTS docs_restritos_tipo_idx ON public.documentos_restritos (tipo);
 CREATE INDEX IF NOT EXISTS suporte_tickets_status_idx ON public.suporte_tickets (status);
@@ -435,7 +366,6 @@ CREATE POLICY "anyone can insert inscricao" ON public.inscricoes FOR INSERT TO a
   WITH CHECK (
     char_length(nome) BETWEEN 1 AND 80 AND char_length(sobrenome) BETWEEN 1 AND 80
     AND rg ~ '^[0-9]{1,8}$' AND char_length(telefone) BETWEEN 1 AND 20
-    AND char_length(discord_id) BETWEEN 1 AND 64
   );
 
 -- Demais tabelas: RLS ativo sem policy pública (admin via service role)
@@ -445,11 +375,10 @@ BEGIN
   FOR t IN SELECT unnest(ARRAY[
     'entrevistas','operacoes','militares','comunicados',
     'intel_relatorios','intel_investigacoes','intel_suspeitos','intel_blacklist',
-    'intel_docs_sigilosos','logs','discord_webhooks','discord_cargos',
-    'discord_bot_status','discord_sync_eventos',
+    'intel_docs_sigilosos','logs',
     'disciplina_advertencias','disciplina_prisoes','disciplina_suspensoes','disciplina_expulsoes',
     'disciplina_sindicancias','documentos_restritos','sessoes_admin','backups_registro',
-    'discord_membros','identidades_militares','documentos_emitidos',
+    'identidades_militares','documentos_emitidos',
     'suporte_tickets','suporte_mensagens'
   ]) LOOP
     EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);
@@ -463,10 +392,9 @@ BEGIN
   FOR t IN SELECT unnest(ARRAY[
     'inscricoes','entrevistas','operacoes','militares','comunicados',
     'intel_relatorios','intel_investigacoes','intel_suspeitos','intel_blacklist',
-    'intel_docs_sigilosos','discord_webhooks','discord_cargos','discord_bot_status',
-    'discord_sync_eventos','disciplina_advertencias','disciplina_prisoes',
+    'intel_docs_sigilosos','disciplina_advertencias','disciplina_prisoes',
     'disciplina_suspensoes','disciplina_expulsoes','disciplina_sindicancias',
-    'documentos_restritos','discord_membros','identidades_militares',
+    'documentos_restritos','identidades_militares',
     'suporte_tickets'
   ]) LOOP
     EXECUTE format('DROP TRIGGER IF EXISTS trg_%s_updated_at ON public.%I', t, t);
@@ -476,3 +404,13 @@ BEGIN
     );
   END LOOP;
 END $$;
+
+-- ── Storage: bucket privado dos PDFs da Área Restrita ───────────────────────
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('area-restrita', 'area-restrita', false)
+ON CONFLICT (id) DO NOTHING;
+
+-- Faz a API do Supabase enxergar as tabelas novas na hora
+NOTIFY pgrst, 'reload schema';
+
+COMMIT;

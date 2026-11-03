@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { DocumentosMilitares } from "@/components/military/DocumentosMilitares";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
-import { useDiscordSession } from "@/hooks/useDiscordSession";
-import { buscarInscricaoPorDiscord } from "@/lib/discord-auth.functions";
 import { consultarPorProtocolo } from "@/lib/inscricoes.functions";
 import { consumePendingDocProtocolo } from "@/lib/painel-nav";
 
@@ -25,8 +23,6 @@ function normalizeProtocolo(raw: string): string {
 }
 
 export function DocumentosPainel() {
-  const { session } = useDiscordSession();
-  const buscarDiscord = useServerFn(buscarInscricaoPorDiscord);
   const consultarProt = useServerFn(consultarPorProtocolo);
   const [militar, setMilitar] = useState<{
     nome: string;
@@ -63,27 +59,7 @@ export function DocumentosPainel() {
         }
       }
 
-      if (session) {
-        try {
-          const r = await buscarDiscord({ data: { session } });
-          const ins = r.inscricao as Inscricao | null;
-          if (!cancelled && ins?.status === "aprovado") {
-            setMilitar({
-              nome: ins.nome,
-              sobrenome: ins.sobrenome,
-              rg: ins.rg,
-              protocolo: ins.protocolo,
-              created_at: ins.created_at,
-            });
-          } else if (!cancelled) {
-            setMilitar(null);
-          }
-        } catch {
-          if (!cancelled) setMilitar(null);
-        }
-      } else if (!cancelled) {
-        setMilitar(null);
-      }
+      if (!cancelled) setMilitar(null);
 
       if (!cancelled) setLoading(false);
     }
@@ -92,7 +68,7 @@ export function DocumentosPainel() {
     return () => {
       cancelled = true;
     };
-  }, [session, buscarDiscord, consultarProt]);
+  }, [consultarProt]);
 
   return (
     <div>
@@ -109,8 +85,7 @@ export function DocumentosPainel() {
       {!loading && !militar && (
         <div className="field-paper p-5 mb-6 text-sm text-(--color-stencil)">
           <p>
-            Vincule sua inscrição aprovada no Discord (menu <strong>Identidade</strong>) ou informe
-            os dados manualmente abaixo para gerar PDFs.
+            Informe os dados do militar abaixo para gerar PDFs.
           </p>
         </div>
       )}

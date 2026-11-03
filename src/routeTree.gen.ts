@@ -20,7 +20,6 @@ import { Route as AutoriaRouteImport } from './routes/autoria'
 import { Route as AcompanharRouteImport } from './routes/acompanhar'
 import { Route as ADMCMFRouteImport } from './routes/ADMCMF'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthDiscordCallbackRouteImport } from './routes/auth/discord.callback'
 
 const SuporteRoute = SuporteRouteImport.update({
   id: '/suporte',
@@ -77,11 +76,6 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthDiscordCallbackRoute = AuthDiscordCallbackRouteImport.update({
-  id: '/auth/discord/callback',
-  path: '/auth/discord/callback',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -95,7 +89,6 @@ export interface FileRoutesByFullPath {
   '/organograma': typeof OrganogramaRoute
   '/perfil': typeof PerfilRoute
   '/suporte': typeof SuporteRoute
-  '/auth/discord/callback': typeof AuthDiscordCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -109,7 +102,6 @@ export interface FileRoutesByTo {
   '/organograma': typeof OrganogramaRoute
   '/perfil': typeof PerfilRoute
   '/suporte': typeof SuporteRoute
-  '/auth/discord/callback': typeof AuthDiscordCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -124,7 +116,6 @@ export interface FileRoutesById {
   '/organograma': typeof OrganogramaRoute
   '/perfil': typeof PerfilRoute
   '/suporte': typeof SuporteRoute
-  '/auth/discord/callback': typeof AuthDiscordCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -140,7 +131,6 @@ export interface FileRouteTypes {
     | '/organograma'
     | '/perfil'
     | '/suporte'
-    | '/auth/discord/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -154,7 +144,6 @@ export interface FileRouteTypes {
     | '/organograma'
     | '/perfil'
     | '/suporte'
-    | '/auth/discord/callback'
   id:
     | '__root__'
     | '/'
@@ -168,7 +157,6 @@ export interface FileRouteTypes {
     | '/organograma'
     | '/perfil'
     | '/suporte'
-    | '/auth/discord/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -183,7 +171,6 @@ export interface RootRouteChildren {
   OrganogramaRoute: typeof OrganogramaRoute
   PerfilRoute: typeof PerfilRoute
   SuporteRoute: typeof SuporteRoute
-  AuthDiscordCallbackRoute: typeof AuthDiscordCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -265,13 +252,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth/discord/callback': {
-      id: '/auth/discord/callback'
-      path: '/auth/discord/callback'
-      fullPath: '/auth/discord/callback'
-      preLoaderRoute: typeof AuthDiscordCallbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -287,7 +267,6 @@ const rootRouteChildren: RootRouteChildren = {
   OrganogramaRoute: OrganogramaRoute,
   PerfilRoute: PerfilRoute,
   SuporteRoute: SuporteRoute,
-  AuthDiscordCallbackRoute: AuthDiscordCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

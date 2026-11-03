@@ -10,18 +10,15 @@ import {
 } from "@/lib/militar-identidade";
 import { baixarCarteiraMilitar } from "@/lib/documentos-militares-pdf";
 import { playScanner, playConfirm } from "@/lib/military-sounds";
-import type { DiscordProfile } from "@/lib/discord-oauth";
 import { CarteiraMilitarVisual } from "@/components/military/CarteiraMilitarVisual";
 
 type Props = {
   dados: IdentidadeMilitarData;
   /** Só exibe emissão completa se aprovado */
   aprovado?: boolean;
-  /** Perfil Discord — nome, avatar e tags na carteira */
-  discordProfile?: DiscordProfile | null;
 };
 
-export function IdentidadeMilitarDigital({ dados, aprovado = true, discordProfile }: Props) {
+export function IdentidadeMilitarDigital({ dados, aprovado = true }: Props) {
   const [id, setId] = useState<IdentidadeGerada | null>(null);
   const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [foto, setFoto] = useState<string | null>(null);
@@ -37,13 +34,12 @@ export function IdentidadeMilitarDigital({ dados, aprovado = true, discordProfil
     const fotoSalva = carregarFotoLocal(gerada.matricula);
     if (fotoSalva) gerada.fotoDataUrl = fotoSalva;
     else if (foto) gerada.fotoDataUrl = foto;
-    else if (discordProfile?.avatarUrl) gerada.fotoDataUrl = discordProfile.avatarUrl;
     setId(gerada);
     const qr = await gerarQrDataUrl(gerada.qrPayload, 140);
     setQrUrl(qr);
     playConfirm();
     toast.success("Identidade militar gerada.");
-  }, [dados, aprovado, foto, discordProfile]);
+  }, [dados, aprovado, foto]);
 
   useEffect(() => {
     if (aprovado) void emitir();
@@ -64,7 +60,7 @@ export function IdentidadeMilitarDigital({ dados, aprovado = true, discordProfil
   const baixarCarteira = async () => {
     if (!id || !qrUrl) return;
     playScanner();
-    await baixarCarteiraMilitar(id, qrUrl, { discordProfile: discordProfile ?? undefined });
+    await baixarCarteiraMilitar(id, qrUrl);
     toast.success("Carteira militar baixada (PDF).");
   };
 
@@ -108,7 +104,6 @@ export function IdentidadeMilitarDigital({ dados, aprovado = true, discordProfil
           <CarteiraMilitarVisual
             id={id}
             qrUrl={qrUrl}
-            discordProfile={discordProfile}
             onUpload={() => fileRef.current?.click()}
           />
           <input

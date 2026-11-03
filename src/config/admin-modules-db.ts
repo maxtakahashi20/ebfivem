@@ -103,13 +103,11 @@ export const MODULO_DB: Partial<Record<AdminView, ModuloDbSpec>> = {
     table: "militares",
     filter: { categoria: "ativo" },
     rowMap: (r) => ({
-      id:
-        str(r.codigo) ||
-        (r.discord_user_id ? `DSC-${String(r.discord_user_id).slice(-6)}` : "—"),
+      id: str(r.codigo) || "—",
       nome: str(r.nome),
       patente: str(r.patente) || "—",
-      discord: str(r.funcao) || (r.discord_user_id ? "Vinculado" : "Manual"),
-      status: str(r.status) || "Autenticado",
+      funcao: str(r.funcao) || "—",
+      status: str(r.status) || "Ativo",
     }),
   },
   "efetivo-instrutores": {
@@ -132,35 +130,13 @@ export const MODULO_DB: Partial<Record<AdminView, ModuloDbSpec>> = {
       detalhe: str(r.detalhe ?? r.evento ?? r.componente),
     }),
   },
-  "discord-webhooks": {
-    table: "discord_webhooks",
+  comunicados: {
+    table: "comunicados",
     rowMap: (r) => ({
-      nome: str(r.nome),
-      uso: str(r.uso),
-      status: str(r.status),
-    }),
-  },
-  "discord-cargos": {
-    table: "discord_cargos",
-    rowMap: (r) => ({
-      patente: str(r.patente_rp),
-      cargo: str(r.cargo_discord),
-      auto: str(r.auto_sync),
-    }),
-  },
-  "discord-logs": {
-    table: "logs",
-    filter: { tipo: "discord" },
-    rowMap: (r) => ({
-      hora: fmtDate(r.hora).split(" ")[1] ?? fmtDate(r.hora),
-      evento: str(r.evento ?? r.detalhe),
-    }),
-  },
-  "discord-sync": {
-    table: "discord_sync_eventos",
-    rowMap: (r) => ({
-      item: str(r.item),
-      status: str(r.status),
+      data: fmtDate(r.publicado_em),
+      titulo: str(r.titulo),
+      corpo: str(r.corpo),
+      emitido: str(r.emitido_por) || "—",
     }),
   },
   "disc-advertencias": {
@@ -266,9 +242,6 @@ export const TABELAS_SISTEMA = [
   "intel_blacklist",
   "intel_docs_sigilosos",
   "logs",
-  "discord_webhooks",
-  "discord_cargos",
-  "discord_sync_eventos",
   "disciplina_advertencias",
   "disciplina_prisoes",
   "disciplina_suspensoes",
@@ -277,7 +250,6 @@ export const TABELAS_SISTEMA = [
   "documentos_restritos",
   "sessoes_admin",
   "backups_registro",
-  "discord_membros",
   "identidades_militares",
   "documentos_emitidos",
   "suporte_tickets",

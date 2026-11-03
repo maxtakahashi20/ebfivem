@@ -125,21 +125,12 @@ const FORMS: Partial<Record<AdminView, ModuloFormSpec>> = {
     ],
     defaults: { status: "Instrução" },
   },
-  "discord-webhooks": {
+  comunicados: {
     fields: [
-      { key: "nome", label: "Canal", dbColumn: "nome", required: true },
-      { key: "uso", label: "Uso", dbColumn: "uso" },
-      { key: "status", label: "Status", dbColumn: "status", placeholder: "Ativo" },
+      { key: "titulo", label: "Título", dbColumn: "titulo", required: true },
+      { key: "corpo", label: "Mensagem", dbColumn: "corpo", required: true },
+      { key: "emitido", label: "Emitido por", dbColumn: "emitido_por" },
     ],
-    defaults: { status: "Ativo" },
-  },
-  "discord-cargos": {
-    fields: [
-      { key: "patente", label: "Patente RP", dbColumn: "patente_rp", required: true },
-      { key: "cargo", label: "Cargo Discord", dbColumn: "cargo_discord", required: true },
-      { key: "auto", label: "Sync automático", dbColumn: "auto_sync", placeholder: "Sim" },
-    ],
-    defaults: { auto_sync: "Sim" },
   },
   "restrito-intel": {
     fields: [
@@ -174,18 +165,12 @@ const FORMS: Partial<Record<AdminView, ModuloFormSpec>> = {
   },
   "logs-geral": {
     fields: [
-      { key: "tipo", label: "Tipo", dbColumn: "tipo", placeholder: "admin | discord | operacional | sistema", required: true },
+      { key: "tipo", label: "Tipo", dbColumn: "tipo", placeholder: "admin | operacional | sistema", required: true },
       { key: "usuario", label: "Operador", dbColumn: "usuario" },
       { key: "acao", label: "Ação", dbColumn: "acao" },
       { key: "detalhe", label: "Detalhe", dbColumn: "detalhe" },
     ],
     defaults: { tipo: "admin", usuario: "Painel ADMCMF" },
-  },
-  "discord-logs": {
-    fields: [
-      { key: "evento", label: "Evento", dbColumn: "evento", required: true },
-    ],
-    defaults: { tipo: "discord" },
   },
 };
 
@@ -201,7 +186,6 @@ export const ACAO_LABEL: Partial<Record<AdminView, string>> = {
   "intel-sigilosos": "Novo documento sigiloso",
   "efetivo-instrutores": "Cadastrar instrutor",
   "logs-geral": "Registrar log",
-  "discord-logs": "Registrar log",
 };
 
 export function getModuloForm(view: AdminView): ModuloFormSpec | null {
@@ -214,10 +198,9 @@ export function getModuloForm(view: AdminView): ModuloFormSpec | null {
   };
 }
 
-export type AcaoEspecial = "discord-sync" | "sys-backup";
+export type AcaoEspecial = "sys-backup";
 
 export function getAcaoEspecial(view: AdminView): AcaoEspecial | null {
-  if (view === "discord-sync") return "discord-sync";
   if (view === "sys-backup") return "sys-backup";
   return null;
 }

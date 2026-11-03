@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   listarInscricoes,
@@ -8,7 +8,7 @@ import {
   excluirInscricao,
   obterEstatisticas,
 } from "@/lib/inscricoes.functions";
-import { enviarComunicadoDiscord } from "@/lib/discord.functions";
+import { validarChavePainel } from "@/lib/admin.functions";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminPageTransition } from "@/components/admin/AdminPageTransition";
@@ -19,15 +19,7 @@ import { DocumentosPainel } from "@/components/admin/DocumentosPainel";
 import { SuporteAdmin } from "@/components/admin/SuporteAdmin";
 import { PerfilMilitar } from "@/components/military/PerfilMilitar";
 import { PENDING_VIEW_KEY } from "@/lib/painel-nav";
-import { useDiscordSession } from "@/hooks/useDiscordSession";
-import { liberarAcessoPainelDiscord } from "@/lib/discord-auth.functions";
-import { DISCORD_SESSION_KEY } from "@/lib/discord-oauth";
-import {
-  clearPanelAccessKey,
-  getPanelAccessKey,
-  isDiscordSessionInvalidError,
-  setPanelAccessKey,
-} from "@/lib/painel-auth-storage";
+import { clearPanelAccessKey, getPanelAccessKey, setPanelAccessKey } from "@/lib/painel-auth-storage";
 import { type AdminView, getViewLabel } from "@/config/admin-nav";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,7 +41,7 @@ export const Route = createFileRoute("/ADMCMF")({
   head: () => ({
     meta: [
       { title: "Comando · Painel de Instrutores" },
-      { name: "description", content: "Painel restrito de instrutores. Acesso via Discord." },
+      { name: "description", content: "Painel restrito de instrutores." },
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
@@ -65,7 +57,6 @@ type Row = {
   sobrenome: string;
   rg: string;
   telefone: string;
-  discord_id: string;
   status: Status;
   observacoes_instrutor: string | null;
   created_at: string;
@@ -89,93 +80,87 @@ const STATUS_META: Record<Status, { label: string; color: string; symbol: string
   reprovado:  { label: "Reprovado",  color: "oklch(0.48 0.18 30)",   symbol: "❌", variant: "destructive" },
 };
 
-// ─── Acesso: somente Discord OAuth ───────────────────────────────────────────
+// ─── Acesso: chave única (ACCESS_KEY) ───────────────────────────────────────
 function Comando() {
   const [accessKey, setAccessKey] = useState("");
   const [authed, setAuthed] = useState(false);
-  const [checkingDiscord, setCheckingDiscord] = useState(true);
+  const [checking, setChecking] = useState(true);
+  const [entrando, setEntrando] = useState(false);
+  const [chave, setChave] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
-  const redirecting = useRef(false);
-  const { login: loginDiscord } = useDiscordSession();
-  const liberarPainel = useServerFn(liberarAcessoPainelDiscord);
-
-  const iniciarLoginDiscord = () => {
-    setAuthError(null);
-    redirecting.current = true;
-    loginDiscord().catch((e) => {
-      redirecting.current = false;
-      setAuthError(e instanceof Error ? e.message : "Não foi possível abrir o login Discord.");
-    });
-  };
+  const validar = useServerFn(validarChavePainel);
 
   useEffect(() => {
-    const discordTok = localStorage.getItem(DISCORD_SESSION_KEY);
-    const cachedKey = getPanelAccessKey();
-
-    if (discordTok && cachedKey) {
-      setAccessKey(cachedKey);
-      setAuthed(true);
-      setCheckingDiscord(false);
-      liberarPainel({ data: { session: discordTok } })
-        .then(({ accessKey: key }) => {
-          setPanelAccessKey(key);
-          setAccessKey(key);
-        })
-        .catch((e) => {
-          const msg = e instanceof Error ? e.message : "";
-          if (!isDiscordSessionInvalidError(msg)) return;
-          localStorage.removeItem(DISCORD_SESSION_KEY);
-          clearPanelAccessKey();
-          setAuthed(false);
-          setAccessKey("");
-          setAuthError("Sessão Discord expirada. Entre novamente.");
-        });
+    const salva = getPanelAccessKey();
+    if (!salva) {
+      setChecking(false);
       return;
     }
-
-    if (!discordTok) {
-      setCheckingDiscord(false);
-      return;
-    }
-
-    liberarPainel({ data: { session: discordTok } })
-      .then(({ accessKey: key }) => {
-        setPanelAccessKey(key);
-        setAccessKey(key);
+    validar({ data: { accessKey: salva } })
+      .then(() => {
+        setAccessKey(salva);
         setAuthed(true);
       })
-      .catch((e) => {
-        const msg = e instanceof Error ? e.message : "Sessão Discord inválida. Entre novamente.";
-        if (isDiscordSessionInvalidError(msg)) {
-          localStorage.removeItem(DISCORD_SESSION_KEY);
-          clearPanelAccessKey();
-        }
-        setAuthError(msg);
-      })
-      .finally(() => setCheckingDiscord(false));
-  }, [liberarPainel]);
+      .catch(() => clearPanelAccessKey())
+      .finally(() => setChecking(false));
+  }, [validar]);
 
-  useEffect(() => {
-    if (authed || checkingDiscord || redirecting.current) return;
-    if (localStorage.getItem(DISCORD_SESSION_KEY)) return;
-    iniciarLoginDiscord();
-  }, [authed, checkingDiscord]);
+  async function entrar(e: React.FormEvent) {
+    e.preventDefault();
+    const key = chave.trim();
+    if (!key) return;
+    setEntrando(true);
+    setAuthError(null);
+    try {
+      await validar({ data: { accessKey: key } });
+      setPanelAccessKey(key);
+      setAccessKey(key);
+      setAuthed(true);
+      setChave("");
+    } catch (err) {
+      setAuthError(err instanceof Error ? err.message : "Não foi possível validar a chave.");
+    } finally {
+      setEntrando(false);
+    }
+  }
 
   if (!authed) {
     return (
       <div className="mx-auto max-w-md px-6 py-24">
-        <div className="field-paper p-8 relative text-center">
+        <form onSubmit={entrar} className="field-paper p-8 relative">
           <div className="absolute -top-3 left-6 tag-rank bg-(--color-destructive)">RESTRITO</div>
-          <p className="stencil text-xs mb-2 mt-3">PAINEL MEMBRO · CMF</p>
-          <p className="font-mono text-sm text-(--color-stencil)">
-            {authError ?? (checkingDiscord ? "VERIFICANDO SESSÃO…" : "REDIRECIONANDO PARA O DISCORD…")}
-          </p>
-          {authError && (
-            <button type="button" className="btn-olive w-full mt-6" onClick={iniciarLoginDiscord}>
-              ▸ TENTAR NOVAMENTE
-            </button>
+          <p className="stencil text-xs mb-4 mt-3 text-center">PAINEL · CMF</p>
+          {checking ? (
+            <p className="font-mono text-sm text-(--color-stencil) text-center">VERIFICANDO SESSÃO…</p>
+          ) : (
+            <>
+              <label htmlFor="chave-painel" className="block stencil text-[11px] mb-1">
+                Chave de acesso
+              </label>
+              <Input
+                id="chave-painel"
+                type="password"
+                autoComplete="current-password"
+                autoFocus
+                value={chave}
+                onChange={(e) => setChave(e.target.value)}
+                className="font-mono text-sm bg-transparent"
+              />
+              {authError && (
+                <p role="alert" className="font-mono text-xs text-(--color-destructive) mt-2">
+                  {authError}
+                </p>
+              )}
+              <button
+                type="submit"
+                disabled={entrando || !chave.trim()}
+                className="btn-olive w-full mt-6 disabled:opacity-50"
+              >
+                {entrando ? "VALIDANDO…" : "▸ ENTRAR"}
+              </button>
+            </>
           )}
-        </div>
+        </form>
       </div>
     );
   }
@@ -184,12 +169,9 @@ function Comando() {
     <CentralComando
       accessKey={accessKey}
       onLogout={() => {
-        redirecting.current = false;
         clearPanelAccessKey();
-        localStorage.removeItem(DISCORD_SESSION_KEY);
         setAccessKey("");
         setAuthError(null);
-        setCheckingDiscord(false);
         setAuthed(false);
       }}
     />
@@ -275,7 +257,6 @@ function PanelContent({
     case "perfil":
       return (
         <PerfilMilitar
-          variant="admin"
           onOpenDocumentos={() => onViewChange("documentos")}
         />
       );
@@ -323,8 +304,6 @@ function PanelContent({
           tag="RECRUTAMENTO"
         />
       );
-    case "comunicados":
-      return <Comunicados accessKey={accessKey} />;
     case "suporte-admin":
       return <SuporteAdmin accessKey={accessKey} />;
     default:
@@ -392,7 +371,6 @@ function Dashboard({ accessKey }: { accessKey: string }) {
         <CardContent className="space-y-2">
           <StatusLine ok label="Banco de dados: operacional" />
           <StatusLine ok label="Sistema de inscrições: ativo" />
-          <StatusLine ok={!!process.env.DISCORD_WEBHOOK_URL} label="Integração Discord: configure DISCORD_WEBHOOK_URL no .env" />
           <StatusLine ok label="Painel admin: autenticado" />
         </CardContent>
       </Card>
@@ -524,7 +502,7 @@ function GestaoInscricoes({
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="nome, RG, protocolo, discord…"
+              placeholder="nome, RG, protocolo…"
               className="font-mono text-sm bg-transparent"
             />
           </div>
@@ -564,7 +542,7 @@ function GestaoInscricoes({
                 <div className="font-mono text-sm w-32 shrink-0 text-(--color-stencil)">{r.protocolo}</div>
                 <div className="flex-1 min-w-40">
                   <div className="font-display tracking-wide">{r.nome} {r.sobrenome}</div>
-                  <div className="text-xs text-(--color-stencil)">RG {r.rg} · {r.discord_id}</div>
+                  <div className="text-xs text-(--color-stencil)">RG {r.rg} · {r.telefone}</div>
                 </div>
                 <Badge
                   variant={m.variant}
@@ -613,7 +591,6 @@ function InscricaoEditor({
       <div>
         <div className="grid sm:grid-cols-2 gap-3 mb-4 text-sm font-mono">
           <LabelValue label="TELEFONE"    value={row.telefone} />
-          <LabelValue label="DISCORD"     value={row.discord_id} />
           <LabelValue label="RG"          value={row.rg} />
           <LabelValue label="PROTOCOLO"   value={row.protocolo} />
           <LabelValue label="APRESENTAÇÃO"     value={new Date(row.created_at).toLocaleString("pt-BR")} />
@@ -663,10 +640,6 @@ function InscricaoEditor({
           {saving ? "SALVANDO…" : "▸ CONFIRMAR DECISÃO"}
         </Button>
 
-        <p className="text-[9px] font-mono text-(--color-stencil) text-center">
-          Notificará o Discord automaticamente
-        </p>
-
         <Separator className="my-2" />
 
         <Button
@@ -682,138 +655,6 @@ function InscricaoEditor({
         >
           {deleting ? "EXCLUINDO…" : "✕ EXCLUIR INSCRIÇÃO"}
         </Button>
-      </div>
-    </div>
-  );
-}
-
-// ─── Comunicados ──────────────────────────────────────────────────────────────
-function Comunicados({ accessKey }: { accessKey: string }) {
-  const enviar = useServerFn(enviarComunicadoDiscord);
-  const [titulo, setTitulo] = useState("");
-  const [mensagem, setMensagem] = useState("");
-  const [tipo, setTipo] = useState<"informativo" | "alerta" | "operacao" | "urgente">("informativo");
-  const [sending, setSending] = useState(false);
-
-  const tipoMeta = {
-    informativo: { label: "Informativo", color: "oklch(0.50 0.13 145)", emoji: "📣" },
-    alerta:      { label: "Alerta",      color: "oklch(0.72 0.13 80)",  emoji: "⚠️" },
-    operacao:    { label: "Operação",    color: "oklch(0.55 0.12 230)", emoji: "⚔️" },
-    urgente:     { label: "Urgente",     color: "oklch(0.48 0.18 30)",  emoji: "🚨" },
-  };
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!titulo.trim() || !mensagem.trim()) return;
-    setSending(true);
-    try {
-      await enviar({ data: { accessKey, titulo, mensagem, tipo } });
-      toast.success("Comunicado enviado para o Discord.");
-      setTitulo("");
-      setMensagem("");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao enviar comunicado");
-    } finally { setSending(false); }
-  }
-
-  return (
-    <div>
-      <PageHeader
-        tag="PAINEL DE INSTRUTORES"
-        title="Central de Comunicados"
-        sub="Envio direto ao canal Discord configurado"
-      />
-
-      <div className="grid md:grid-cols-[1fr_300px] gap-6">
-        <Card className="field-paper border-0 shadow-none">
-          <CardContent className="pt-5">
-            <form onSubmit={submit} className="space-y-4">
-              {/* Tipo */}
-              <div>
-                <label className="block stencil text-[10px] mb-2">TIPO DE COMUNICADO</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {(Object.keys(tipoMeta) as typeof tipo[]).map((t) => {
-                    const m = tipoMeta[t];
-                    const sel = tipo === t;
-                    return (
-                      <label
-                        key={t}
-                        className={`flex items-center gap-2 p-2 border cursor-pointer transition-all text-xs font-display tracking-widest ${
-                          sel ? "border-(--color-olive-deep) bg-khaki/50" : "border-transparent"
-                        }`}
-                      >
-                        <input type="radio" name="tipo" checked={sel} onChange={() => setTipo(t)} />
-                        <span style={{ color: m.color }}>{m.emoji} {m.label}</span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div>
-                <label className="block stencil text-[10px] mb-1">TÍTULO</label>
-                <Input
-                  value={titulo}
-                  onChange={(e) => setTitulo(e.target.value)}
-                  maxLength={100}
-                  placeholder="Ex: CHAMADA GERAL — TREINAMENTO"
-                  className="font-mono text-sm bg-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block stencil text-[10px] mb-1">MENSAGEM</label>
-                <Textarea
-                  value={mensagem}
-                  onChange={(e) => setMensagem(e.target.value)}
-                  maxLength={2000}
-                  rows={5}
-                  placeholder="Redija o comunicado operacional…"
-                  className="font-mono text-sm bg-transparent resize-y"
-                />
-                <p className="text-[9px] font-mono text-(--color-stencil) text-right mt-1">
-                  {mensagem.length}/2000
-                </p>
-              </div>
-
-              <button
-                type="submit"
-                disabled={sending || !titulo.trim() || !mensagem.trim()}
-                className="btn-olive w-full disabled:opacity-40"
-              >
-                {sending ? "TRANSMITINDO…" : "▸ TRANSMITIR PARA O DISCORD"}
-              </button>
-            </form>
-          </CardContent>
-        </Card>
-
-        <Card className="field-paper border-0 shadow-none">
-          <CardHeader className="pb-2">
-            <CardTitle className="stencil text-xs">CONFIGURAÇÃO DISCORD</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-xs font-mono text-(--color-stencil)">
-            <p>1. Crie um webhook no canal Discord desejado.</p>
-            <p>2. Copie a URL gerada.</p>
-            <p>3. Defina no <span className="font-bold">.env</span>:</p>
-            <code className="block bg-background/60 border border-(--color-border) p-2 text-[10px] break-all">
-              DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
-            </code>
-            <p>Para logs em canal separado:</p>
-            <code className="block bg-background/60 border border-(--color-border) p-2 text-[10px] break-all">
-              DISCORD_WEBHOOK_LOG_URL=https://discord.com/api/webhooks/...
-            </code>
-            <Separator className="my-2" />
-            <p className="font-display tracking-widest text-[9px] text-(--color-olive-deep)">
-              AUTOMÁTICO AO APROVAR/REPROVAR:
-            </p>
-            <ul className="list-disc list-inside space-y-1 text-[10px]">
-              <li>Nova inscrição recebida</li>
-              <li>Aprovação de recruta</li>
-              <li>Reprovação de inscrição</li>
-              <li>Mudança para em análise</li>
-            </ul>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
