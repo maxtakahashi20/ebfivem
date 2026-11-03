@@ -250,6 +250,7 @@ export async function gerarCarteiraMilitarPdf(
   qrDataUrl: string,
 ): Promise<jsPDF> {
   const doc = new jsPDF({
+    orientation: "landscape",
     unit: "mm",
     format: [CARD_W, CARD_H],
     compress: false,
