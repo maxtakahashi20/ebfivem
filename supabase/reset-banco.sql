@@ -508,6 +508,7 @@ CREATE POLICY "anyone can insert inscricao" ON public.inscricoes FOR INSERT TO a
     char_length(nome) BETWEEN 1 AND 80 AND char_length(sobrenome) BETWEEN 1 AND 80
     AND rg ~ '^[0-9]{1,8}$' AND char_length(telefone) BETWEEN 1 AND 20
     AND char_length(discord_id) BETWEEN 1 AND 64
+    AND status = 'pendente' AND discord_user_id IS NULL
   );
 
 -- Faz a API do Supabase enxergar as tabelas novas na hora
