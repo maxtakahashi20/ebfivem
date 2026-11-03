@@ -18,7 +18,7 @@ import {
   upsertDiscordMembro,
   vincularDiscordNaInscricao,
 } from "@/lib/identidade-db";
-import { hasFullAccess, isDesenvolvedor } from "@/lib/access-control";
+import { isDesenvolvedor, papelDoPerfil } from "@/lib/access-control";
 
 function resolveRedirectUri(): string {
   const { redirectUri } = discordConfig();
@@ -120,6 +120,32 @@ async function fetchRolesViaBot(
   };
 }
 
+const CARGOS_CACHE_MS = 60_000;
+const cacheCargos = new Map<string, { roles: DiscordRoleTag[]; exp: number }>();
+
+const foraDoServidor = (e: unknown) =>
+  isDiscordApiError(e) && (e.discordCode === 10007 || e.discordCode === 10013);
+
+/**
+ * Cargos de agora, não os gravados na sessão (que vale 7 dias): cargo removido perde efeito em até 1 min.
+ * ponytail: cache por instância; se o Discord cair, vale o cargo assinado até ele voltar.
+ */
+export async function cargosAtuais(profile: DiscordProfile): Promise<DiscordRoleTag[]> {
+  const { guildId, botToken } = discordConfig();
+  if (!guildId || !botToken) return profile.roles;
+  const salvo = cacheCargos.get(profile.id);
+  if (salvo && salvo.exp > Date.now()) return salvo.roles;
+  try {
+    const { roles } = await fetchRolesViaBot(guildId, profile.id, botToken);
+    cacheCargos.set(profile.id, { roles, exp: Date.now() + CARGOS_CACHE_MS });
+    return roles;
+  } catch (e) {
+    if (foraDoServidor(e)) throw new Error("Você não faz parte do servidor Discord da 2ª DE.");
+    console.warn("[discord] cargosAtuais:", e);
+    return profile.roles;
+  }
+}
+
 function rolesLoadWarning(e: unknown): string {
   if (isDiscordApiError(e) && e.discordCode === 10004) {
     return "Bot não está no servidor 2ª DE ou DISCORD_GUILD_ID incorreto no .env. Convide o bot no servidor e confira o ID do servidor.";
@@ -160,6 +186,7 @@ async function enrichProfileWithRoles(
     console.warn("[discord] enrichProfileWithRoles:", e);
     return {
       ...profile,
+      roles: foraDoServidor(e) ? [] : profile.roles,
       rolesWarning: rolesLoadWarning(e),
     };
   }
@@ -299,7 +326,7 @@ export const completarDiscordOAuth = createServerFn({ method: "POST" })
       profile,
       session,
       inscricaoId: inscricao?.id ?? null,
-      altoComando: hasFullAccess(profile),
+      papel: papelDoPerfil(profile),
       desenvolvedor: isDesenvolvedor(profile),
     };
   });
@@ -315,7 +342,7 @@ export const validarSessaoDiscord = createServerFn({ method: "POST" })
       return {
         profile,
         session: data.session,
-        altoComando: hasFullAccess(profile),
+        papel: papelDoPerfil(profile),
         desenvolvedor: isDesenvolvedor(profile),
       };
     }
@@ -328,7 +355,7 @@ export const validarSessaoDiscord = createServerFn({ method: "POST" })
     return {
       profile: refreshed,
       session,
-      altoComando: hasFullAccess(refreshed),
+      papel: papelDoPerfil(refreshed),
       desenvolvedor: isDesenvolvedor(refreshed),
     };
   });
@@ -337,27 +364,21 @@ export const encerrarSessaoDiscord = createServerFn({ method: "POST" }).handler(
   ok: true,
 }));
 
-/** Libera chave do painel após OAuth Discord (membro do servidor 2ª DE). */
+/** Abre o painel para quem ainda está no servidor Discord da 2ª DE. */
 export const liberarAcessoPainelDiscord = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z.object({ session: z.string().min(1) }).parse(input),
   )
   .handler(async ({ data }) => {
-    let profile = await verifyDiscordSession(data.session);
-    if (!profile) throw new Error("Sessão Discord inválida ou expirada.");
+    const assinado = await verifyDiscordSession(data.session);
+    if (!assinado) throw new Error("Sessão Discord inválida ou expirada.");
+    await cargosAtuais(assinado);
     const { guildId } = discordConfig();
-    if (guildId) profile = await enrichProfileWithRoles(profile, guildId);
+    const profile = guildId ? await enrichProfileWithRoles(assinado, guildId) : assinado;
     const inscricao = await buscarInscricaoPorDiscordId(profile.id, profile.username);
     await upsertDiscordMembro(profile, inscricao?.id ?? null);
     await sincronizarMilitarEfetivo(profile);
-    const accessKey = process.env.ACCESS_KEY?.trim();
-    if (!accessKey) throw new Error("ACCESS_KEY não configurada no servidor.");
-    return {
-      accessKey,
-      profile,
-      altoComando: hasFullAccess(profile),
-      desenvolvedor: isDesenvolvedor(profile),
-    };
+    return { profile, papel: papelDoPerfil(profile), desenvolvedor: isDesenvolvedor(profile) };
   });
 
 export const buscarInscricaoPorDiscord = createServerFn({ method: "POST" })

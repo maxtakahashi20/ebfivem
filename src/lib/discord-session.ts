@@ -5,7 +5,7 @@ const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 type SessionPayload = DiscordProfile & { exp: number };
 
 function sessionSecret(): string {
-  // Segredo exclusivo: a ACCESS_KEY chega ao navegador dos membros, e com ela daria para forjar sessão.
+  // Sem segredo não há sessão: um valor fixo ou previsível permitiria forjar login.
   const secret = process.env.DISCORD_SESSION_SECRET?.trim();
   if (!secret) throw new Error("Defina DISCORD_SESSION_SECRET no servidor.");
   return secret;

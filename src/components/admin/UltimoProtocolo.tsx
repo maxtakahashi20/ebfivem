@@ -3,7 +3,10 @@ import { createPortal } from "react-dom";
 import { useServerFn } from "@tanstack/react-start";
 import { Check, Copy } from "lucide-react";
 import { toast } from "sonner";
+import { useDiscordSession } from "@/hooks/useDiscordSession";
+import { papelAlcanca } from "@/lib/access-control";
 import { obterUltimoProtocolo } from "@/lib/inscricoes.functions";
+import { getDiscordSessionToken } from "@/lib/painel-auth-storage";
 
 const POLL_MS = 10_000;
 
@@ -29,20 +32,23 @@ async function copiar(texto: string): Promise<boolean> {
 }
 
 /** Protocolo da inscrição mais recente, no header do painel (`#panel-header-slot`). */
-export function UltimoProtocolo({ accessKey }: { accessKey: string }) {
+export function UltimoProtocolo() {
+  const { papel } = useDiscordSession();
+  const podeVer = papelAlcanca(papel, "instrutor");
   const buscar = useServerFn(obterUltimoProtocolo);
   const [protocolo, setProtocolo] = useState<string | null>(null);
   const [copiado, setCopiado] = useState(false);
 
   useEffect(() => {
+    if (!podeVer) return;
     const carregar = () =>
-      buscar({ data: { accessKey } })
+      buscar({ data: { session: getDiscordSessionToken() } })
         .then(setProtocolo)
         .catch(() => {});
     void carregar();
     const id = setInterval(carregar, POLL_MS);
     return () => clearInterval(id);
-  }, [accessKey, buscar]);
+  }, [podeVer, buscar]);
 
   useEffect(() => {
     if (!copiado) return;
@@ -51,7 +57,7 @@ export function UltimoProtocolo({ accessKey }: { accessKey: string }) {
   }, [copiado]);
 
   const slot = document.getElementById("panel-header-slot");
-  if (!slot) return null;
+  if (!slot || !podeVer) return null;
 
   return createPortal(
     protocolo ? (

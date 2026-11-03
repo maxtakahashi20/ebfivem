@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import type { Papel } from "@/lib/access-control";
 import {
   LayoutDashboard,
   Radar,
@@ -19,13 +20,9 @@ import {
 
 export type AdminView = string;
 
-/** Marcação opcional de gates por papel (atualmente só "alto-comando"). */
-export type RestrictedRole = "alto-comando";
-
 export type NavLeaf = {
   id: AdminView;
   label: string;
-  restricted?: RestrictedRole;
 };
 
 export type NavGroup = {
@@ -34,7 +31,6 @@ export type NavGroup = {
   icon: LucideIcon;
   defaultOpen?: boolean;
   children: NavLeaf[];
-  restricted?: RestrictedRole;
 };
 
 export type NavSingle = {
@@ -43,7 +39,6 @@ export type NavSingle = {
   label: string;
   icon: LucideIcon;
   highlight?: "war" | "default";
-  restricted?: RestrictedRole;
 };
 
 export type NavGroupEntry = {
@@ -67,19 +62,13 @@ export const IMPLEMENTED_VIEWS = new Set<AdminView>([
   "suporte-admin",
 ]);
 
-/** Views com gate Alto Comando — usadas pelo servidor para autorização defensiva. */
-export const ALTO_COMANDO_VIEWS = new Set<AdminView>([
-  "logs-geral",
-  "suporte-admin",
-  "sys-db",
-  "sys-api",
-  "sys-seguranca",
-  "sys-sessoes",
-  "sys-backup",
-  "restrito-intel",
-  "restrito-ops",
-  "restrito-docs",
-]);
+const VIEWS_MEMBRO = new Set<AdminView>(["dashboard", "perfil", "documentos"]);
+
+/** Quem pode abrir cada tela. O que não estiver listado é do Alto Comando. */
+export function papelDaView(view: AdminView): Papel {
+  if (VIEWS_MEMBRO.has(view)) return "membro";
+  return view.startsWith("recrutamento-") ? "instrutor" : "alto-comando";
+}
 
 const PLACEHOLDER_COPY: Record<string, { title: string; desc: string; tag?: string }> = {
   "recrutamento-entrevistas": {
@@ -171,7 +160,6 @@ export const NAV_ENTRIES: NavEntry[] = [
     id: "suporte-admin",
     label: "Suporte",
     icon: LifeBuoy,
-    restricted: "alto-comando",
   },
   {
     type: "group",
@@ -205,7 +193,6 @@ export const NAV_ENTRIES: NavEntry[] = [
     id: "logs-geral",
     label: "Logs em geral",
     icon: ScrollText,
-    restricted: "alto-comando",
   },
   {
     type: "group",
@@ -281,7 +268,6 @@ export const NAV_ENTRIES: NavEntry[] = [
       id: "sistema",
       label: "Sistema",
       icon: Settings,
-      restricted: "alto-comando",
       children: [
         { id: "sys-db", label: "Banco de dados" },
         { id: "sys-api", label: "API" },
@@ -297,7 +283,6 @@ export const NAV_ENTRIES: NavEntry[] = [
       id: "restrito",
       label: "Área Restrita",
       icon: Lock,
-      restricted: "alto-comando",
       children: [
         { id: "restrito-intel", label: "Inteligência" },
         { id: "restrito-ops", label: "Operações sigilosas" },
@@ -308,22 +293,3 @@ export const NAV_ENTRIES: NavEntry[] = [
 ];
 
 buildViewLabels(NAV_ENTRIES);
-
-/** Para uso em UIs/servers ao decidir bloqueio (`entry` pode ser single ou child). */
-export function viewIsRestricted(view: AdminView): RestrictedRole | undefined {
-  for (const e of NAV_ENTRIES) {
-    if (e.type === "single") {
-      if (e.id === view) return e.restricted;
-      continue;
-    }
-    const g = e.group;
-    if (g.restricted) {
-      if (g.children.some((c) => c.id === view)) return g.restricted;
-    }
-    for (const c of g.children) {
-      if (c.id === view && c.restricted) return c.restricted;
-    }
-  }
-  if (ALTO_COMANDO_VIEWS.has(view)) return "alto-comando";
-  return undefined;
-}

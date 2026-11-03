@@ -281,7 +281,7 @@ const REGISTRY: Partial<Record<AdminView, ModuleConfig>> = {
       { key: "status", label: "STATUS" },
     ],
     rows: [
-      { item: "ACCESS_KEY painel", status: "Configurado" },
+      { item: "Segredo da sessão", status: "Configurado" },
       { item: "RLS Supabase", status: "Ativo" },
       { item: "HTTPS", status: "Ativo" },
     ],

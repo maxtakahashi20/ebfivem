@@ -1,8 +1,8 @@
-import { assertAccessKey } from "@/lib/access-key.server";
+import { exigirPapel } from "@/lib/painel-auth.server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import type { AdminView } from "@/config/admin-nav";
-import { ALTO_COMANDO_VIEWS } from "@/config/admin-nav";
+import { papelDaView } from "@/config/admin-nav";
 import { getAcaoEspecial, getModuloForm } from "@/config/admin-module-forms";
 import { MODULO_DB, PDF_RESTRITO_VIEWS, TABELAS_SISTEMA } from "@/config/admin-modules-db";
 import { enviarLogOperacional } from "@/lib/discord.functions";
@@ -10,27 +10,8 @@ import { sincronizarTodosDiscordNoEfetivo } from "@/lib/identidade-db";
 import { patenteFromDiscordRoles } from "@/lib/militar-identidade";
 import type { DiscordProfile, DiscordRoleTag } from "@/lib/discord-oauth";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { verifyDiscordSession } from "@/lib/discord-session";
-import { hasFullAccess } from "@/lib/access-control";
 
 const RESTRITO_BUCKET = "area-restrita";
-
-async function ensureAltoComandoForView(
-  view: AdminView,
-  session: string | undefined,
-): Promise<DiscordProfile | null> {
-  if (!ALTO_COMANDO_VIEWS.has(view)) {
-    if (!session) return null;
-    const p = await verifyDiscordSession(session);
-    return p ?? null;
-  }
-  if (!session) throw new Error("Acesso restrito ao Alto Comando.");
-  const profile = await verifyDiscordSession(session);
-  if (!profile || !hasFullAccess(profile)) {
-    throw new Error("Acesso restrito ao Alto Comando.");
-  }
-  return profile;
-}
 
 export type ModuloAdminPayload = {
   rows: Record<string, string>[];
@@ -43,16 +24,14 @@ export const carregarModuloAdmin = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z
       .object({
-        accessKey: z.string(),
         view: z.string(),
-        session: z.string().optional(),
+        session: z.string(),
       })
       .parse(input),
   )
   .handler(async ({ data }): Promise<ModuloAdminPayload> => {
-    assertAccessKey(data.accessKey);
     const view = data.view as AdminView;
-    await ensureAltoComandoForView(view, data.session);
+    await exigirPapel(data.session, papelDaView(view));
 
     if (view === "sys-db") {
       return carregarSysDb();
@@ -223,13 +202,13 @@ function carregarSysApi(): ModuloAdminPayload {
 }
 
 function carregarSysSeguranca(): ModuloAdminPayload {
-  const hasKey = !!process.env.ACCESS_KEY?.trim();
+  const hasKey = !!process.env.DISCORD_SESSION_SECRET?.trim();
   const hasService = !!process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   const hasAltoComando = !!process.env.DISCORD_ALTO_COMANDO_ROLE_IDS?.trim();
 
   return {
     rows: [
-      { item: "ACCESS_KEY painel", status: hasKey ? "Configurado" : "Padrão local" },
+      { item: "Segredo da sessão", status: hasKey ? "Configurado" : "Ausente" },
       { item: "Service role Supabase", status: hasService ? "Configurado" : "Ausente" },
       {
         item: "Alto Comando (roles)",
@@ -245,17 +224,15 @@ export const criarRegistroModulo = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z
       .object({
-        accessKey: z.string(),
         view: z.string(),
         valores: z.record(z.string()),
-        session: z.string().optional(),
+        session: z.string(),
       })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    assertAccessKey(data.accessKey);
     const view = data.view as AdminView;
-    await ensureAltoComandoForView(view, data.session);
+    await exigirPapel(data.session, papelDaView(view));
 
     const form = getModuloForm(view);
     const db = MODULO_DB[view];
@@ -289,12 +266,11 @@ export const criarRegistroModulo = createServerFn({ method: "POST" })
 
 export const executarAcaoEspecial = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
-    z.object({ accessKey: z.string(), view: z.string(), session: z.string().optional() }).parse(input),
+    z.object({ view: z.string(), session: z.string() }).parse(input),
   )
   .handler(async ({ data }) => {
-    assertAccessKey(data.accessKey);
     const view = data.view as AdminView;
-    await ensureAltoComandoForView(view, data.session);
+    await exigirPapel(data.session, papelDaView(view));
     const acao = getAcaoEspecial(view);
     if (!acao) throw new Error("Ação não disponível");
 
@@ -336,11 +312,10 @@ export const executarAcaoEspecial = createServerFn({ method: "POST" })
 
 export const atualizarStatusDiscordBot = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
-    z.object({ accessKey: z.string(), session: z.string().optional() }).parse(input),
+    z.object({ session: z.string() }).parse(input),
   )
   .handler(async ({ data }) => {
-    assertAccessKey(data.accessKey);
-    await ensureAltoComandoForView("discord-bot", data.session);
+    await exigirPapel(data.session, papelDaView("discord-bot"));
     const latencia = 30 + Math.floor(Math.random() * 50);
     const { error } = await supabaseAdmin
       .from("discord_bot_status")
@@ -402,7 +377,6 @@ export const uploadPdfRestrito = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z
       .object({
-        accessKey: z.string(),
         session: z.string().min(1),
         view: z.string(),
         recordId: z.string().uuid(),
@@ -413,10 +387,9 @@ export const uploadPdfRestrito = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    assertAccessKey(data.accessKey);
     const view = data.view as AdminView;
     ensurePdfView(view);
-    await ensureAltoComandoForView(view, data.session);
+    await exigirPapel(data.session, papelDaView(view));
 
     const bytes = base64ToUint8Array(data.base64);
     if (bytes.length > 25 * 1024 * 1024) {
@@ -449,18 +422,13 @@ export const baixarPdfRestrito = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z
       .object({
-        accessKey: z.string(),
         session: z.string().min(1),
         recordId: z.string().uuid(),
       })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    assertAccessKey(data.accessKey);
-    const profile = await verifyDiscordSession(data.session);
-    if (!profile || !hasFullAccess(profile)) {
-      throw new Error("Acesso restrito ao Alto Comando.");
-    }
+    await exigirPapel(data.session, "alto-comando");
 
     const { data: rec, error } = await supabaseAdmin
       .from("documentos_restritos")
@@ -483,18 +451,13 @@ export const removerPdfRestrito = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z
       .object({
-        accessKey: z.string(),
         session: z.string().min(1),
         recordId: z.string().uuid(),
       })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    assertAccessKey(data.accessKey);
-    const profile = await verifyDiscordSession(data.session);
-    if (!profile || !hasFullAccess(profile)) {
-      throw new Error("Acesso restrito ao Alto Comando.");
-    }
+    await exigirPapel(data.session, "alto-comando");
 
     const { data: rec, error } = await supabaseAdmin
       .from("documentos_restritos")

@@ -1,36 +1,11 @@
-/** Chave do painel /ADM2DE — persiste no localStorage (não some ao fechar o navegador). */
-export const PANEL_ACCESS_KEY_STORAGE = "eb_cmd_key";
+import { DISCORD_SESSION_KEY } from "@/lib/discord-oauth";
 
-export function getPanelAccessKey(): string | null {
-  if (typeof window === "undefined") return null;
-  const fromLocal = localStorage.getItem(PANEL_ACCESS_KEY_STORAGE);
-  if (fromLocal) return fromLocal;
-  const legacy = sessionStorage.getItem(PANEL_ACCESS_KEY_STORAGE);
-  if (legacy) {
-    localStorage.setItem(PANEL_ACCESS_KEY_STORAGE, legacy);
-    sessionStorage.removeItem(PANEL_ACCESS_KEY_STORAGE);
-  }
-  return legacy;
+/** Token assinado da sessão Discord: é a credencial de todas as funções do painel. */
+export function getDiscordSessionToken(): string {
+  return typeof window === "undefined" ? "" : (localStorage.getItem(DISCORD_SESSION_KEY) ?? "");
 }
 
-export function setPanelAccessKey(key: string): void {
-  localStorage.setItem(PANEL_ACCESS_KEY_STORAGE, key.trim());
-  sessionStorage.removeItem(PANEL_ACCESS_KEY_STORAGE);
-}
-
-export function clearPanelAccessKey(): void {
-  localStorage.removeItem(PANEL_ACCESS_KEY_STORAGE);
-  sessionStorage.removeItem(PANEL_ACCESS_KEY_STORAGE);
-}
-
+/** Só erro de sessão desloga; erro de configuração ou de validação precisa aparecer. */
 export function isDiscordSessionInvalidError(message: string): boolean {
-  const m = message.toLowerCase();
-  return (
-    m.includes("sessão") ||
-    m.includes("session") ||
-    m.includes("inválid") ||
-    m.includes("invalid") ||
-    m.includes("expirad") ||
-    m.includes("expired")
-  );
+  return /sess[aã]o discord/i.test(message);
 }

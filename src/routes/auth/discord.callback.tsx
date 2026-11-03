@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { DISCORD_OAUTH_STATE_KEY, DISCORD_SESSION_KEY } from "@/lib/discord-oauth";
 import { PENDING_VIEW_KEY } from "@/lib/painel-nav";
-import { setPanelAccessKey } from "@/lib/painel-auth-storage";
 import {
   completarDiscordOAuth,
   liberarAcessoPainelDiscord,
@@ -56,8 +55,7 @@ function DiscordCallbackPage() {
         const { profile, session } = await completar({ data: { code, state } });
         localStorage.setItem(DISCORD_SESSION_KEY, session);
 
-        const { accessKey } = await liberarPainel({ data: { session } });
-        setPanelAccessKey(accessKey);
+        await liberarPainel({ data: { session } });
         sessionStorage.removeItem(DISCORD_OAUTH_STATE_KEY);
         sessionStorage.setItem(PENDING_VIEW_KEY, "perfil");
 

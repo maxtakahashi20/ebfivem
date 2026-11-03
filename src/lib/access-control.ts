@@ -48,6 +48,22 @@ export function hasFullAccess(
   return isDesenvolvedor(profile) || isAltoComando(profile);
 }
 
+export type Papel = "membro" | "instrutor" | "alto-comando";
+
+const NIVEL: Record<Papel, number> = { membro: 0, instrutor: 1, "alto-comando": 2 };
+
+export function papelAlcanca(papel: Papel, exigido: Papel): boolean {
+  return NIVEL[papel] >= NIVEL[exigido];
+}
+
+/** `DISCORD_INSTRUTOR_ROLE_IDS=id1,id2,...`; vazio = só o Alto Comando atua no recrutamento. */
+export function papelDoPerfil(profile: Pick<DiscordProfile, "roles"> | null | undefined): Papel {
+  if (hasFullAccess(profile)) return "alto-comando";
+  return profileHasAnyRole(profile, parseRoleIds(process.env.DISCORD_INSTRUTOR_ROLE_IDS))
+    ? "instrutor"
+    : "membro";
+}
+
 /** Igual a `hasFullAccess`, porém lança erro padronizado quando o gate falha (uso em server fns). */
 export function assertFullAccess(
   profile: Pick<DiscordProfile, "roles"> | null | undefined,

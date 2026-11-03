@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { assertAccessKey } from "@/lib/access-key.server";
+import { exigirPapel } from "@/lib/painel-auth.server";
 
 function hasWebhook(url: string | undefined) {
   const u = url?.trim();
@@ -8,9 +8,9 @@ function hasWebhook(url: string | undefined) {
 }
 
 export const getPainelStatus = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => z.object({ accessKey: z.string() }).parse(input))
+  .inputValidator((input: unknown) => z.object({ session: z.string() }).parse(input))
   .handler(async ({ data }) => {
-    assertAccessKey(data.accessKey);
+    await exigirPapel(data.session, "membro");
 
     return {
       sistema: true,

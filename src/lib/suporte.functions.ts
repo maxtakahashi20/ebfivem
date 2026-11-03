@@ -1,22 +1,11 @@
-import { assertAccessKey } from "@/lib/access-key.server";
+import { exigirPapel } from "@/lib/painel-auth.server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { verifyDiscordSession } from "@/lib/discord-session";
-import { hasFullAccess } from "@/lib/access-control";
 import { enviarLogOperacional } from "@/lib/discord.functions";
 
 const MAX_MENSAGEM = 2000;
 const HISTORICO_LIMIT = 200;
-
-async function assertAdminAltoComando(session: string) {
-  const profile = await verifyDiscordSession(session);
-  if (!profile) throw new Error("Sessão Discord inválida.");
-  if (!hasFullAccess(profile)) {
-    throw new Error("Apenas o Alto Comando pode atender o suporte.");
-  }
-  return profile;
-}
 
 const UuidSchema = z.string().uuid();
 
@@ -189,15 +178,13 @@ export const listarTicketsAdmin = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z
       .object({
-        accessKey: z.string(),
         session: z.string().min(1),
         status: StatusSchema.optional(),
       })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    assertAccessKey(data.accessKey);
-    await assertAdminAltoComando(data.session);
+    await exigirPapel(data.session, "alto-comando");
 
     let q = supabaseAdmin
       .from("suporte_tickets")
@@ -215,15 +202,13 @@ export const listarMensagensAdmin = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z
       .object({
-        accessKey: z.string(),
         session: z.string().min(1),
         ticketId: UuidSchema,
       })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    assertAccessKey(data.accessKey);
-    await assertAdminAltoComando(data.session);
+    await exigirPapel(data.session, "alto-comando");
 
     const { data: ticket, error: errT } = await supabaseAdmin
       .from("suporte_tickets")
@@ -251,7 +236,6 @@ export const enviarMensagemAdmin = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z
       .object({
-        accessKey: z.string(),
         session: z.string().min(1),
         ticketId: UuidSchema,
         mensagem: z.string().trim().min(1).max(MAX_MENSAGEM),
@@ -259,8 +243,7 @@ export const enviarMensagemAdmin = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    assertAccessKey(data.accessKey);
-    const profile = await assertAdminAltoComando(data.session);
+    const profile = await exigirPapel(data.session, "alto-comando");
 
     const { data: ticket, error: errT } = await supabaseAdmin
       .from("suporte_tickets")
@@ -306,15 +289,13 @@ export const encerrarTicketAdmin = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z
       .object({
-        accessKey: z.string(),
         session: z.string().min(1),
         ticketId: UuidSchema,
       })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    assertAccessKey(data.accessKey);
-    const profile = await assertAdminAltoComando(data.session);
+    const profile = await exigirPapel(data.session, "alto-comando");
 
     const { error } = await supabaseAdmin
       .from("suporte_tickets")

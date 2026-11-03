@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { useDiscordSession } from "@/hooks/useDiscordSession";
-import { DISCORD_SESSION_KEY } from "@/lib/discord-oauth";
+import { getDiscordSessionToken } from "@/lib/painel-auth-storage";
 import {
   encerrarTicketAdmin,
   enviarMensagemAdmin,
@@ -19,13 +19,8 @@ const MAX_LEN = 2000;
 
 type StatusFilter = "todos" | "aberto" | "em_atendimento" | "encerrado";
 
-function getSessionToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(DISCORD_SESSION_KEY);
-}
-
-export function SuporteAdmin({ accessKey }: { accessKey: string }) {
-  const { altoComando } = useDiscordSession();
+export function SuporteAdmin() {
+  const { papel, loading: verificandoPapel } = useDiscordSession();
   const listarTickets = useServerFn(listarTicketsAdmin);
   const listarMensagens = useServerFn(listarMensagensAdmin);
   const enviar = useServerFn(enviarMensagemAdmin);
@@ -44,13 +39,12 @@ export function SuporteAdmin({ accessKey }: { accessKey: string }) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const reloadTickets = useCallback(async () => {
-    const session = getSessionToken();
+    const session = getDiscordSessionToken();
     if (!session) return;
     setLoadingTickets(true);
     try {
       const res = await listarTickets({
         data: {
-          accessKey,
           session,
           status: filter === "todos" ? undefined : filter,
         },
@@ -61,28 +55,28 @@ export function SuporteAdmin({ accessKey }: { accessKey: string }) {
     } finally {
       setLoadingTickets(false);
     }
-  }, [accessKey, filter, listarTickets]);
+  }, [filter, listarTickets]);
 
   const reloadMensagens = useCallback(async () => {
-    const session = getSessionToken();
+    const session = getDiscordSessionToken();
     if (!session || !selected) return;
     try {
       const res = await listarMensagens({
-        data: { accessKey, session, ticketId: selected },
+        data: { session, ticketId: selected },
       });
       setTicket(res.ticket);
       setMensagens(res.mensagens);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao carregar mensagens");
     }
-  }, [accessKey, listarMensagens, selected]);
+  }, [listarMensagens, selected]);
 
   useEffect(() => {
-    if (!altoComando) return;
+    if (papel !== "alto-comando") return;
     void reloadTickets();
     const id = setInterval(reloadTickets, POLL_MS * 2);
     return () => clearInterval(id);
-  }, [altoComando, reloadTickets]);
+  }, [papel, reloadTickets]);
 
   useEffect(() => {
     if (!selected) return;
@@ -102,7 +96,7 @@ export function SuporteAdmin({ accessKey }: { accessKey: string }) {
 
   const handleSend = async () => {
     if (!selected || !novaMensagem.trim() || sending) return;
-    const session = getSessionToken();
+    const session = getDiscordSessionToken();
     if (!session) {
       toast.error("Sessão Discord necessária.");
       return;
@@ -110,7 +104,7 @@ export function SuporteAdmin({ accessKey }: { accessKey: string }) {
     setSending(true);
     try {
       const res = await enviar({
-        data: { accessKey, session, ticketId: selected, mensagem: novaMensagem.trim() },
+        data: { session, ticketId: selected, mensagem: novaMensagem.trim() },
       });
       setMensagens((prev) => [...prev, res.mensagem]);
       setNovaMensagem("");
@@ -124,12 +118,12 @@ export function SuporteAdmin({ accessKey }: { accessKey: string }) {
 
   const handleEncerrar = async () => {
     if (!selected) return;
-    const session = getSessionToken();
+    const session = getDiscordSessionToken();
     if (!session) return;
     const ok = window.confirm("Encerrar este atendimento?");
     if (!ok) return;
     try {
-      await encerrar({ data: { accessKey, session, ticketId: selected } });
+      await encerrar({ data: { session, ticketId: selected } });
       toast.success("Atendimento encerrado");
       void reloadTickets();
       void reloadMensagens();
@@ -138,7 +132,7 @@ export function SuporteAdmin({ accessKey }: { accessKey: string }) {
     }
   };
 
-  if (!altoComando) {
+  if (!verificandoPapel && papel !== "alto-comando") {
     return (
       <div>
         <AdminPageHeader

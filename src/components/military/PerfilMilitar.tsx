@@ -9,7 +9,6 @@ import { IdentidadeDiscordQr } from "@/components/military/IdentidadeDiscordQr";
 import { buscarInscricaoPorDiscord } from "@/lib/discord-auth.functions";
 import { patenteFromDiscordRoles } from "@/lib/militar-identidade";
 import { PENDING_VIEW_KEY } from "@/lib/painel-nav";
-import { getPanelAccessKey } from "@/lib/painel-auth-storage";
 
 type Inscricao = {
   protocolo: string;
@@ -35,9 +34,7 @@ export function PerfilMilitar({ variant = "public", onOpenDocumentos }: Props) {
   useEffect(() => {
     if (variant === "admin") return;
     if (
-      session &&
-      typeof window !== "undefined" &&
-      getPanelAccessKey()
+      session
     ) {
       void navigate({ to: "/ADM2DE" });
     }

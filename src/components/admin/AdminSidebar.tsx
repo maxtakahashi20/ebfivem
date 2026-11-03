@@ -24,17 +24,19 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { papelAlcanca } from "@/lib/access-control";
 import { getPainelStatus } from "@/lib/admin.functions";
+import { getDiscordSessionToken } from "@/lib/painel-auth-storage";
 import {
   type AdminView,
   NAV_ENTRIES,
   type NavEntry,
+  papelDaView,
 } from "@/config/admin-nav";
 
 type Props = {
   view: AdminView;
   onViewChange: (v: AdminView) => void;
-  accessKey: string;
   onLogout: () => void;
 };
 
@@ -43,9 +45,9 @@ function isGroupActive(groupId: string, view: AdminView, entry: NavEntry): boole
   return entry.group.children.some((c) => c.id === view);
 }
 
-export function AdminSidebar({ view, onViewChange, accessKey, onLogout }: Props) {
+export function AdminSidebar({ view, onViewChange, onLogout }: Props) {
   const fetchStatus = useServerFn(getPainelStatus);
-  const { altoComando, desenvolvedor } = useDiscordSession();
+  const { papel, desenvolvedor } = useDiscordSession();
   const [status, setStatus] = useState({
     sistema: true,
     discord: false,
@@ -63,26 +65,20 @@ export function AdminSidebar({ view, onViewChange, accessKey, onLogout }: Props)
   });
 
   const visibleEntries = useMemo<NavEntry[]>(() => {
+    const pode = (id: string) => papelAlcanca(papel, papelDaView(id));
     return NAV_ENTRIES.flatMap((entry) => {
-      if (entry.type === "single") {
-        if (entry.restricted === "alto-comando" && !altoComando) return [];
-        return [entry];
-      }
-      const g = entry.group;
-      if (g.restricted === "alto-comando" && !altoComando) return [];
-      const children = g.children.filter(
-        (c) => !(c.restricted === "alto-comando" && !altoComando),
-      );
+      if (entry.type === "single") return pode(entry.id) ? [entry] : [];
+      const children = entry.group.children.filter((c) => pode(c.id));
       if (children.length === 0) return [];
-      return [{ type: "group" as const, group: { ...g, children } }];
+      return [{ type: "group" as const, group: { ...entry.group, children } }];
     });
-  }, [altoComando]);
+  }, [papel]);
 
   useEffect(() => {
-    fetchStatus({ data: { accessKey } })
+    fetchStatus({ data: { session: getDiscordSessionToken() } })
       .then(setStatus)
       .catch(() => {});
-  }, [accessKey, fetchStatus]);
+  }, [fetchStatus]);
 
   useEffect(() => {
     for (const e of NAV_ENTRIES) {

@@ -1,8 +1,8 @@
 // Server functions for the 2ª DE enrollment system.
-// Reads/updates are gated by a shared admin key (ACCESS_KEY env).
+// O painel exige sessão Discord e papel (`exigirPapel`).
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { assertAccessKey } from "@/lib/access-key.server";
+import { exigirPapel } from "@/lib/painel-auth.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
   notificarNovaInscricao,
@@ -98,14 +98,14 @@ export const listarInscricoes = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z
       .object({
-        accessKey: z.string(),
+        session: z.string(),
         status: StatusEnum.optional(),
         search: z.string().trim().max(80).optional(),
       })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    assertAccessKey(data.accessKey);
+    await exigirPapel(data.session, "instrutor");
     let q = supabaseAdmin
       .from("inscricoes")
       .select(
@@ -126,9 +126,9 @@ export const listarInscricoes = createServerFn({ method: "POST" })
   });
 
 export const obterUltimoProtocolo = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => z.object({ accessKey: z.string() }).parse(input))
+  .inputValidator((input: unknown) => z.object({ session: z.string() }).parse(input))
   .handler(async ({ data }) => {
-    assertAccessKey(data.accessKey);
+    await exigirPapel(data.session, "instrutor");
     const { data: row, error } = await supabaseAdmin
       .from("inscricoes")
       .select("protocolo")
@@ -141,10 +141,10 @@ export const obterUltimoProtocolo = createServerFn({ method: "POST" })
 
 export const obterEstatisticas = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
-    z.object({ accessKey: z.string() }).parse(input),
+    z.object({ session: z.string() }).parse(input),
   )
   .handler(async ({ data }) => {
-    assertAccessKey(data.accessKey);
+    await exigirPapel(data.session, "membro");
 
     const { data: rows, error } = await supabaseAdmin
       .from("inscricoes")
@@ -175,7 +175,7 @@ export const atualizarInscricao = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z
       .object({
-        accessKey: z.string(),
+        session: z.string(),
         id: z.string().uuid(),
         status: StatusEnum,
         observacoes_instrutor: z.string().max(2000).optional().nullable(),
@@ -186,7 +186,7 @@ export const atualizarInscricao = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    assertAccessKey(data.accessKey);
+    await exigirPapel(data.session, "instrutor");
     const { error } = await supabaseAdmin
       .from("inscricoes")
       .update({
@@ -232,13 +232,13 @@ export const excluirInscricao = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z
       .object({
-        accessKey: z.string(),
+        session: z.string(),
         id: z.string().uuid(),
       })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    assertAccessKey(data.accessKey);
+    await exigirPapel(data.session, "instrutor");
 
     const { data: row, error: fetchErr } = await supabaseAdmin
       .from("inscricoes")

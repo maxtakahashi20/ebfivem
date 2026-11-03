@@ -1,4 +1,4 @@
-import { assertAccessKey } from "@/lib/access-key.server";
+import { exigirPapel } from "@/lib/painel-auth.server";
 // Discord webhook integration for 2ª DE admin panel.
 // Reads DISCORD_WEBHOOK_URL (general / inscriptions) and DISCORD_WEBHOOK_LOG_URL (admin logs).
 import { createServerFn } from "@tanstack/react-start";
@@ -241,7 +241,7 @@ export const enviarComunicadoDiscord = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z
       .object({
-        accessKey: z.string(),
+        session: z.string(),
         titulo: z.string().min(3).max(100),
         mensagem: z.string().min(5).max(2000),
         tipo: z.enum(["informativo", "alerta", "operacao", "urgente"]).default("informativo"),
@@ -249,7 +249,7 @@ export const enviarComunicadoDiscord = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    assertAccessKey(data.accessKey);
+    await exigirPapel(data.session, "alto-comando");
 
     const url = assertWebhookConfigured(process.env.DISCORD_WEBHOOK_URL);
 

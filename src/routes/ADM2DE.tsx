@@ -23,12 +23,7 @@ import { PENDING_VIEW_KEY } from "@/lib/painel-nav";
 import { useDiscordSession } from "@/hooks/useDiscordSession";
 import { liberarAcessoPainelDiscord } from "@/lib/discord-auth.functions";
 import { DISCORD_SESSION_KEY } from "@/lib/discord-oauth";
-import {
-  clearPanelAccessKey,
-  getPanelAccessKey,
-  isDiscordSessionInvalidError,
-  setPanelAccessKey,
-} from "@/lib/painel-auth-storage";
+import { getDiscordSessionToken, isDiscordSessionInvalidError } from "@/lib/painel-auth-storage";
 import { type AdminView, getViewLabel } from "@/config/admin-nav";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -92,7 +87,6 @@ const STATUS_META: Record<Status, { label: string; color: string; symbol: string
 
 // ─── Acesso: somente Discord OAuth ───────────────────────────────────────────
 function Comando() {
-  const [accessKey, setAccessKey] = useState("");
   const [authed, setAuthed] = useState(false);
   const [checkingDiscord, setCheckingDiscord] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -111,28 +105,6 @@ function Comando() {
 
   useEffect(() => {
     const discordTok = localStorage.getItem(DISCORD_SESSION_KEY);
-    const cachedKey = getPanelAccessKey();
-
-    if (discordTok && cachedKey) {
-      setAccessKey(cachedKey);
-      setAuthed(true);
-      setCheckingDiscord(false);
-      liberarPainel({ data: { session: discordTok } })
-        .then(({ accessKey: key }) => {
-          setPanelAccessKey(key);
-          setAccessKey(key);
-        })
-        .catch((e) => {
-          const msg = e instanceof Error ? e.message : "";
-          if (!isDiscordSessionInvalidError(msg)) return;
-          localStorage.removeItem(DISCORD_SESSION_KEY);
-          clearPanelAccessKey();
-          setAuthed(false);
-          setAccessKey("");
-          setAuthError("Sessão Discord expirada. Entre novamente.");
-        });
-      return;
-    }
 
     if (!discordTok) {
       setCheckingDiscord(false);
@@ -140,16 +112,11 @@ function Comando() {
     }
 
     liberarPainel({ data: { session: discordTok } })
-      .then(({ accessKey: key }) => {
-        setPanelAccessKey(key);
-        setAccessKey(key);
-        setAuthed(true);
-      })
+      .then(() => setAuthed(true))
       .catch((e) => {
         const msg = e instanceof Error ? e.message : "Sessão Discord inválida. Entre novamente.";
         if (isDiscordSessionInvalidError(msg)) {
           localStorage.removeItem(DISCORD_SESSION_KEY);
-          clearPanelAccessKey();
         }
         setAuthError(msg);
       })
@@ -183,12 +150,9 @@ function Comando() {
 
   return (
     <CentralComando
-      accessKey={accessKey}
       onLogout={() => {
         redirecting.current = false;
-        clearPanelAccessKey();
         localStorage.removeItem(DISCORD_SESSION_KEY);
-        setAccessKey("");
         setAuthError(null);
         setCheckingDiscord(false);
         setAuthed(false);
@@ -198,7 +162,7 @@ function Comando() {
 }
 
 // ─── Main panel with sidebar ──────────────────────────────────────────────────
-function CentralComando({ accessKey, onLogout }: { accessKey: string; onLogout: () => void }) {
+function CentralComando({ onLogout }: { onLogout: () => void }) {
   const [view, setView] = useState<AdminView>(() => {
     if (typeof window === "undefined") return "dashboard";
     const pending = sessionStorage.getItem(PENDING_VIEW_KEY) as AdminView | null;
@@ -213,12 +177,11 @@ function CentralComando({ accessKey, onLogout }: { accessKey: string; onLogout: 
     <SidebarProvider
       style={{ "--sidebar-width-icon": "3.5rem" } as React.CSSProperties}
     >
-      <UltimoProtocolo accessKey={accessKey} />
+      <UltimoProtocolo />
       <div className="flex min-h-screen w-full adm2de-shell">
         <AdminSidebar
           view={view}
           onViewChange={setView}
-          accessKey={accessKey}
           onLogout={onLogout}
         />
 
@@ -247,8 +210,7 @@ function CentralComando({ accessKey, onLogout }: { accessKey: string; onLogout: 
               <AdminPageTransition viewKey={view}>
                 <PanelContent
                   view={view}
-                  accessKey={accessKey}
-                  onLogout={onLogout}
+                          onLogout={onLogout}
                   onViewChange={setView}
                 />
               </AdminPageTransition>
@@ -262,18 +224,16 @@ function CentralComando({ accessKey, onLogout }: { accessKey: string; onLogout: 
 
 function PanelContent({
   view,
-  accessKey,
   onLogout,
   onViewChange,
 }: {
   view: AdminView;
-  accessKey: string;
   onLogout: () => void;
   onViewChange: (v: AdminView) => void;
 }) {
   switch (view) {
     case "dashboard":
-      return <Dashboard accessKey={accessKey} />;
+      return <Dashboard />;
     case "perfil":
       return (
         <PerfilMilitar
@@ -288,7 +248,6 @@ function PanelContent({
     case "recrutamento-inscricoes":
       return (
         <GestaoInscricoes
-          accessKey={accessKey}
           onLogout={onLogout}
           initialStatus="todos"
           title="Inscrições"
@@ -298,7 +257,6 @@ function PanelContent({
     case "recrutamento-aprovados":
       return (
         <GestaoInscricoes
-          accessKey={accessKey}
           onLogout={onLogout}
           initialStatus="aprovado"
           title="Aprovados"
@@ -308,7 +266,6 @@ function PanelContent({
     case "recrutamento-reprovados":
       return (
         <GestaoInscricoes
-          accessKey={accessKey}
           onLogout={onLogout}
           initialStatus="reprovado"
           title="Reprovados"
@@ -318,7 +275,6 @@ function PanelContent({
     case "recrutamento-analise":
       return (
         <GestaoInscricoes
-          accessKey={accessKey}
           onLogout={onLogout}
           initialStatus="em_analise"
           title="Em análise"
@@ -326,22 +282,22 @@ function PanelContent({
         />
       );
     case "comunicados":
-      return <Comunicados accessKey={accessKey} />;
+      return <Comunicados />;
     case "suporte-admin":
-      return <SuporteAdmin accessKey={accessKey} />;
+      return <SuporteAdmin />;
     default:
-      return <AdminModuleView view={view} accessKey={accessKey} />;
+      return <AdminModuleView view={view} />;
   }
 }
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
-function Dashboard({ accessKey }: { accessKey: string }) {
+function Dashboard() {
   const getStats = useServerFn(obterEstatisticas);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getStats({ data: { accessKey } })
+    getStats({ data: { session: getDiscordSessionToken() } })
       .then((s) => setStats(s as Stats))
       .catch(() => toast.error("Falha ao carregar estatísticas"))
       .finally(() => setLoading(false));
@@ -413,13 +369,11 @@ function StatusLine({ ok, label }: { ok: boolean; label: string }) {
 
 // ─── Gestão de Inscrições ─────────────────────────────────────────────────────
 function GestaoInscricoes({
-  accessKey,
   onLogout,
   initialStatus = "todos",
   title = "Gestão de Inscrições",
   tag = "PAINEL DE INSTRUTORES",
 }: {
-  accessKey: string;
   onLogout: () => void;
   initialStatus?: Status | "todos";
   title?: string;
@@ -443,7 +397,7 @@ function GestaoInscricoes({
     try {
       const r = await listar({
         data: {
-          accessKey,
+          session: getDiscordSessionToken(),
           status: statusFilter === "todos" ? undefined : statusFilter,
           search: search || undefined,
         },
@@ -464,7 +418,7 @@ function GestaoInscricoes({
 
   async function update(row: Row, status: Status, obs: string) {
     try {
-      await atualizar({ data: { accessKey, id: row.id, status, observacoes_instrutor: obs, nome: row.nome, sobrenome: row.sobrenome, protocolo: row.protocolo } });
+      await atualizar({ data: { session: getDiscordSessionToken(), id: row.id, status, observacoes_instrutor: obs, nome: row.nome, sobrenome: row.sobrenome, protocolo: row.protocolo } });
       toast.success(`Inscrição ${row.protocolo} atualizada`);
       setRows((rs) => rs.map((r) => r.id === row.id ? { ...r, status, observacoes_instrutor: obs } : r));
     } catch (e) {
@@ -478,7 +432,7 @@ function GestaoInscricoes({
     );
     if (!ok) return;
     try {
-      await excluir({ data: { accessKey, id: row.id } });
+      await excluir({ data: { session: getDiscordSessionToken(), id: row.id } });
       toast.success(`Inscrição ${row.protocolo} excluída`);
       setRows((rs) => rs.filter((r) => r.id !== row.id));
       setExpanded((id) => (id === row.id ? null : id));
@@ -690,7 +644,7 @@ function InscricaoEditor({
 }
 
 // ─── Comunicados ──────────────────────────────────────────────────────────────
-function Comunicados({ accessKey }: { accessKey: string }) {
+function Comunicados() {
   const enviar = useServerFn(enviarComunicadoDiscord);
   const [titulo, setTitulo] = useState("");
   const [mensagem, setMensagem] = useState("");
@@ -709,7 +663,7 @@ function Comunicados({ accessKey }: { accessKey: string }) {
     if (!titulo.trim() || !mensagem.trim()) return;
     setSending(true);
     try {
-      await enviar({ data: { accessKey, titulo, mensagem, tipo } });
+      await enviar({ data: { session: getDiscordSessionToken(), titulo, mensagem, tipo } });
       toast.success("Comunicado enviado para o Discord.");
       setTitulo("");
       setMensagem("");

@@ -10,12 +10,13 @@ import {
   obterUrlDiscordOAuth,
   validarSessaoDiscord,
 } from "@/lib/discord-auth.functions";
+import type { Papel } from "@/lib/access-control";
 import { isDiscordSessionInvalidError } from "@/lib/painel-auth-storage";
 
 export function useDiscordSession() {
   const [profile, setProfile] = useState<DiscordProfile | null>(null);
   const [session, setSession] = useState<string | null>(null);
-  const [altoComando, setAltoComando] = useState(false);
+  const [papel, setPapel] = useState<Papel>("membro");
   const [desenvolvedor, setDesenvolvedor] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -29,7 +30,7 @@ export function useDiscordSession() {
       if (!s) {
         setProfile(null);
         setSession(null);
-        setAltoComando(false);
+        setPapel("membro");
         setDesenvolvedor(false);
         setLoading(false);
         return;
@@ -38,10 +39,10 @@ export function useDiscordSession() {
         const res = await validar({ data: { session: s } });
         const p = res.profile;
         const nextSession = res.session ?? s;
-        const flags = res as { altoComando?: boolean; desenvolvedor?: boolean };
+        const flags = res as { papel?: Papel; desenvolvedor?: boolean };
         setProfile(p);
         setSession(nextSession);
-        setAltoComando(Boolean(flags.altoComando));
+        setPapel(flags.papel ?? "membro");
         setDesenvolvedor(Boolean(flags.desenvolvedor));
         localStorage.setItem(DISCORD_SESSION_KEY, nextSession);
       } catch (e) {
@@ -50,7 +51,7 @@ export function useDiscordSession() {
           localStorage.removeItem(DISCORD_SESSION_KEY);
           setProfile(null);
           setSession(null);
-          setAltoComando(false);
+          setPapel("membro");
           setDesenvolvedor(false);
         }
       } finally {
@@ -80,7 +81,7 @@ export function useDiscordSession() {
     localStorage.removeItem(DISCORD_SESSION_KEY);
     setProfile(null);
     setSession(null);
-    setAltoComando(false);
+    setPapel("membro");
     setDesenvolvedor(false);
   }, [encerrar]);
 
@@ -96,7 +97,7 @@ export function useDiscordSession() {
   return {
     profile,
     session,
-    altoComando,
+    papel,
     desenvolvedor,
     loading,
     login,

@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import type { AdminView } from "@/config/admin-nav";
-import { ALTO_COMANDO_VIEWS } from "@/config/admin-nav";
+import { papelDaView } from "@/config/admin-nav";
+import { papelAlcanca } from "@/lib/access-control";
 import { getAcaoEspecial, getLabelAcao, getModuloForm } from "@/config/admin-module-forms";
 import { MODULO_DB, PDF_RESTRITO_VIEWS } from "@/config/admin-modules-db";
 import {
@@ -21,7 +22,7 @@ import {
   uploadPdfRestrito,
 } from "@/lib/admin-modules.functions";
 import { useDiscordSession } from "@/hooks/useDiscordSession";
-import { DISCORD_SESSION_KEY } from "@/lib/discord-oauth";
+import { getDiscordSessionToken } from "@/lib/painel-auth-storage";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -34,14 +35,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-function getDiscordSessionToken(): string | undefined {
-  if (typeof window === "undefined") return undefined;
-  return localStorage.getItem(DISCORD_SESSION_KEY) ?? undefined;
-}
-
-export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKey: string }) {
+export function AdminModuleView({ view }: { view: AdminView }) {
   const cfg = getModuleConfig(view);
-  const { altoComando } = useDiscordSession();
+  const { papel, loading: verificandoPapel } = useDiscordSession();
   const [search, setSearch] = useState("");
   const [rows, setRows] = useState(cfg.rows);
   const [stats, setStats] = useState<ModuleStat[]>(cfg.stats);
@@ -58,15 +54,14 @@ export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKe
   const downloadPdf = useServerFn(baixarPdfRestrito);
   const deletePdf = useServerFn(removerPdfRestrito);
 
-  const isRestrita = ALTO_COMANDO_VIEWS.has(view);
-  const acessoNegado = isRestrita && !altoComando;
+  const acessoNegado = !verificandoPapel && !papelAlcanca(papel, papelDaView(view));
   const supportsPdf = PDF_RESTRITO_VIEWS.has(view);
 
   const reload = useCallback(() => {
     if (!usesDb(view)) return;
-    if (acessoNegado) return;
+    if (verificandoPapel || acessoNegado) return;
     setLoading(true);
-    loadModulo({ data: { accessKey, view, session: getDiscordSessionToken() } })
+    loadModulo({ data: { view, session: getDiscordSessionToken() } })
       .then((payload) => {
         setRows(payload.rows);
         if (payload.stats.length > 0) {
@@ -78,7 +73,7 @@ export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKe
         toast.error(e instanceof Error ? e.message : "Falha ao carregar dados do módulo"),
       )
       .finally(() => setLoading(false));
-  }, [accessKey, view, loadModulo, acessoNegado]);
+  }, [view, loadModulo, acessoNegado, verificandoPapel]);
 
   useEffect(() => {
     if (!usesDb(view)) {
@@ -88,7 +83,7 @@ export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKe
       return;
     }
     reload();
-  }, [view, accessKey, reload, cfg.rows, cfg.stats]);
+  }, [view, reload, cfg.rows, cfg.stats]);
 
   const filtered = rows.filter((row) => {
     if (!search.trim()) return true;
@@ -115,7 +110,7 @@ export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKe
       setActionLoading(true);
       try {
         const res = await acaoEspecial({
-          data: { accessKey, view, session: getDiscordSessionToken() },
+          data: { view, session: getDiscordSessionToken() },
         });
         toast.success(res.mensagem ?? "Ação concluída");
         reload();
@@ -136,7 +131,7 @@ export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKe
     setSaving(true);
     try {
       const session = getDiscordSessionToken();
-      const result = await criarRegistro({ data: { accessKey, view, valores, session } });
+      const result = await criarRegistro({ data: { view, valores, session } });
       if (pdf) {
         if (!result.id) {
           toast.error("Registro criado, mas não foi possível anexar o PDF (ID ausente).");
@@ -145,7 +140,6 @@ export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKe
         } else {
           await uploadPdf({
             data: {
-              accessKey,
               session,
               view,
               recordId: result.id,
@@ -174,7 +168,7 @@ export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKe
     }
     try {
       const { url, filename } = await downloadPdf({
-        data: { accessKey, session, recordId },
+        data: { session, recordId },
       });
       const a = document.createElement("a");
       a.href = url;
@@ -198,7 +192,7 @@ export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKe
     const ok = window.confirm("Remover o PDF deste registro?");
     if (!ok) return;
     try {
-      await deletePdf({ data: { accessKey, session, recordId } });
+      await deletePdf({ data: { session, recordId } });
       toast.success("PDF removido");
       reload();
     } catch (e) {
@@ -299,7 +293,6 @@ export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKe
 
       {cfg.variant === "discord" && view === "discord-bot" && (
         <DiscordBotPanel
-          accessKey={accessKey}
           online={extra.online !== false}
           latencia={Number(extra.latencia_ms ?? 0)}
           uptime={String(extra.uptime_pct ?? "—")}
@@ -440,13 +433,11 @@ function statusBadge(key: string, value: string) {
 }
 
 function DiscordBotPanel({
-  accessKey,
   online,
   latencia,
   uptime,
   onRefresh,
 }: {
-  accessKey: string;
   online: boolean;
   latencia: number;
   uptime: string;
@@ -458,7 +449,7 @@ function DiscordBotPanel({
   const handleRefresh = async () => {
     setLoading(true);
     try {
-      await refreshBot({ data: { accessKey, session: getDiscordSessionToken() } });
+      await refreshBot({ data: { session: getDiscordSessionToken() } });
       toast.success("Status do bot atualizado");
       onRefresh();
     } catch (e) {

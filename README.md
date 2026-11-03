@@ -29,7 +29,7 @@ Portal institucional temático (**uso fictício / comunidade FiveM**) para a **2
 | **Inscrição** (`/inscricao`) | Formulário de ficha de alistamento com validação (Zod no servidor). |
 | **Comprovante PDF** | Após envio bem-sucedido, geração de PDF local com **jsPDF** (protocolo e dados principais). |
 | **Acompanhar** (`/acompanhar`) | Consulta de status por **RG** ou **protocolo** (`EB-XXXXXXXX`). |
-| **Painel instrutor** (`/ADM2DE`) | Lista filtro/busca de inscrições; atualização de status e observações (protegido por **ACCESS_KEY**). |
+| **Painel instrutor** (`/ADM2DE`) | Lista filtro/busca de inscrições; atualização de status e observações (protegido por **cargo no Discord**). |
 
 Status possíveis da inscrição: `pendente`, `em_analise`, `aprovado`, `reprovado`.
 
@@ -95,7 +95,8 @@ Copie `.env.example` para `.env` e preencha.
 | `SUPABASE_SERVICE_ROLE_KEY` | **Obrigatória** para `criarInscricao`, consultas admin e painel — **nunca** exponha no cliente nem em `VITE_*`. |
 | `SUPABASE_URL` | Opcional se já existir `VITE_SUPABASE_URL` (há fallback no código). |
 | `SUPABASE_PUBLISHABLE_KEY` | Usada pelo middleware de auth; pode repetir o valor publishable do dashboard. |
-| `ACCESS_KEY` | Chave compartilhada para `/ADM2DE` e operações restritas nas server functions; obrigatória: sem ela, ninguém entra. |
+| `DISCORD_SESSION_SECRET` | Assina a sessão Discord, que é a credencial do painel; obrigatória: sem ela, ninguém entra. |
+| `DISCORD_INSTRUTOR_ROLE_IDS` | IDs dos cargos que atuam em Recrutamento, separados por vírgula. Vazio: só o Alto Comando. |
 | `DISCORD_SESSION_SECRET` | Assina a sessão do login Discord. Use um valor longo e aleatório. |
 | `DISCORD_ALTO_COMANDO_ROLE_IDS` | Lista de IDs de cargos Discord que liberam Alto Comando — separados por vírgula. Quem **não** tem esses cargos não vê **Logs em geral**, **Sistema**, **Área Restrita** e a aba **Suporte** do painel. |
 | `DISCORD_DESENVOLVEDOR_ROLE_IDS` | Lista de IDs de cargos Discord com **acesso pleno** ao painel (mesmo que Alto Comando + badge "MODO DESENVOLVEDOR"). Use apenas para o cargo de dev. |
@@ -155,7 +156,7 @@ Tipos TypeScript gerados / alinhados estão em `src/integrations/supabase/types.
 | `/inscricao` | `src/routes/inscricao.tsx` | Envio da ficha |
 | `/acompanhar` | `src/routes/acompanhar.tsx` | Consulta RG/protocolo |
 | `/suporte` | `src/routes/suporte.tsx` | Chat de suporte ao conscrito (protocolo + RG) |
-| `/ADM2DE` | `src/routes/ADM2DE.tsx` | Painel (Discord OAuth + `ACCESS_KEY`) |
+| `/ADM2DE` | `src/routes/ADM2DE.tsx` | Painel (Discord OAuth + papel por cargo) |
 | `/autoria` | `src/routes/autoria.tsx` | Créditos |
 
 A árvore gerada pelo TanStack Router fica em `src/routeTree.gen.ts` (não editar manualmente).
@@ -204,7 +205,7 @@ src/
 
 1. Conecte o repositório em [vercel.com](https://vercel.com).
 2. **Build Command:** `npm run build` (padrão).
-3. **Variáveis de ambiente:** copie de `.env.example` (Supabase, Discord, `ACCESS_KEY`, webhooks).
+3. **Variáveis de ambiente:** copie de `.env.example` (Supabase, Discord, `DISCORD_SESSION_SECRET`, webhooks).
 4. **Discord OAuth:** `DISCORD_REDIRECT_URI` = `https://SEU-DOMINIO.vercel.app/auth/discord/callback` (e cadastre a mesma URL no Discord Developer Portal).
 5. Deploy — o preset Nitro `vercel` é aplicado automaticamente quando `VERCEL=1` no build.
 
@@ -226,7 +227,7 @@ Documentação: [TanStack Start](https://tanstack.com/start)
 ## Segurança
 
 - **Service role**: poder total sobre o projeto Supabase; só em servidor e CI seguros.
-- **ACCESS_KEY**: mecanismo simples por ambiente — troque o padrão em produção e use valor forte.
+- **Permissões**: toda função do painel exige sessão assinada e confere o cargo atual no Discord (`exigirPapel`). Membro vê Dashboard, Identidade e Documentos; Instrutor, também Recrutamento; o resto é do Alto Comando.
 - **RLS**: insert público controlado por política; demais operações via backend com service role.
 - Não commite `.env`; mantenha apenas `.env.example` sem segredos reais.
 
