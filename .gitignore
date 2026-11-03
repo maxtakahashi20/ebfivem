@@ -60,3 +60,7 @@ Desktop.ini
 
 # ─── Cursor (sessão local do editor) ────────────────────────────────────────
 .cursor/
+
+# Teste de permissões
+e2e/.teste.env
+e2e/.proxy.pid

@@ -238,3 +238,8 @@ Documentação: [TanStack Start](https://tanstack.com/start)
 Este repositório é **privado** conforme `package.json`. O conteúdo institucional e militar é **ficcional / temático para comunidade de roleplay** e não substitui canais oficiais das Forças Armadas brasileiras.
 
 Para dúvidas sobre schema ou fluxo de inscrição, consulte `src/lib/inscricoes.functions.ts` e `supabase/migrations/`.
+
+## Testes e backup
+
+- **Permissões:** `npm run test:permissoes` confere no servidor o que cada papel alcança. Precisa de `e2e/ambiente.sh subir` (Docker, banco descartável), do site com as variáveis de `e2e/.teste.env` e do pacote `playwright`. O CI roda isso a cada push.
+- **Backup:** `.github/workflows/backup.yml` gera um `pg_dump` criptografado por dia. Configure os segredos `DATABASE_URL` e `BACKUP_PASSPHRASE` no GitHub. Para restaurar: `gpg -d backup.sql.gz.gpg | gunzip | psql "$DESTINO"`.

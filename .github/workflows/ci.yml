@@ -1,0 +1,35 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      # ponytail: o lint ainda não bloqueia, há erros de formatação antigos. Tirar quando limpar.
+      - run: npx eslint .
+        continue-on-error: true
+      - run: npm run build
+      - name: Instalar navegador do teste
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - run: e2e/ambiente.sh subir
+      - name: Testar permissões
+        run: |
+          . e2e/.teste.env
+          npx vite dev --port 8090 --host 127.0.0.1 --strictPort > vite.log 2>&1 &
+          node e2e/permissoes.cjs
+      - if: failure()
+        run: tail -50 vite.log
