@@ -4,6 +4,7 @@ import { getPlaceholderMeta } from "@/config/admin-nav";
 export type ModuleVariant =
   | "table"
   | "defcon"
+  | "discord"
   | "logs"
   | "system"
   | "entrevistas"
@@ -153,12 +154,13 @@ const REGISTRY: Partial<Record<AdminView, ModuleConfig>> = {
   "efetivo-ativos": base("efetivo-ativos", {
     stats: [
       { label: "Militares", value: 0, color: C.green },
+      { label: "Autenticados Discord", value: 0, color: C.blue },
     ],
     columns: [
       { key: "id", label: "ID", mono: true },
       { key: "nome", label: "NOME" },
       { key: "patente", label: "PATENTE" },
-      { key: "funcao", label: "FUNÇÃO" },
+      { key: "discord", label: "DISCORD" },
       { key: "status", label: "STATUS" },
     ],
     rows: [],
@@ -187,17 +189,62 @@ const REGISTRY: Partial<Record<AdminView, ModuleConfig>> = {
     rows: [],
   }),
 
-  comunicados: base("comunicados", {
-    variant: "comunicacao",
-    stats: [{ label: "Comunicados", value: 0, color: C.olive }],
-    primaryAction: "Novo comunicado",
+  "discord-webhooks": base("discord-webhooks", {
+    variant: "discord",
+    stats: [{ label: "Webhooks", value: 2, color: C.green }],
+    primaryAction: "Novo webhook",
     columns: [
-      { key: "data", label: "DATA", mono: true },
-      { key: "titulo", label: "TÍTULO" },
-      { key: "corpo", label: "MENSAGEM" },
-      { key: "emitido", label: "EMITIDO POR" },
+      { key: "nome", label: "CANAL" },
+      { key: "uso", label: "USO" },
+      { key: "status", label: "STATUS" },
     ],
     rows: [],
+  }),
+
+  "discord-bot": base("discord-bot", {
+    variant: "discord",
+    stats: [
+      { label: "Latência", value: "42ms", color: C.green },
+      { label: "Uptime", value: "99.8%", color: C.olive },
+    ],
+    columns: [],
+    rows: [],
+  }),
+
+  "discord-cargos": base("discord-cargos", {
+    variant: "discord",
+    stats: [{ label: "Regras de sync", value: 0, color: C.blue }],
+    primaryAction: "Nova regra de cargo",
+    columns: [
+      { key: "patente", label: "PATENTE RP" },
+      { key: "cargo", label: "CARGO DISCORD" },
+      { key: "auto", label: "AUTO" },
+    ],
+    rows: [],
+  }),
+
+  "discord-logs": base("discord-logs", {
+    variant: "logs",
+    stats: [{ label: "Mensagens log (24h)", value: 0, color: C.blue }],
+    columns: [
+      { key: "hora", label: "HORA", mono: true },
+      { key: "evento", label: "EVENTO" },
+    ],
+    rows: [],
+  }),
+
+  "discord-sync": base("discord-sync", {
+    variant: "discord",
+    stats: [
+      { label: "Última sync", value: "—", color: C.green },
+      { label: "Pendentes", value: 0, color: C.olive },
+    ],
+    columns: [
+      { key: "item", label: "ITEM" },
+      { key: "status", label: "STATUS" },
+    ],
+    rows: [],
+    primaryAction: "Sincronizar agora",
   }),
 
   "sys-db": base("sys-db", {

@@ -2,7 +2,10 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import logo from "@/assets/logo-2de.png";
 import { SfxToggle } from "@/components/SfxToggle";
+import { PainelMembroButton } from "@/components/PainelMembroButton";
 import { AdminThemeToggle } from "@/components/admin/AdminThemeToggle";
+
+const DISCORD_URL = "https://discord.gg/F2T248Ytpj";
 
 const links = [
   { to: "/", label: "Informativo" },
@@ -10,7 +13,6 @@ const links = [
   { to: "/organograma", label: "Organograma" },
   { to: "/inscricao", label: "Alistamento" },
   { to: "/acompanhar", label: "Acompanhar" },
-  { to: "/identidade", label: "Identidade" },
   { to: "/suporte", label: "Suporte" },
   { to: "/autoria", label: "Autoria" },
 ];
@@ -78,12 +80,15 @@ export function Header() {
               </Link>
             );
           })}
-          <Link
-            to="/ADM2DE"
+          <PainelMembroButton />
+          <a
+            href={DISCORD_URL}
+            target="_blank"
+            rel="noreferrer"
             className="ml-2 tag-rank bg-(--color-olive-bright) hover:opacity-90 shrink-0"
           >
-            ◆ Painel
-          </Link>
+            ◆ Discord
+          </a>
         </nav>
       </div>
       <div className="divider-tape" />
@@ -96,7 +101,7 @@ export function Footer({ pathname }: { pathname: string }) {
 
   return (
     <footer className="mt-24 border-t-2 border-(--color-olive-deep) bg-(--color-olive-deep) text-(--color-khaki)">
-      <div className="mx-auto max-w-6xl px-6 py-10 grid md:grid-cols-2 gap-8 text-sm">
+      <div className="mx-auto max-w-6xl px-6 py-10 grid md:grid-cols-3 gap-8 text-sm">
         <div>
           <div className="font-display tracking-widest text-(--color-gold) mb-2">
             2ª DE · 2ª DIVISÃO DO EXÉRCITO
@@ -113,6 +118,18 @@ export function Footer({ pathname }: { pathname: string }) {
             <li>Imersão</li>
             <li>Camaradagem</li>
           </ul>
+        </div>
+        <div>
+          <div className="font-display tracking-widest text-(--color-gold) mb-2">COMUNICAÇÃO</div>
+          <a
+            href={DISCORD_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="underline opacity-90 hover:opacity-100"
+          >
+            discord.gg/F2T248Ytpj
+          </a>
+          <p className="opacity-70 mt-2 text-xs">Canal oficial · Convocação 24h</p>
         </div>
         </div>
       <div className="text-center text-[10px] tracking-widest opacity-70 pb-6 px-4 space-y-2">

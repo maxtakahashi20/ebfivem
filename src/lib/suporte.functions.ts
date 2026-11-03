@@ -1,12 +1,22 @@
+import { assertAccessKey } from "@/lib/access-key.server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { assertAccessKey } from "@/lib/access-key.server";
-import { registrarLog } from "@/lib/logs.server";
+import { verifyDiscordSession } from "@/lib/discord-session";
+import { hasFullAccess } from "@/lib/access-control";
+import { enviarLogOperacional } from "@/lib/discord.functions";
 
-const ATENDENTE = "Comando 2ª DE";
 const MAX_MENSAGEM = 2000;
 const HISTORICO_LIMIT = 200;
+
+async function assertAdminAltoComando(session: string) {
+  const profile = await verifyDiscordSession(session);
+  if (!profile) throw new Error("Sessão Discord inválida.");
+  if (!hasFullAccess(profile)) {
+    throw new Error("Apenas o Alto Comando pode atender o suporte.");
+  }
+  return profile;
+}
 
 const UuidSchema = z.string().uuid();
 
@@ -33,6 +43,7 @@ export type SuporteTicket = {
   nome: string | null;
   sobrenome: string | null;
   status: "aberto" | "em_atendimento" | "encerrado";
+  atendente_discord_id: string | null;
   atendente_nome: string | null;
   ultima_mensagem_em: string;
   created_at: string;
@@ -44,6 +55,7 @@ export type SuporteMensagem = {
   ticket_id: string;
   autor: "conscrito" | "militar" | "sistema";
   autor_nome: string | null;
+  autor_discord_id: string | null;
   mensagem: string;
   created_at: string;
 };
@@ -78,7 +90,10 @@ export const abrirOuObterTicket = createServerFn({ method: "POST" })
         : `Ticket aberto — assunto: ${data.titulo}.`,
     });
 
-    await registrarLog("operacional", "SUPORTE", `Novo ticket ${novo.id} — ${data.titulo}`);
+    enviarLogOperacional({
+      acao: "SUPORTE",
+      descricao: `Novo ticket de suporte ${novo.id} — ${data.titulo}`,
+    }).catch(() => {});
 
     return {
       ticket: novo as SuporteTicket,
@@ -175,12 +190,14 @@ export const listarTicketsAdmin = createServerFn({ method: "POST" })
     z
       .object({
         accessKey: z.string(),
+        session: z.string().min(1),
         status: StatusSchema.optional(),
       })
       .parse(input),
   )
   .handler(async ({ data }) => {
     assertAccessKey(data.accessKey);
+    await assertAdminAltoComando(data.session);
 
     let q = supabaseAdmin
       .from("suporte_tickets")
@@ -199,12 +216,14 @@ export const listarMensagensAdmin = createServerFn({ method: "POST" })
     z
       .object({
         accessKey: z.string(),
+        session: z.string().min(1),
         ticketId: UuidSchema,
       })
       .parse(input),
   )
   .handler(async ({ data }) => {
     assertAccessKey(data.accessKey);
+    await assertAdminAltoComando(data.session);
 
     const { data: ticket, error: errT } = await supabaseAdmin
       .from("suporte_tickets")
@@ -233,6 +252,7 @@ export const enviarMensagemAdmin = createServerFn({ method: "POST" })
     z
       .object({
         accessKey: z.string(),
+        session: z.string().min(1),
         ticketId: UuidSchema,
         mensagem: z.string().trim().min(1).max(MAX_MENSAGEM),
       })
@@ -240,10 +260,11 @@ export const enviarMensagemAdmin = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     assertAccessKey(data.accessKey);
+    const profile = await assertAdminAltoComando(data.session);
 
     const { data: ticket, error: errT } = await supabaseAdmin
       .from("suporte_tickets")
-      .select("status, atendente_nome")
+      .select("status, atendente_discord_id")
       .eq("id", data.ticketId)
       .maybeSingle();
     if (errT) throw new Error(errT.message);
@@ -257,7 +278,8 @@ export const enviarMensagemAdmin = createServerFn({ method: "POST" })
       .insert({
         ticket_id: data.ticketId,
         autor: "militar",
-        autor_nome: ATENDENTE,
+        autor_nome: profile.displayName,
+        autor_discord_id: profile.id,
         mensagem: data.mensagem,
       })
       .select("*")
@@ -267,8 +289,14 @@ export const enviarMensagemAdmin = createServerFn({ method: "POST" })
     const updates: Record<string, unknown> = {
       ultima_mensagem_em: new Date().toISOString(),
     };
-    if (ticket.status === "aberto") updates.status = "em_atendimento";
-    if (!ticket.atendente_nome) updates.atendente_nome = ATENDENTE;
+    if (ticket.status === "aberto") {
+      updates.status = "em_atendimento";
+      updates.atendente_discord_id = profile.id;
+      updates.atendente_nome = profile.displayName;
+    } else if (!ticket.atendente_discord_id) {
+      updates.atendente_discord_id = profile.id;
+      updates.atendente_nome = profile.displayName;
+    }
     await supabaseAdmin.from("suporte_tickets").update(updates).eq("id", data.ticketId);
 
     return { mensagem: msg as SuporteMensagem };
@@ -279,12 +307,14 @@ export const encerrarTicketAdmin = createServerFn({ method: "POST" })
     z
       .object({
         accessKey: z.string(),
+        session: z.string().min(1),
         ticketId: UuidSchema,
       })
       .parse(input),
   )
   .handler(async ({ data }) => {
     assertAccessKey(data.accessKey);
+    const profile = await assertAdminAltoComando(data.session);
 
     const { error } = await supabaseAdmin
       .from("suporte_tickets")
@@ -295,8 +325,9 @@ export const encerrarTicketAdmin = createServerFn({ method: "POST" })
     await supabaseAdmin.from("suporte_mensagens").insert({
       ticket_id: data.ticketId,
       autor: "sistema",
-      autor_nome: ATENDENTE,
-      mensagem: `Atendimento encerrado por ${ATENDENTE}.`,
+      autor_nome: profile.displayName,
+      autor_discord_id: profile.id,
+      mensagem: `Atendimento encerrado por ${profile.displayName}.`,
     });
 
     return { ok: true };

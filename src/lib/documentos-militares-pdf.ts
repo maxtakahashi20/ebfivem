@@ -1,5 +1,6 @@
 /** PDFs militares: certificado, ficha, ordem de serviço, boletim interno */
 import { jsPDF } from "jspdf";
+import type { DiscordProfile } from "@/lib/discord-oauth";
 import type { IdentidadeGerada } from "@/lib/militar-identidade";
 
 export type TipoDocumentoMilitar = "certificado" | "ficha" | "ordem" | "boletim";
@@ -196,6 +197,11 @@ export function baixarDocumentoMilitar(input: DocumentoMilitarInput) {
   pdf.save(`2DE-${input.tipo}-${ref}.pdf`);
 }
 
+export type CarteiraPdfOptions = {
+  discordProfile?: DiscordProfile | null;
+  footerLeft?: string;
+};
+
 /** ISO ID-1 horizontal — título de eleitor (~86 × 54 mm) com margem interna extra. */
 const CARD_W = 90;
 const CARD_H = 57;
@@ -244,11 +250,13 @@ function fieldCarteira(
   return y + 3 + valueSize * 0.42;
 }
 
-/** Carteira militar em PDF — horizontal (só dados + QR). */
+/** Carteira militar em PDF — horizontal, sem cargos Discord (só dados + QR). */
 export async function gerarCarteiraMilitarPdf(
   id: IdentidadeGerada,
   qrDataUrl: string,
+  options?: CarteiraPdfOptions,
 ): Promise<jsPDF> {
+  const profile = options?.discordProfile;
   const doc = new jsPDF({
     orientation: "landscape",
     unit: "mm",
@@ -311,7 +319,9 @@ export async function gerarCarteiraMilitarPdf(
 
   const infoX = photoX + photoW + 2;
   const infoW = Math.max(20, qrX - infoX - 1.5);
-  const nome = pdfSafe(`${id.nome} ${id.sobrenome}`.toUpperCase(), 32);
+  const nome =
+    profile?.displayName?.toUpperCase() ??
+    pdfSafe(`${id.nome} ${id.sobrenome}`.toUpperCase(), 32);
 
   let y = bodyY + 0.5;
   const rowGap = 1.1;
@@ -341,7 +351,7 @@ export async function gerarCarteiraMilitarPdf(
   doc.setFont("helvetica", "normal");
   doc.setFontSize(3.4);
   doc.setTextColor(80, 90, 60);
-  const footLeft = pdfSafe(`PROTOCOLO ${id.protocolo}`, 28);
+  const footLeft = pdfSafe(options?.footerLeft ?? `PROTOCOLO ${id.protocolo}`, 28);
   doc.text(footLeft, INSET + 1, footerTop + 3.6, { maxWidth: infoW });
   doc.text("DOC. FICTICIO - 2ª DE", W - INSET - 1, footerTop + 3.6, { align: "right" });
 
@@ -355,7 +365,8 @@ export async function gerarCarteiraMilitarPdf(
 export async function baixarCarteiraMilitar(
   id: IdentidadeGerada,
   qrDataUrl: string,
+  options?: CarteiraPdfOptions,
 ) {
-  const pdf = await gerarCarteiraMilitarPdf(id, qrDataUrl);
+  const pdf = await gerarCarteiraMilitarPdf(id, qrDataUrl, options);
   pdf.save(`2ª DE-carteira-${id.matricula}.pdf`);
 }

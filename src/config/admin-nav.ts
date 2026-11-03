@@ -6,6 +6,7 @@ import {
   Crosshair,
   ScrollText,
   Users,
+  Bot,
   Eye,
   Gavel,
   Radio,
@@ -18,9 +19,13 @@ import {
 
 export type AdminView = string;
 
+/** Marcação opcional de gates por papel (atualmente só "alto-comando"). */
+export type RestrictedRole = "alto-comando";
+
 export type NavLeaf = {
   id: AdminView;
   label: string;
+  restricted?: RestrictedRole;
 };
 
 export type NavGroup = {
@@ -29,6 +34,7 @@ export type NavGroup = {
   icon: LucideIcon;
   defaultOpen?: boolean;
   children: NavLeaf[];
+  restricted?: RestrictedRole;
 };
 
 export type NavSingle = {
@@ -37,6 +43,7 @@ export type NavSingle = {
   label: string;
   icon: LucideIcon;
   highlight?: "war" | "default";
+  restricted?: RestrictedRole;
 };
 
 export type NavGroupEntry = {
@@ -60,6 +67,20 @@ export const IMPLEMENTED_VIEWS = new Set<AdminView>([
   "suporte-admin",
 ]);
 
+/** Views com gate Alto Comando — usadas pelo servidor para autorização defensiva. */
+export const ALTO_COMANDO_VIEWS = new Set<AdminView>([
+  "logs-geral",
+  "suporte-admin",
+  "sys-db",
+  "sys-api",
+  "sys-seguranca",
+  "sys-sessoes",
+  "sys-backup",
+  "restrito-intel",
+  "restrito-ops",
+  "restrito-docs",
+]);
+
 const PLACEHOLDER_COPY: Record<string, { title: string; desc: string; tag?: string }> = {
   "recrutamento-entrevistas": {
     title: "Entrevistas",
@@ -73,11 +94,16 @@ const PLACEHOLDER_COPY: Record<string, { title: string; desc: string; tag?: stri
   },
   "efetivo-ativos": {
     title: "Militares",
-    desc: "Militares do quadro ativo.",
+    desc: "Membros autenticados no Discord (inclusão automática).",
     tag: "EFETIVO",
   },
   "efetivo-instrutores": { title: "Instrutores", desc: "Corpo de instrução.", tag: "EFETIVO" },
-  "logs-geral": { title: "Logs em geral", desc: "Eventos auditados do painel, operações e sistema.", tag: "LOGS" },
+  "logs-geral": { title: "Logs em geral", desc: "Eventos auditados do painel, Discord, operações e sistema.", tag: "LOGS" },
+  "discord-webhooks": { title: "Webhooks", desc: "Configuração de webhooks.", tag: "DISCORD" },
+  "discord-bot": { title: "Status do bot", desc: "Integração com bot oficial.", tag: "DISCORD" },
+  "discord-cargos": { title: "Cargos automáticos", desc: "Sincronização de cargos.", tag: "DISCORD" },
+  "discord-logs": { title: "Logs Discord", desc: "Canal de logs.", tag: "DISCORD" },
+  "discord-sync": { title: "Sincronização", desc: "Sync painel ↔ Discord.", tag: "DISCORD" },
   "intel-relatorios": { title: "Relatórios", desc: "Relatórios de inteligência.", tag: "INTELIGÊNCIA" },
   "intel-investigacao": { title: "Investigação", desc: "Casos em investigação.", tag: "INTELIGÊNCIA" },
   "intel-suspeitos": { title: "Suspeitos", desc: "Base de suspeitos monitorados.", tag: "INTELIGÊNCIA" },
@@ -96,11 +122,6 @@ const PLACEHOLDER_COPY: Record<string, { title: string; desc: string; tag?: stri
   "restrito-intel": { title: "Inteligência restrita", desc: "Somente alto comando.", tag: "RESTRITO" },
   "restrito-ops": { title: "Operações sigilosas", desc: "Classificado.", tag: "RESTRITO" },
   "restrito-docs": { title: "Documentos internos", desc: "Arquivo restrito.", tag: "RESTRITO" },
-  comunicados: {
-    title: "Comunicados",
-    desc: "Comunicados oficiais do comando.",
-    tag: "COMUNICAÇÃO",
-  },
   "suporte-admin": {
     title: "Suporte",
     desc: "Atendimento de conscritos via chat ao vivo.",
@@ -150,6 +171,7 @@ export const NAV_ENTRIES: NavEntry[] = [
     id: "suporte-admin",
     label: "Suporte",
     icon: LifeBuoy,
+    restricted: "alto-comando",
   },
   {
     type: "group",
@@ -183,6 +205,7 @@ export const NAV_ENTRIES: NavEntry[] = [
     id: "logs-geral",
     label: "Logs em geral",
     icon: ScrollText,
+    restricted: "alto-comando",
   },
   {
     type: "group",
@@ -193,6 +216,21 @@ export const NAV_ENTRIES: NavEntry[] = [
       children: [
         { id: "efetivo-ativos", label: "Militares" },
         { id: "efetivo-instrutores", label: "Instrutores" },
+      ],
+    },
+  },
+  {
+    type: "group",
+    group: {
+      id: "discord",
+      label: "Discord",
+      icon: Bot,
+      children: [
+        { id: "discord-webhooks", label: "Webhooks" },
+        { id: "discord-bot", label: "Status do bot" },
+        { id: "discord-cargos", label: "Cargos automáticos" },
+        { id: "discord-logs", label: "Logs" },
+        { id: "discord-sync", label: "Sincronização" },
       ],
     },
   },
@@ -243,6 +281,7 @@ export const NAV_ENTRIES: NavEntry[] = [
       id: "sistema",
       label: "Sistema",
       icon: Settings,
+      restricted: "alto-comando",
       children: [
         { id: "sys-db", label: "Banco de dados" },
         { id: "sys-api", label: "API" },
@@ -258,6 +297,7 @@ export const NAV_ENTRIES: NavEntry[] = [
       id: "restrito",
       label: "Área Restrita",
       icon: Lock,
+      restricted: "alto-comando",
       children: [
         { id: "restrito-intel", label: "Inteligência" },
         { id: "restrito-ops", label: "Operações sigilosas" },
@@ -268,3 +308,22 @@ export const NAV_ENTRIES: NavEntry[] = [
 ];
 
 buildViewLabels(NAV_ENTRIES);
+
+/** Para uso em UIs/servers ao decidir bloqueio (`entry` pode ser single ou child). */
+export function viewIsRestricted(view: AdminView): RestrictedRole | undefined {
+  for (const e of NAV_ENTRIES) {
+    if (e.type === "single") {
+      if (e.id === view) return e.restricted;
+      continue;
+    }
+    const g = e.group;
+    if (g.restricted) {
+      if (g.children.some((c) => c.id === view)) return g.restricted;
+    }
+    for (const c of g.children) {
+      if (c.id === view && c.restricted) return c.restricted;
+    }
+  }
+  if (ALTO_COMANDO_VIEWS.has(view)) return "alto-comando";
+  return undefined;
+}

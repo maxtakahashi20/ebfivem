@@ -1,5 +1,24 @@
 /** Gera matrícula, validade e payload QR para identidade militar digital 2ª DE */
 
+import type { DiscordProfile, DiscordRoleTag } from "@/lib/discord-oauth";
+
+/** Índice do cargo de patente/graduação na lista (3º cargo = Sub Tenente, etc.). */
+export const PATENTE_CARGO_INDEX = 2;
+
+/** Mesma ordem das tags na carteira: maior position do Discord primeiro. */
+export function ordenarCargosDiscord(roles: DiscordRoleTag[]): DiscordRoleTag[] {
+  return [...roles].sort((a, b) => b.position - a.position);
+}
+
+/** Patente/graduação = 3º cargo do membro no servidor 2ª DE. */
+export function patenteFromDiscordRoles(roles: DiscordRoleTag[]): string {
+  const ordenados = ordenarCargosDiscord(roles);
+  const cargo = ordenados[PATENTE_CARGO_INDEX] ?? ordenados.at(-1);
+  if (!cargo) return "Membro 2ª DE";
+  const nome = cargo.name.trim();
+  return nome.length > 48 ? `${nome.slice(0, 45)}…` : nome;
+}
+
 export type IdentidadeMilitarData = {
   protocolo: string;
   nome: string;
@@ -66,6 +85,42 @@ export function montarIdentidade(d: IdentidadeMilitarData): IdentidadeGerada {
     validadeDe: de,
     validadeAte: ate,
     qrPayload,
+  };
+}
+
+/** Carteira + QR logo após login Discord (sem depender de inscrição aprovada). */
+export function montarIdentidadeDiscord(profile: DiscordProfile): IdentidadeGerada {
+  const protocolo = `DSC-${profile.id}`;
+  const rg = profile.id.replace(/\D/g, "").slice(-8).padStart(8, "0").slice(0, 8);
+  const patente = patenteFromDiscordRoles(profile.roles);
+  const partes = profile.displayName.trim().split(/\s+/);
+  const nome = partes[0] ?? profile.username;
+  const sobrenome = partes.length > 1 ? partes.slice(1).join(" ") : profile.username;
+
+  const gerada = montarIdentidade({
+    protocolo,
+    nome,
+    sobrenome,
+    rg,
+    patente,
+    fotoDataUrl: profile.avatarUrl,
+  });
+
+  const cargosOrdenados = ordenarCargosDiscord(profile.roles);
+
+  return {
+    ...gerada,
+    qrPayload: JSON.stringify({
+      org: "2DE",
+      matricula: gerada.matricula,
+      discordId: profile.id,
+      usuario: profile.username,
+      nome: profile.displayName,
+      patente,
+      cargos: cargosOrdenados.slice(0, 20).map((r) => r.name),
+      validade: gerada.validadeAte,
+      v: 2,
+    }),
   };
 }
 

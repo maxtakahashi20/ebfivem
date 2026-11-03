@@ -17,13 +17,13 @@ export const Route = createFileRoute("/inscricao")({
 
 type Form = {
   nome: string; sobrenome: string; rg: string;
-  telefone: string;
+  telefone: string; discord_id: string;
 };
 
 function Inscricao() {
   const submit = useServerFn(criarInscricao);
   const [form, setForm] = useState<Form>({
-    nome: "", sobrenome: "", rg: "", telefone: "",
+    nome: "", sobrenome: "", rg: "", telefone: "", discord_id: "",
   });
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState<{ protocolo: string; rg: string; created_at?: string } | null>(null);
@@ -52,6 +52,7 @@ function Inscricao() {
           sobrenome: form.sobrenome,
           rg: form.rg,
           telefone: form.telefone,
+          discord_id: form.discord_id,
           created_at: res.created_at,
         });
       } catch (pdfErr) {
@@ -72,6 +73,7 @@ function Inscricao() {
         sobrenome: form.sobrenome,
         rg: form.rg,
         telefone: form.telefone,
+        discord_id: form.discord_id,
         created_at: done.created_at,
       });
 
@@ -134,6 +136,14 @@ function Inscricao() {
             highlight
           />
         </div>
+        <Field
+          label="ID do Discord"
+          value={form.discord_id}
+          onChange={(v) => set("discord_id", v)}
+          required
+          placeholder="usuario#0000 ou ID numérico"
+          maxLength={64}
+        />
         <div className="flex items-center justify-between gap-4 pt-2 border-t border-(--color-border)">
           <div className="stencil text-[10px]">DECLARO QUE AS INFORMAÇÕES SÃO VERDADEIRAS.</div>
           <button type="submit" disabled={loading} className="btn-olive disabled:opacity-60">

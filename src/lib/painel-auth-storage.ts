@@ -22,3 +22,15 @@ export function clearPanelAccessKey(): void {
   localStorage.removeItem(PANEL_ACCESS_KEY_STORAGE);
   sessionStorage.removeItem(PANEL_ACCESS_KEY_STORAGE);
 }
+
+export function isDiscordSessionInvalidError(message: string): boolean {
+  const m = message.toLowerCase();
+  return (
+    m.includes("sessão") ||
+    m.includes("session") ||
+    m.includes("inválid") ||
+    m.includes("invalid") ||
+    m.includes("expirad") ||
+    m.includes("expired")
+  );
+}

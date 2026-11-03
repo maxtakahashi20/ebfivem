@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import type { AdminView } from "@/config/admin-nav";
+import { ALTO_COMANDO_VIEWS } from "@/config/admin-nav";
 import { getAcaoEspecial, getLabelAcao, getModuloForm } from "@/config/admin-module-forms";
 import { MODULO_DB, PDF_RESTRITO_VIEWS } from "@/config/admin-modules-db";
 import {
@@ -11,6 +12,7 @@ import {
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { getModuleConfig, type ModuleStat } from "@/components/admin/module-registry";
 import {
+  atualizarStatusDiscordBot,
   baixarPdfRestrito,
   carregarModuloAdmin,
   criarRegistroModulo,
@@ -18,6 +20,8 @@ import {
   removerPdfRestrito,
   uploadPdfRestrito,
 } from "@/lib/admin-modules.functions";
+import { useDiscordSession } from "@/hooks/useDiscordSession";
+import { DISCORD_SESSION_KEY } from "@/lib/discord-oauth";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -30,11 +34,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+function getDiscordSessionToken(): string | undefined {
+  if (typeof window === "undefined") return undefined;
+  return localStorage.getItem(DISCORD_SESSION_KEY) ?? undefined;
+}
+
 export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKey: string }) {
   const cfg = getModuleConfig(view);
+  const { altoComando } = useDiscordSession();
   const [search, setSearch] = useState("");
   const [rows, setRows] = useState(cfg.rows);
   const [stats, setStats] = useState<ModuleStat[]>(cfg.stats);
+  const [extra, setExtra] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(usesDb(view));
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -47,23 +58,27 @@ export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKe
   const downloadPdf = useServerFn(baixarPdfRestrito);
   const deletePdf = useServerFn(removerPdfRestrito);
 
+  const isRestrita = ALTO_COMANDO_VIEWS.has(view);
+  const acessoNegado = isRestrita && !altoComando;
   const supportsPdf = PDF_RESTRITO_VIEWS.has(view);
 
   const reload = useCallback(() => {
     if (!usesDb(view)) return;
+    if (acessoNegado) return;
     setLoading(true);
-    loadModulo({ data: { accessKey, view } })
+    loadModulo({ data: { accessKey, view, session: getDiscordSessionToken() } })
       .then((payload) => {
         setRows(payload.rows);
         if (payload.stats.length > 0) {
           setStats(payload.stats.map((s) => ({ label: s.label, value: s.value, sub: s.sub })));
         }
+        if (payload.extra) setExtra(payload.extra);
       })
       .catch((e) =>
         toast.error(e instanceof Error ? e.message : "Falha ao carregar dados do módulo"),
       )
       .finally(() => setLoading(false));
-  }, [accessKey, view, loadModulo]);
+  }, [accessKey, view, loadModulo, acessoNegado]);
 
   useEffect(() => {
     if (!usesDb(view)) {
@@ -99,7 +114,9 @@ export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKe
     if (acaoEsp) {
       setActionLoading(true);
       try {
-        const res = await acaoEspecial({ data: { accessKey, view } });
+        const res = await acaoEspecial({
+          data: { accessKey, view, session: getDiscordSessionToken() },
+        });
         toast.success(res.mensagem ?? "Ação concluída");
         reload();
       } catch (e) {
@@ -118,14 +135,18 @@ export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKe
   ) => {
     setSaving(true);
     try {
-      const result = await criarRegistro({ data: { accessKey, view, valores } });
+      const session = getDiscordSessionToken();
+      const result = await criarRegistro({ data: { accessKey, view, valores, session } });
       if (pdf) {
         if (!result.id) {
           toast.error("Registro criado, mas não foi possível anexar o PDF (ID ausente).");
+        } else if (!session) {
+          toast.error("Sessão Discord necessária para anexar PDF.");
         } else {
           await uploadPdf({
             data: {
               accessKey,
+              session,
               view,
               recordId: result.id,
               base64: pdf.base64,
@@ -146,9 +167,14 @@ export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKe
   };
 
   const handleDownloadPdf = async (recordId: string) => {
+    const session = getDiscordSessionToken();
+    if (!session) {
+      toast.error("Sessão Discord necessária.");
+      return;
+    }
     try {
       const { url, filename } = await downloadPdf({
-        data: { accessKey, recordId },
+        data: { accessKey, session, recordId },
       });
       const a = document.createElement("a");
       a.href = url;
@@ -164,16 +190,43 @@ export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKe
   };
 
   const handleDeletePdf = async (recordId: string) => {
+    const session = getDiscordSessionToken();
+    if (!session) {
+      toast.error("Sessão Discord necessária.");
+      return;
+    }
     const ok = window.confirm("Remover o PDF deste registro?");
     if (!ok) return;
     try {
-      await deletePdf({ data: { accessKey, recordId } });
+      await deletePdf({ data: { accessKey, session, recordId } });
       toast.success("PDF removido");
       reload();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao remover PDF");
     }
   };
+
+  if (acessoNegado) {
+    return (
+      <div>
+        <AdminPageHeader tag={cfg.tag} title={cfg.title} sub={cfg.subtitle} />
+        <Card className="field-paper border-0 shadow-none">
+          <CardContent className="py-10 text-center space-y-3">
+            <div className="tag-rank bg-(--color-destructive) text-[10px] inline-block">
+              RESTRITO · ALTO COMANDO
+            </div>
+            <p className="font-display tracking-widest text-(--color-olive-deep)">
+              Acesso negado
+            </p>
+            <p className="text-xs font-mono text-(--color-stencil) max-w-md mx-auto">
+              Esta área é reservada ao Alto Comando da 2ª DE. Solicite ao comando que adicione seu
+              cargo Discord à lista <code>DISCORD_ALTO_COMANDO_ROLE_IDS</code>.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -244,12 +297,22 @@ export function AdminModuleView({ view, accessKey }: { view: AdminView; accessKe
         </div>
       )}
 
+      {cfg.variant === "discord" && view === "discord-bot" && (
+        <DiscordBotPanel
+          accessKey={accessKey}
+          online={extra.online !== false}
+          latencia={Number(extra.latencia_ms ?? 0)}
+          uptime={String(extra.uptime_pct ?? "—")}
+          onRefresh={reload}
+        />
+      )}
       {cfg.variant === "entrevistas" && <EntrevistasPanel rows={rows} loading={loading} />}
 
       {(cfg.variant === "table" ||
         cfg.variant === "logs" ||
         cfg.variant === "comunicacao" ||
-        cfg.variant === "system") &&
+        cfg.variant === "system" ||
+        cfg.variant === "discord") &&
         cfg.columns.length > 0 && (
           <Card className="field-paper border-0 shadow-none">
             <CardHeader className="pb-2 flex flex-row flex-wrap items-center justify-between gap-3">
@@ -335,7 +398,8 @@ function usesDb(view: AdminView): boolean {
     view in MODULO_DB ||
     view === "sys-db" ||
     view === "sys-api" ||
-    view === "sys-seguranca"
+    view === "sys-seguranca" ||
+    view === "discord-bot"
   );
 }
 
@@ -372,6 +436,78 @@ function statusBadge(key: string, value: string) {
     <Badge variant={variant} className="font-display tracking-widest text-[10px]">
       {value}
     </Badge>
+  );
+}
+
+function DiscordBotPanel({
+  accessKey,
+  online,
+  latencia,
+  uptime,
+  onRefresh,
+}: {
+  accessKey: string;
+  online: boolean;
+  latencia: number;
+  uptime: string;
+  onRefresh: () => void;
+}) {
+  const refreshBot = useServerFn(atualizarStatusDiscordBot);
+  const [loading, setLoading] = useState(false);
+
+  const handleRefresh = async () => {
+    setLoading(true);
+    try {
+      await refreshBot({ data: { accessKey, session: getDiscordSessionToken() } });
+      toast.success("Status do bot atualizado");
+      onRefresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao atualizar");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Card className="field-paper border-0 shadow-none mb-6">
+      <CardContent className="pt-5 space-y-4">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <span
+              className={`size-3 rounded-full shadow-[0_0_8px_lime] ${online ? "bg-green-500" : "bg-red-500"}`}
+            />
+            <div>
+              <div className="font-display tracking-widest">
+                BOT 2ª DE — {online ? "ONLINE" : "OFFLINE"}
+              </div>
+              <p className="text-xs text-(--color-stencil)">Status em discord_bot_status</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="btn-olive text-xs disabled:opacity-50"
+            disabled={loading}
+            onClick={() => void handleRefresh()}
+          >
+            {loading ? "Atualizando…" : "↻ Atualizar status"}
+          </button>
+        </div>
+        <div className="grid sm:grid-cols-3 gap-3 text-sm font-mono">
+          <div className="p-3 border border-(--color-border)">
+            <div className="stencil text-[10px] mb-1">LATÊNCIA</div>
+            <div>{latencia} ms</div>
+          </div>
+          <div className="p-3 border border-(--color-border)">
+            <div className="stencil text-[10px] mb-1">UPTIME</div>
+            <div>{uptime}</div>
+          </div>
+          <div className="p-3 border border-(--color-border)">
+            <div className="stencil text-[10px] mb-1">FONTE</div>
+            <div>Supabase</div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

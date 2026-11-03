@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   ChevronRight,
@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { AdminThemeToggle } from "@/components/admin/AdminThemeToggle";
+import { useDiscordSession } from "@/hooks/useDiscordSession";
 import {
   Sidebar,
   SidebarContent,
@@ -44,7 +45,13 @@ function isGroupActive(groupId: string, view: AdminView, entry: NavEntry): boole
 
 export function AdminSidebar({ view, onViewChange, accessKey, onLogout }: Props) {
   const fetchStatus = useServerFn(getPainelStatus);
-  const [status, setStatus] = useState({ sistema: true, api: false });
+  const { altoComando, desenvolvedor } = useDiscordSession();
+  const [status, setStatus] = useState({
+    sistema: true,
+    discord: false,
+    api: false,
+    webhook: false,
+  });
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {};
     for (const e of NAV_ENTRIES) {
@@ -54,6 +61,22 @@ export function AdminSidebar({ view, onViewChange, accessKey, onLogout }: Props)
     }
     return init;
   });
+
+  const visibleEntries = useMemo<NavEntry[]>(() => {
+    return NAV_ENTRIES.flatMap((entry) => {
+      if (entry.type === "single") {
+        if (entry.restricted === "alto-comando" && !altoComando) return [];
+        return [entry];
+      }
+      const g = entry.group;
+      if (g.restricted === "alto-comando" && !altoComando) return [];
+      const children = g.children.filter(
+        (c) => !(c.restricted === "alto-comando" && !altoComando),
+      );
+      if (children.length === 0) return [];
+      return [{ type: "group" as const, group: { ...g, children } }];
+    });
+  }, [altoComando]);
 
   useEffect(() => {
     fetchStatus({ data: { accessKey } })
@@ -100,7 +123,7 @@ export function AdminSidebar({ view, onViewChange, accessKey, onLogout }: Props)
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="gap-0.5">
-              {NAV_ENTRIES.map((entry, idx) => {
+              {visibleEntries.map((entry, idx) => {
                 if (entry.type === "single") {
                   const Icon = entry.icon;
                   const active = view === entry.id;
@@ -194,8 +217,16 @@ export function AdminSidebar({ view, onViewChange, accessKey, onLogout }: Props)
 
       <SidebarFooter className="border-t border-olive-deep/15 p-2 group-data-[collapsible=icon]:px-1.5 space-y-2">
         <div className="adm-nav-status space-y-1 px-1 group-data-[collapsible=icon]:hidden">
+          {desenvolvedor && (
+            <div className="flex items-center gap-1.5 text-[9px] font-display tracking-widest text-(--color-destructive) mb-1">
+              <span className="size-1.5 rounded-full bg-(--color-destructive) shadow-[0_0_6px_rgba(220,38,38,0.6)]" />
+              MODO DESENVOLVEDOR
+            </div>
+          )}
           <StatusDot ok={status.sistema} label="SISTEMA OPERACIONAL" />
+          <StatusDot ok={status.discord} label="DISCORD ONLINE" />
           <StatusDot ok={status.api} label="API ONLINE" />
+          <StatusDot ok={status.webhook} label="WEBHOOK ATIVO" />
         </div>
 
         <SidebarMenu className="gap-2">
