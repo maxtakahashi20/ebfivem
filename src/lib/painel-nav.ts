@@ -11,11 +11,13 @@ export function queuePainelView(view: AdminView, extras?: { protocolo?: string }
   }
 }
 
-export function consumePendingDocProtocolo(): string | null {
-  if (typeof window === "undefined") return null;
-  const p = sessionStorage.getItem(PENDING_DOC_PROTOCOLO_KEY);
+/** A tela pode montar mais de uma vez: o protocolo só sai da fila depois de usado. */
+export function pendingDocProtocolo(): string | null {
+  return sessionStorage.getItem(PENDING_DOC_PROTOCOLO_KEY);
+}
+
+export function limparPendingDocProtocolo() {
   sessionStorage.removeItem(PENDING_DOC_PROTOCOLO_KEY);
-  return p;
 }
 
 export function goToPainel(view: AdminView = "perfil", extras?: { protocolo?: string }) {

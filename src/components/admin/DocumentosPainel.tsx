@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { DocumentosMilitares } from "@/components/military/DocumentosMilitares";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
-import { useDiscordSession } from "@/hooks/useDiscordSession";
 import { buscarInscricaoPorDiscord } from "@/lib/discord-auth.functions";
-import { consultarPorProtocolo } from "@/lib/inscricoes.functions";
-import { consumePendingDocProtocolo } from "@/lib/painel-nav";
+import { buscarFichaParaDocumento } from "@/lib/inscricoes.functions";
+import { getDiscordSessionToken } from "@/lib/painel-auth-storage";
+import { limparPendingDocProtocolo, pendingDocProtocolo } from "@/lib/painel-nav";
 
 type Inscricao = {
   protocolo: string;
@@ -25,9 +25,8 @@ function normalizeProtocolo(raw: string): string {
 }
 
 export function DocumentosPainel() {
-  const { session } = useDiscordSession();
   const buscarDiscord = useServerFn(buscarInscricaoPorDiscord);
-  const consultarProt = useServerFn(consultarPorProtocolo);
+  const buscarFicha = useServerFn(buscarFichaParaDocumento);
   const [militar, setMilitar] = useState<{
     nome: string;
     sobrenome: string;
@@ -42,14 +41,19 @@ export function DocumentosPainel() {
 
     async function load() {
       setLoading(true);
-      const pendingProto = consumePendingDocProtocolo();
+      const session = getDiscordSessionToken();
+      const pendingProto = pendingDocProtocolo();
 
       if (pendingProto) {
         const p = normalizeProtocolo(pendingProto) || pendingProto;
         if (/^EB-[0-9A-F]{8}$/.test(p)) {
-          const r = await consultarProt({ data: { protocolo: p } });
-          const row = (r as Inscricao[])[0];
-          if (!cancelled && row?.status === "aprovado") {
+          // Quem não é instrutor cai na própria ficha, logo abaixo.
+          const row = (await buscarFicha({ data: { session, protocolo: p } }).catch(
+            () => null,
+          )) as Inscricao | null;
+          if (cancelled) return;
+          limparPendingDocProtocolo();
+          if (row?.status === "aprovado") {
             setMilitar({
               nome: row.nome,
               sobrenome: row.sobrenome,
@@ -92,7 +96,7 @@ export function DocumentosPainel() {
     return () => {
       cancelled = true;
     };
-  }, [session, buscarDiscord, consultarProt]);
+  }, [buscarDiscord, buscarFicha]);
 
   return (
     <div>

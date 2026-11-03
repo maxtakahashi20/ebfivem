@@ -2,6 +2,7 @@
 // O painel exige sessão Discord e papel (`exigirPapel`).
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { exigirHumano, exigirLimite } from "@/lib/limite.server";
 import { exigirPapel } from "@/lib/painel-auth.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
@@ -20,11 +21,14 @@ const InscricaoSchema = z.object({
   rg: z.string().trim().regex(/^\d{1,8}$/, "RG deve conter até 8 dígitos"),
   telefone: z.string().trim().min(1).max(20),
   discord_id: z.string().trim().min(1).max(64),
+  turnstileToken: z.string().optional(),
 });
 
 export const criarInscricao = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => InscricaoSchema.parse(input))
   .handler(async ({ data }) => {
+    await exigirHumano(data.turnstileToken);
+    await exigirLimite("inscricao", 5, 3600);
     const discordUserId = /^\d{17,20}$/.test(data.discord_id) ? data.discord_id : null;
     const { data: row, error } = await supabaseAdmin
       .from("inscricoes")
@@ -57,41 +61,44 @@ export const criarInscricao = createServerFn({ method: "POST" })
 const camposConsultaConscrito =
   "protocolo, nome, sobrenome, rg, status, observacoes_instrutor, created_at, updated_at" as const;
 
-export const consultarPorRg = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) =>
-    z.object({ rg: z.string().trim().regex(/^\d{1,8}$/) }).parse(input),
-  )
-  .handler(async ({ data }) => {
-    const { data: rows, error } = await supabaseAdmin
-      .from("inscricoes")
-      .select(camposConsultaConscrito)
-      .eq("rg", data.rg)
-      .order("created_at", { ascending: false });
-    if (error) throw new Error(error.message);
-    return rows ?? [];
-  });
+const ProtocoloSchema = z
+  .string()
+  .trim()
+  .regex(/^EB-[0-9A-F]{8}$/i, "Protocolo no formato EB-XXXXXXXX");
 
-/** Mesmo formato que consultarPorRg (lista), porém no máximo um registro — protocolo é UNIQUE. */
-export const consultarPorProtocolo = createServerFn({ method: "POST" })
+/** Ficha só para quem sabe protocolo e RG juntos: um dado só permitiria varrer nomes. */
+export const consultarFicha = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z
-      .object({
-        protocolo: z
-          .string()
-          .trim()
-          .regex(/^EB-[0-9A-F]{8}$/i, "Protocolo no formato EB-XXXXXXXX"),
-      })
+      .object({ protocolo: ProtocoloSchema, rg: z.string().trim().regex(/^\d{1,8}$/) })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    const protocolo = data.protocolo.toUpperCase();
+    await exigirLimite("consulta", 10, 300);
     const { data: row, error } = await supabaseAdmin
       .from("inscricoes")
       .select(camposConsultaConscrito)
-      .eq("protocolo", protocolo)
+      .eq("protocolo", data.protocolo.toUpperCase())
+      .eq("rg", data.rg)
       .maybeSingle();
     if (error) throw new Error(error.message);
     return row ? [row] : [];
+  });
+
+/** Dados para emitir documento de terceiros: só instrutor. */
+export const buscarFichaParaDocumento = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z.object({ session: z.string(), protocolo: ProtocoloSchema }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    await exigirPapel(data.session, "instrutor");
+    const { data: row, error } = await supabaseAdmin
+      .from("inscricoes")
+      .select(camposConsultaConscrito)
+      .eq("protocolo", data.protocolo.toUpperCase())
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return row;
   });
 
 export const listarInscricoes = createServerFn({ method: "POST" })

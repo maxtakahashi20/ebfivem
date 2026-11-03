@@ -1,7 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useHydrated } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Turnstile } from "@/components/Turnstile";
 import { criarInscricao } from "@/lib/inscricoes.functions";
 import { baixarComprovante } from "@/lib/inscricao-pdf";
 
@@ -22,6 +23,9 @@ type Form = {
 
 function Inscricao() {
   const submit = useServerFn(criarInscricao);
+  const hidratado = useHydrated();
+  const [turnstileToken, setTurnstileToken] = useState<string>();
+  const [turnstileVersao, setTurnstileVersao] = useState(0);
   const [form, setForm] = useState<Form>({
     nome: "", sobrenome: "", rg: "", telefone: "", discord_id: "",
   });
@@ -41,7 +45,7 @@ function Inscricao() {
     }
     setLoading(true);
     try {
-      const res = await submit({ data: form });
+      const res = await submit({ data: { ...form, turnstileToken } });
       setDone({ protocolo: res.protocolo, rg: res.rg, created_at: res.created_at });
       toast.success(`Inscrição registrada · Protocolo ${res.protocolo}`);
       // Gera e baixa automaticamente o comprovante em PDF.
@@ -59,6 +63,7 @@ function Inscricao() {
         console.error("PDF gen error", pdfErr);
       }
     } catch (err) {
+      setTurnstileVersao((v) => v + 1);
       toast.error(err instanceof Error ? err.message : "Falha ao registrar inscrição.");
     } finally {
       setLoading(false);
@@ -146,7 +151,8 @@ function Inscricao() {
         />
         <div className="flex items-center justify-between gap-4 pt-2 border-t border-(--color-border)">
           <div className="stencil text-[10px]">DECLARO QUE AS INFORMAÇÕES SÃO VERDADEIRAS.</div>
-          <button type="submit" disabled={loading} className="btn-olive disabled:opacity-60">
+          <Turnstile key={turnstileVersao} onToken={setTurnstileToken} />
+          <button type="submit" disabled={loading || !hidratado} className="btn-olive disabled:opacity-60">
             {loading ? "ENVIANDO…" : "▸ ENVIAR FICHA"}
           </button>
         </div>

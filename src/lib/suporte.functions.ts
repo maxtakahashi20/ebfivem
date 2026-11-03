@@ -1,3 +1,4 @@
+import { exigirHumano, exigirLimite } from "@/lib/limite.server";
 import { exigirPapel } from "@/lib/painel-auth.server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
@@ -56,10 +57,13 @@ export const abrirOuObterTicket = createServerFn({ method: "POST" })
       .object({
         titulo: TituloSchema,
         nome: NomeOpcionalSchema,
+        turnstileToken: z.string().optional(),
       })
       .parse(input),
   )
   .handler(async ({ data }) => {
+    await exigirHumano(data.turnstileToken);
+    await exigirLimite("chamado", 5, 3600);
     const { data: novo, error: errIns } = await supabaseAdmin
       .from("suporte_tickets")
       .insert({

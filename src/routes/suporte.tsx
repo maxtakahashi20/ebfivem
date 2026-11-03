@@ -1,7 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useHydrated } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { Turnstile } from "@/components/Turnstile";
 import {
   abrirOuObterTicket,
   enviarMensagemConscrito,
@@ -61,6 +62,9 @@ export const Route = createFileRoute("/suporte")({
 
 function SuportePage() {
   const abrir = useServerFn(abrirOuObterTicket);
+  const hidratado = useHydrated();
+  const [turnstileToken, setTurnstileToken] = useState<string>();
+  const [turnstileVersao, setTurnstileVersao] = useState(0);
   const listar = useServerFn(listarMensagens);
   const enviar = useServerFn(enviarMensagemConscrito);
 
@@ -129,6 +133,7 @@ function SuportePage() {
         data: {
           titulo: tituloTrim,
           nome: nome.trim() || undefined,
+          turnstileToken,
         },
       });
       const novo: StoredTicket = {
@@ -144,6 +149,7 @@ function SuportePage() {
       toast.success("Chamado aberto. Aguarde o atendimento.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao abrir chamado.");
+      setTurnstileVersao((v) => v + 1);
     } finally {
       setSubmitting(false);
     }
@@ -219,7 +225,8 @@ function SuportePage() {
                 maxLength={120}
               />
             </div>
-            <button type="submit" className="btn-olive w-full" disabled={submitting}>
+            <Turnstile key={turnstileVersao} onToken={setTurnstileToken} />
+            <button type="submit" className="btn-olive w-full" disabled={submitting || !hidratado}>
               {submitting ? "ABRINDO…" : "▸ ABRIR CHAMADO"}
             </button>
           </form>

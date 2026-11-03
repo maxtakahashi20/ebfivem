@@ -1,9 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useHydrated } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
-import { consultarPorProtocolo, consultarPorRg } from "@/lib/inscricoes.functions";
+import { consultarFicha } from "@/lib/inscricoes.functions";
 import { IdentidadeMilitarDigital } from "@/components/military/IdentidadeMilitarDigital";
 import { Link } from "@tanstack/react-router";
 import { useDiscordSession } from "@/hooks/useDiscordSession";
@@ -21,7 +21,7 @@ export const Route = createFileRoute("/acompanhar")({
       { title: "Acompanhar Inscrição · 2ª DE" },
       {
         name: "description",
-        content: "Acompanhe o status do seu alistamento pelo RG ou pelo protocolo da ficha.",
+        content: "Acompanhe o status do seu alistamento com o protocolo e o RG da ficha.",
       },
     ],
   }),
@@ -54,39 +54,31 @@ function normalizeProtocolo(raw: string): string {
 function Acompanhar() {
   const { rg: initialRg, protocolo: initialProtocolo } = Route.useSearch();
   const { profile: discordProfile } = useDiscordSession();
-  const consultarRg = useServerFn(consultarPorRg);
-  const consultarProt = useServerFn(consultarPorProtocolo);
+  const consultar = useServerFn(consultarFicha);
+  const hidratado = useHydrated();
   const [rg, setRg] = useState(initialRg ?? "");
   const [protocolo, setProtocolo] = useState(initialProtocolo ?? "");
   const [rows, setRows] = useState<Inscricao[] | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function searchByRg(value: string) {
-    if (!/^\d{1,8}$/.test(value)) return;
+  async function buscar(rawProtocolo: string, rgValor: string) {
     setLoading(true);
     try {
-      const r = await consultarRg({ data: { rg: value } });
+      const r = await consultar({
+        data: { protocolo: normalizeProtocolo(rawProtocolo), rg: rgValor },
+      });
       setRows(r as Inscricao[]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function searchByProtocolo(raw: string) {
-    const p = normalizeProtocolo(raw);
-    if (!/^EB-[0-9A-F]{8}$/.test(p)) return;
-    setLoading(true);
-    try {
-      const r = await consultarProt({ data: { protocolo: p } });
-      setRows(r as Inscricao[]);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha na consulta.");
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    if (initialProtocolo) void searchByProtocolo(initialProtocolo);
-    else if (initialRg) void searchByRg(initialRg);
+    if (initialProtocolo && normalizeProtocolo(initialProtocolo) && /^\d{1,8}$/.test(initialRg ?? "")) {
+      void buscar(initialProtocolo, initialRg ?? "");
+    }
     /* eslint-disable-next-line react-hooks/exhaustive-deps */
   }, []);
 
@@ -95,27 +87,21 @@ function Acompanhar() {
       <div className="stencil text-xs mb-2">PAINEL DO CONSCRITO</div>
       <h1 className="text-4xl mb-2">Acompanhar Alistamento</h1>
       <p className="text-(--color-stencil) mb-8">
-        Informe seu RG ou o protocolo recebido ao enviar a ficha (ex.: EB-A1B2C3D4).
+        Informe o protocolo recebido ao enviar a ficha (ex.: EB-A1B2C3D4) e o seu RG.
       </p>
 
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          const trimmedProto = protocolo.trim();
-          if (trimmedProto) {
-            const pNorm = normalizeProtocolo(trimmedProto);
-            if (!pNorm) {
-              toast.error("Protocolo inválido. Use EB- seguido de 8 caracteres (ex.: EB-A1B2C3D4).");
-              return;
-            }
-            void searchByProtocolo(trimmedProto);
+          if (!normalizeProtocolo(protocolo)) {
+            toast.error("Protocolo inválido. Use EB- seguido de 8 caracteres (ex.: EB-A1B2C3D4).");
             return;
           }
           if (!/^\d{1,8}$/.test(rg)) {
-            toast.error("Informe um RG numérico de 1 a 8 dígitos ou um protocolo válido.");
+            toast.error("Informe um RG numérico de 1 a 8 dígitos.");
             return;
           }
-          void searchByRg(rg);
+          void buscar(protocolo, rg);
         }}
         className="field-paper p-5 flex flex-col gap-4"
       >
@@ -131,12 +117,12 @@ function Acompanhar() {
               placeholder="Até 8 dígitos"
             />
           </div>
-          <button type="submit" disabled={loading} className="btn-olive shrink-0">
+          <button type="submit" disabled={loading || !hidratado} className="btn-olive shrink-0">
             {loading ? "CONSULTANDO…" : "▸ CONSULTAR"}
           </button>
         </div>
         <div>
-          <label className="block stencil text-[11px] mb-1">Ou protocolo</label>
+          <label className="block stencil text-[11px] mb-1">Protocolo</label>
           <input
             type="text"
             value={protocolo}
@@ -144,9 +130,6 @@ function Acompanhar() {
             className="w-full bg-transparent border border-(--color-input) px-3 py-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-(--color-olive-deep)"
             placeholder="EB-XXXXXXXX"
           />
-          <p className="text-[10px] stencil text-(--color-stencil) mt-1">
-            Se preencher o protocolo, a busca usa o protocolo e ignora o RG neste envio.
-          </p>
         </div>
       </form>
 
@@ -159,7 +142,7 @@ function Acompanhar() {
         {rows && rows.length === 0 && (
           <div className="field-paper p-6 text-center reveal">
             <div className="stamp text-(--color-destructive) mb-3">SEM REGISTRO</div>
-            <p>Nenhuma ficha localizada para este RG ou protocolo.</p>
+            <p>Nenhuma ficha localizada com este protocolo e RG.</p>
           </div>
         )}
         {rows && rows.map((r, i) => {
