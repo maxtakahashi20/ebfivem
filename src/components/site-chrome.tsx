@@ -5,7 +5,7 @@ import { SfxToggle } from "@/components/SfxToggle";
 import { PainelMembroButton } from "@/components/PainelMembroButton";
 import { AdminThemeToggle } from "@/components/admin/AdminThemeToggle";
 
-const DISCORD_URL = "https://discord.gg/F2T248Ytpj";
+const DISCORD_URL = "https://discord.gg/2TETa9Z4Fu";
 
 const links = [
   { to: "/", label: "Informativo" },
@@ -127,7 +127,7 @@ export function Footer({ pathname }: { pathname: string }) {
             rel="noreferrer"
             className="underline opacity-90 hover:opacity-100"
           >
-            discord.gg/F2T248Ytpj
+            discord.gg/2TETa9Z4Fu
           </a>
           <p className="opacity-70 mt-2 text-xs">Canal oficial · Convocação 24h</p>
         </div>

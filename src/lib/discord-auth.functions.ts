@@ -204,11 +204,11 @@ async function buildProfile(accessToken: string, guildId: string): Promise<Disco
   } catch (e) {
     if (isDiscordApiError(e) && e.discordCode === 10004) {
       throw new Error(
-        "DISCORD_GUILD_ID inválido no .env (Unknown Guild). No Discord: Modo desenvolvedor → botão direito no ícone do servidor 2ª DE → Copiar ID do servidor. Confira também se você entrou no servidor discord.gg/F2T248Ytpj.",
+        "DISCORD_GUILD_ID inválido no .env (Unknown Guild). No Discord: Modo desenvolvedor → botão direito no ícone do servidor 2ª DE → Copiar ID do servidor. Confira também se você entrou no servidor discord.gg/2TETa9Z4Fu.",
       );
     }
     throw new Error(
-      "Você precisa estar no servidor Discord da 2ª DE para vincular o perfil. Entre em discord.gg/F2T248Ytpj e tente de novo.",
+      "Você precisa estar no servidor Discord da 2ª DE para vincular o perfil. Entre em discord.gg/2TETa9Z4Fu e tente de novo.",
     );
   }
 

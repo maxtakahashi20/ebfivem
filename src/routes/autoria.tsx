@@ -64,12 +64,12 @@ function Autoria() {
           <p className="leading-relaxed">
             Canal oficial da 2ª DE:{" "}
             <a
-              href="https://discord.gg/F2T248Ytpj"
+              href="https://discord.gg/2TETa9Z4Fu"
               target="_blank"
               rel="noreferrer"
               className="underline text-[color:var(--color-olive-deep)] hover:text-[color:var(--color-olive-bright)]"
             >
-              discord.gg/F2T248Ytpj
+              discord.gg/2TETa9Z4Fu
             </a>
           </p>
         </section>
