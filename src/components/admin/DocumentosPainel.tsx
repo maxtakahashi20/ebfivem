@@ -56,7 +56,11 @@ export function DocumentosPainel() {
               ? consultar({ data: { protocolo: p, rg } }).then((r) => r[0] ?? null)
               : buscarFicha({ data: { session, protocolo: p } })
           ).catch((e) => {
-            toast.error(e instanceof Error ? e.message : "Não foi possível carregar a ficha.");
+            const msg = e instanceof Error ? e.message : "";
+            // Membro sem RG não pode abrir ficha alheia: segue para a própria ficha sem alarme.
+            if (!/Acesso restrito/.test(msg)) {
+              toast.error(msg || "Não foi possível carregar a ficha.");
+            }
             return null;
           })) as Inscricao | null;
           if (cancelled) return;

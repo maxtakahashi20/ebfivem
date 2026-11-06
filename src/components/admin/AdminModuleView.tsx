@@ -109,7 +109,8 @@ export function AdminModuleView({ view }: { view: AdminView }) {
   const filtered = rows.filter((row) => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
-    return Object.values(row).some((v) => v.toLowerCase().includes(q));
+    // Só as colunas visíveis: campos internos (__id, __discord, __alto) não entram na busca.
+    return cfg.columns.some((c) => (row[c.key] ?? "").toLowerCase().includes(q));
   });
 
   const temFormulario = !!getModuloForm(view);

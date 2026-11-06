@@ -9,8 +9,10 @@ export function queuePainelView(view: AdminView, extras?: { protocolo?: string; 
   sessionStorage.setItem(PENDING_VIEW_KEY, view);
   if (extras?.protocolo) {
     sessionStorage.setItem(PENDING_DOC_PROTOCOLO_KEY, extras.protocolo);
+    // Protocolo e RG andam juntos: um RG de visita anterior não pode valer para outro protocolo.
+    if (extras.rg) sessionStorage.setItem(PENDING_DOC_RG_KEY, extras.rg);
+    else sessionStorage.removeItem(PENDING_DOC_RG_KEY);
   }
-  if (extras?.rg) sessionStorage.setItem(PENDING_DOC_RG_KEY, extras.rg);
 }
 
 /** A tela pode montar mais de uma vez: o protocolo só sai da fila depois de usado. */

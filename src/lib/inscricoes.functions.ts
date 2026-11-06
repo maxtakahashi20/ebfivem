@@ -161,9 +161,17 @@ export const obterEstatisticas = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     const all = rows ?? [];
-    const now = new Date();
-    const inicioHoje = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+    // Dias contados no horário de Brasília: o servidor (Vercel) roda em UTC.
+    const diaBR = (t: string | number) =>
+      new Date(t).toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+    const dias = Array.from({ length: 14 }, (_, i) => diaBR(Date.now() - (13 - i) * 864e5));
+    const hojeBR = dias[13];
     const inicio7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const porDiaMapa = new Map<string, number>();
+    for (const r of all) {
+      const d = diaBR(r.created_at);
+      porDiaMapa.set(d, (porDiaMapa.get(d) ?? 0) + 1);
+    }
 
     return {
       total: all.length,
@@ -171,17 +179,14 @@ export const obterEstatisticas = createServerFn({ method: "POST" })
       em_analise: all.filter((r) => r.status === "em_analise").length,
       aprovado: all.filter((r) => r.status === "aprovado").length,
       reprovado: all.filter((r) => r.status === "reprovado").length,
-      hoje: all.filter((r) => r.created_at >= inicioHoje).length,
+      hoje: porDiaMapa.get(hojeBR) ?? 0,
       ultimos7d: all.filter((r) => r.created_at >= inicio7d).length,
-      aprovadosHoje: all.filter(
-        (r) => r.status === "aprovado" && r.created_at >= inicioHoje,
-      ).length,
+      aprovadosHoje: all.filter((r) => r.status === "aprovado" && diaBR(r.created_at) === hojeBR)
+        .length,
       // Só contagens, sem dados de ninguém: mesmo nível de acesso das outras.
-      porDia: Array.from({ length: 14 }, (_, i) => {
-        const ini = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (13 - i));
-        const fim = new Date(ini.getFullYear(), ini.getMonth(), ini.getDate() + 1);
-        return all.filter((r) => r.created_at >= ini.toISOString() && r.created_at < fim.toISOString()).length;
-      }),
+      porDia: dias.map((d) => porDiaMapa.get(d) ?? 0),
+      /** Data (AAAA-MM-DD, Brasília) de cada barra, para o painel rotular sem recalcular. */
+      porDiaDatas: dias,
     };
   });
 

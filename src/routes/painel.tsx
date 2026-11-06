@@ -77,6 +77,7 @@ type Row = {
 type Stats = {
   /** Inscrições por dia, dos 14 dias até hoje (último = hoje). */
   porDia?: number[];
+  porDiaDatas?: string[];
   total: number;
   pendente: number;
   em_analise: number;
@@ -397,7 +398,8 @@ function Dashboard() {
               </div>
               <div className="flex-1 flex items-end gap-2.5 min-h-56">
                 {porDia.map((n, i) => {
-                  const d = new Date(Date.now() - (porDia.length - 1 - i) * 864e5);
+                  // Data vem do servidor (horário de Brasília); meio-dia evita virar o dia no fuso local.
+                  const d = new Date(`${stats.porDiaDatas?.[i] ?? ""}T12:00:00`);
                   return (
                     <div key={i} className="flex-1 h-full flex flex-col items-center justify-end gap-2" title={`${n} em ${d.toLocaleDateString("pt-BR")}`}>
                       <span className="font-mono text-[10px] text-muted-foreground">{n || ""}</span>
