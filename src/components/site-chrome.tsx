@@ -2,7 +2,6 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { MessageSquare } from "lucide-react";
 import logo from "@/assets/logo-2de.png";
-import { SfxToggle } from "@/components/SfxToggle";
 import { AdminThemeToggle } from "@/components/admin/AdminThemeToggle";
 
 const DISCORD_URL = "https://discord.gg/2TETa9Z4Fu";
@@ -144,7 +143,6 @@ export function Footer({ pathname }: { pathname: string }) {
         </div>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 pt-5 border-t border-(--color-olive)/50 font-mono text-[11px] tracking-wider text-sand/50">
           <span>© {new Date().getFullYear()} 2ª DE · TODOS OS DIREITOS RESERVADOS</span>
-          <SfxToggle />
           <span>COMUNIDADE FICTÍCIA · SEM VÍNCULO COM O EXÉRCITO BRASILEIRO</span>
         </div>
       </div>

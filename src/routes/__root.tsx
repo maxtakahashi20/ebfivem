@@ -15,7 +15,6 @@ import {
   isPainelPath,
 } from "@/components/site-chrome";
 import { useRouterState } from "@tanstack/react-router";
-import { MilitarySoundProvider } from "@/components/MilitarySoundProvider";
 import { AdminThemeProvider } from "@/components/admin/AdminThemeProvider";
 import { ADMIN_THEME_KEY } from "@/lib/admin-theme";
 
@@ -112,7 +111,6 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {!painel && <MilitarySoundProvider />}
       {painel ? (
         <AdminThemeProvider>
           <div className="min-h-screen flex flex-col">

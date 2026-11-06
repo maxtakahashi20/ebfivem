@@ -5,7 +5,6 @@ import {
   type TipoDocumentoMilitar,
 } from "@/lib/documentos-militares-pdf";
 import { montarIdentidade } from "@/lib/militar-identidade";
-import { playScanner, playConfirm } from "@/lib/military-sounds";
 
 const TIPOS: { id: TipoDocumentoMilitar; label: string; hint: string }[] = [
   { id: "certificado", label: "Certificado", hint: "Condecoração de mérito operacional" },
@@ -43,7 +42,6 @@ export function DocumentosMilitares({ militarDefault }: Props) {
       toast.error("Informe o texto principal do documento.");
       return;
     }
-    playScanner();
     const identidade =
       vincularId && protocolo && rg
         ? montarIdentidade({
@@ -73,14 +71,13 @@ export function DocumentosMilitares({ militarDefault }: Props) {
         : undefined,
       identidade,
     });
-    playConfirm();
     toast.success("Documento gerado (PDF).");
   };
 
   const cfg = TIPOS.find((t) => t.id === tipo)!;
 
   return (
-    <div className="space-y-6" data-sfx-off>
+    <div className="space-y-6">
       <div className="grid sm:grid-cols-2 gap-2">
         {TIPOS.map((t) => (
           <button

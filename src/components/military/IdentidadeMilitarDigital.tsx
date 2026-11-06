@@ -9,7 +9,6 @@ import {
   type IdentidadeMilitarData,
 } from "@/lib/militar-identidade";
 import { baixarCarteiraMilitar } from "@/lib/documentos-militares-pdf";
-import { playScanner, playConfirm } from "@/lib/military-sounds";
 import type { DiscordProfile } from "@/lib/discord-oauth";
 import { CarteiraMilitarVisual } from "@/components/military/CarteiraMilitarVisual";
 
@@ -32,7 +31,6 @@ export function IdentidadeMilitarDigital({ dados, aprovado = true, discordProfil
       toast.error("Identidade disponível apenas para inscrições aprovadas.");
       return;
     }
-    playScanner();
     const gerada = montarIdentidade(dados);
     const fotoSalva = carregarFotoLocal(gerada.matricula);
     if (fotoSalva) gerada.fotoDataUrl = fotoSalva;
@@ -41,7 +39,6 @@ export function IdentidadeMilitarDigital({ dados, aprovado = true, discordProfil
     setId(gerada);
     const qr = await gerarQrDataUrl(gerada.qrPayload, 140);
     setQrUrl(qr);
-    playConfirm();
     toast.success("Identidade militar gerada.");
   }, [dados, aprovado, foto, discordProfile]);
 
@@ -63,7 +60,6 @@ export function IdentidadeMilitarDigital({ dados, aprovado = true, discordProfil
 
   const baixarCarteira = async () => {
     if (!id || !qrUrl) return;
-    playScanner();
     await baixarCarteiraMilitar(id, qrUrl, { discordProfile: discordProfile ?? undefined });
     toast.success("Carteira militar baixada (PDF).");
   };
@@ -80,7 +76,7 @@ export function IdentidadeMilitarDigital({ dados, aprovado = true, discordProfil
   }
 
   return (
-    <div className="space-y-6" data-sfx-off>
+    <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="stencil text-xs text-(--color-olive-deep)">IDENTIDADE OFICIAL · ALISTAMENTO</p>

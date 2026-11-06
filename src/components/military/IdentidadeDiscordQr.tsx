@@ -8,7 +8,6 @@ import {
 } from "@/lib/militar-identidade";
 import { baixarCarteiraMilitar } from "@/lib/documentos-militares-pdf";
 import { CarteiraMilitarVisual } from "@/components/military/CarteiraMilitarVisual";
-import { playConfirm, playScanner } from "@/lib/military-sounds";
 
 type Props = {
   profile: DiscordProfile;
@@ -22,12 +21,10 @@ export function IdentidadeDiscordQr({ profile }: Props) {
   const emitir = useCallback(async () => {
     setGerando(true);
     try {
-      playScanner();
       const gerada = montarIdentidadeDiscord(profile);
       const qr = await gerarQrDataUrl(gerada.qrPayload, 140);
       setId(gerada);
       setQrUrl(qr);
-      playConfirm();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao gerar QR Code.");
     } finally {
@@ -41,7 +38,6 @@ export function IdentidadeDiscordQr({ profile }: Props) {
 
   const baixar = async () => {
     if (!id || !qrUrl) return;
-    playScanner();
     await baixarCarteiraMilitar(id, qrUrl, {
       discordProfile: profile,
       footerLeft: `DISCORD ${profile.id}`,
@@ -50,7 +46,7 @@ export function IdentidadeDiscordQr({ profile }: Props) {
   };
 
   return (
-    <div className="space-y-4" data-sfx-off>
+    <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="stencil text-xs text-(--color-olive-deep)">CREDENCIAL DIGITAL · QR CODE</p>
