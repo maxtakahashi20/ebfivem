@@ -18,10 +18,12 @@ export function AdminPageHeader({
       transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
       className="flex flex-wrap items-end justify-between gap-4 mb-6"
     >
-      <div>
-        <div className="stencil text-xs mb-1">{tag}</div>
-        <h1 className="text-3xl">{title}</h1>
-        {sub && <p className="text-sm text-(--color-stencil) mt-0.5">{sub}</p>}
+      <div className="flex flex-col gap-2">
+        <div className="font-mono text-[11px] tracking-[0.14em] uppercase text-(--color-olive-bright)">
+          {tag}
+        </div>
+        <h1 className="font-display text-[32px] font-semibold leading-tight text-foreground">{title}</h1>
+        {sub && <p className="text-[15px] text-muted-foreground">{sub}</p>}
       </div>
       {action}
     </motion.div>

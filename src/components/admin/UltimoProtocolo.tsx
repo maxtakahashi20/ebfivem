@@ -65,13 +65,13 @@ export function UltimoProtocolo() {
         type="button"
         title="Copiar o protocolo da inscrição mais recente"
         aria-label={`Copiar protocolo ${protocolo}`}
-        className="flex items-center gap-2 border border-(--color-olive-deep) px-3 py-1.5 font-mono text-sm text-(--color-olive-deep) hover:bg-olive-deep/10"
+        className="flex h-9.5 items-center gap-2 border border-border px-3 font-mono text-[13px] text-(--color-olive-bright) hover:bg-secondary"
         onClick={async () => {
           if (await copiar(protocolo)) setCopiado(true);
           else toast.error("Não foi possível copiar o protocolo.");
         }}
       >
-        <span className="stencil text-[9px] hidden sm:inline">ÚLTIMO PROTOCOLO</span>
+        <span className="font-mono text-[10px] tracking-wider text-muted-foreground hidden sm:inline">ÚLTIMO PROTOCOLO</span>
         {protocolo}
         {copiado ? <Check className="size-4" /> : <Copy className="size-4" />}
         <span className="sr-only" aria-live="polite">
@@ -79,7 +79,7 @@ export function UltimoProtocolo() {
         </span>
       </button>
     ) : (
-      <span className="stencil text-[9px] text-(--color-stencil)">SEM INSCRIÇÕES</span>
+      <span className="font-mono text-[10px] tracking-wider text-muted-foreground">SEM INSCRIÇÕES</span>
     ),
     slot,
   );

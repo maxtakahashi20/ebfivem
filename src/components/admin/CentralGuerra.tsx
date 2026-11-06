@@ -1,3 +1,4 @@
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const DEFCON_LEVELS = [
@@ -13,11 +14,11 @@ export function CentralGuerra() {
 
   return (
     <div className="central-guerra">
-      <div className="stencil text-xs mb-1 text-(--color-destructive)">⚠ CENTRAL OPERACIONAL</div>
-      <h1 className="text-3xl mb-2 font-display tracking-widest">Central de Guerra</h1>
-      <p className="text-sm text-(--color-stencil) mb-6 max-w-2xl">
-        Visão tática em tempo real — radar, tropas, alertas e nível DEFCON (demonstração).
-      </p>
+      <AdminPageHeader
+        tag="⚠ CENTRAL OPERACIONAL"
+        title="Central de Guerra"
+        sub="Situação da tropa em tempo real e o nível de prontidão (demonstração)."
+      />
 
       <div className="grid lg:grid-cols-[1fr_320px] gap-4 mb-4">
         <Card className="field-paper border-0 shadow-none overflow-hidden">
@@ -50,14 +51,22 @@ export function CentralGuerra() {
               <CardTitle className="stencil text-xs">DEFCON ATUAL</CardTitle>
             </CardHeader>
             <CardContent>
-              {DEFCON_LEVELS.filter((d) => d.level === defcon).map((d) => (
-                <div key={d.level}>
-                  <div className="font-display text-2xl tracking-widest" style={{ color: d.color }}>
-                    {d.label}
-                  </div>
-                  <p className="text-xs text-(--color-stencil) mt-1">{d.desc}</p>
-                </div>
-              ))}
+              <ul className="flex flex-col gap-1.5">
+                {DEFCON_LEVELS.map((d) => {
+                  const atual = d.level === defcon;
+                  return (
+                    <li
+                      key={d.level}
+                      aria-current={atual || undefined}
+                      className="flex items-center gap-3 border px-3 py-2"
+                      style={{ borderColor: atual ? d.color : "var(--color-border)", background: atual ? `color-mix(in oklch, ${d.color} 15%, transparent)` : undefined }}
+                    >
+                      <span className="font-display text-[15px]" style={{ color: d.color }}>{d.label}</span>
+                      <span className={`text-[13px] ${atual ? "text-foreground" : "text-muted-foreground"}`}>{d.desc}</span>
+                    </li>
+                  );
+                })}
+              </ul>
             </CardContent>
           </Card>
 
@@ -93,8 +102,8 @@ export function CentralGuerra() {
 function StatRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between gap-2 border-b border-(--color-border)/50 pb-1.5 last:border-0">
-      <span className="text-(--color-stencil)">{label}</span>
-      <span className="font-display tracking-wider text-(--color-olive-deep)">{value}</span>
+      <span className="font-body text-muted-foreground">{label}</span>
+      <span className="font-display text-xl text-foreground">{value}</span>
     </div>
   );
 }

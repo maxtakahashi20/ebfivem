@@ -2,13 +2,13 @@ export const ADMIN_THEME_KEY = "adm2de-theme";
 
 export type AdminTheme = "light" | "dark";
 
+/** Escuro é o padrão; claro só para quem escolheu. */
 export function readAdminTheme(): AdminTheme {
-  if (typeof window === "undefined") return "light";
+  if (typeof window === "undefined") return "dark";
   try {
-    const stored = localStorage.getItem(ADMIN_THEME_KEY);
-    return stored === "dark" ? "dark" : "light";
+    return localStorage.getItem(ADMIN_THEME_KEY) === "light" ? "light" : "dark";
   } catch {
-    return "light";
+    return "dark";
   }
 }
 

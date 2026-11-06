@@ -10,7 +10,9 @@ import {
   AdminModuleFormDialog,
   type AdminFormPdf,
 } from "@/components/admin/AdminModuleFormDialog";
+import { Download, Lock, Plus, Search, X } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { Kpi, StatusBadge, type Tom } from "@/components/admin/panel-ui";
 import { getModuleConfig, type ModuleStat } from "@/components/admin/module-registry";
 import {
   atualizarStatusDiscordBot,
@@ -211,20 +213,17 @@ export function AdminModuleView({ view }: { view: AdminView }) {
     return (
       <div>
         <AdminPageHeader tag={cfg.tag} title={cfg.title} sub={cfg.subtitle} />
-        <Card className="field-paper border-0 shadow-none">
-          <CardContent className="py-10 text-center space-y-3">
-            <div className="tag-rank bg-(--color-destructive) text-[10px] inline-block">
-              RESTRITO · ALTO COMANDO
-            </div>
-            <p className="font-display tracking-widest text-(--color-olive-deep)">
-              Acesso negado
-            </p>
-            <p className="text-xs font-mono text-(--color-stencil) max-w-md mx-auto">
-              Esta área é reservada ao Alto Comando da 2ª DE. Solicite ao comando que adicione seu
-              cargo Discord à lista <code>DISCORD_ALTO_COMANDO_ROLE_IDS</code>.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="mx-auto mt-10 max-w-115 flex flex-col items-center gap-4 border border-border bg-card p-10 text-center">
+          <span className="size-16 flex items-center justify-center border border-(--color-gold)">
+            <Lock className="size-7 text-(--color-gold)" />
+          </span>
+          <span className="font-mono text-xs tracking-[0.14em] text-(--color-gold)">ACESSO NEGADO</span>
+          <p className="font-display text-[26px] font-semibold">Esta área é do Alto Comando.</p>
+          <p className="text-[15px] leading-relaxed text-muted-foreground">
+            O seu cargo no Discord não libera esta área. Se você acha que deveria ter acesso, fale com o
+            Alto Comando.
+          </p>
+        </div>
       </div>
     );
   }
@@ -239,11 +238,11 @@ export function AdminModuleView({ view }: { view: AdminView }) {
           temAcaoHeader ? (
             <button
               type="button"
-              className="btn-olive text-xs disabled:opacity-50"
+              className="btn-olive inline-flex items-center gap-2 px-4.5 py-2.5 text-sm disabled:opacity-50"
               disabled={saving}
               onClick={() => void handlePrimaryAction()}
             >
-              ▸ {labelAcao}
+              <Plus className="size-4" /> {labelAcao}
             </button>
           ) : undefined
         }
@@ -261,39 +260,21 @@ export function AdminModuleView({ view }: { view: AdminView }) {
       )}
 
       {cfg.classified && (
-        <div className="mb-4 flex items-center gap-2">
-          <span className="tag-rank bg-(--color-destructive) text-[10px]">CLASSIFICADO</span>
-          <span className="text-xs font-mono text-(--color-stencil)">
-            Acesso restrito ao alto comando
-          </span>
+        <div className="mb-4 flex items-center gap-2 font-mono text-[11px] tracking-[0.12em] text-(--color-gold)">
+          <Lock className="size-3.5" /> CLASSIFICADO · ACESSO RESTRITO
         </div>
       )}
 
       {loading && (
-        <p className="text-xs font-mono text-(--color-stencil) mb-4 stencil">
+        <p className="font-mono text-xs text-muted-foreground mb-4">
           CARREGANDO REGISTROS…
         </p>
       )}
 
       {stats.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
           {stats.map((s) => (
-            <Card key={s.label} className="field-paper border-0 shadow-none">
-              <CardHeader className="pb-1 pt-4 px-4">
-                <CardTitle
-                  className="stencil text-[10px]"
-                  style={{ color: s.color ?? "var(--color-olive-deep)" }}
-                >
-                  {s.label}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-4 pb-4">
-                <div className="font-display text-3xl" style={{ color: s.color }}>
-                  {s.value}
-                </div>
-                {s.sub && <p className="text-xs text-(--color-stencil) mt-0.5">{s.sub}</p>}
-              </CardContent>
-            </Card>
+            <Kpi key={s.label} label={s.label} value={s.value} sub={s.sub} />
           ))}
         </div>
       )}
@@ -313,28 +294,28 @@ export function AdminModuleView({ view }: { view: AdminView }) {
         cfg.variant === "system" ||
         cfg.variant === "discord") &&
         cfg.columns.length > 0 && (
-          <Card className="field-paper border-0 shadow-none">
-            <CardHeader className="pb-2 flex flex-row flex-wrap items-center justify-between gap-3">
-              <CardTitle className="stencil text-xs">REGISTROS OPERACIONAIS</CardTitle>
+          <div className="flex flex-col gap-4">
+            <div className="relative w-full sm:w-85">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Filtrar registros…"
-                className="max-w-xs font-mono text-sm bg-transparent h-8"
+                placeholder="Buscar…"
+                className="h-10 pl-9 bg-card"
               />
-            </CardHeader>
-            <CardContent className="pt-0 overflow-x-auto">
+            </div>
+            <div className="border border-border bg-card overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-(--color-border) hover:bg-transparent">
+                  <TableRow className="border-border hover:bg-transparent">
                     {cfg.columns.map((col) => (
-                      <TableHead key={col.key} className="stencil text-[10px]">
+                      <TableHead key={col.key} className="h-11 px-5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
                         {col.label}
                       </TableHead>
                     ))}
-                    {supportsPdf && <TableHead className="stencil text-[10px]">AÇÕES</TableHead>}
+                    {supportsPdf && <TableHead className="h-11 px-5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">AÇÕES</TableHead>}
                     {podeDarAltoComando && (
-                      <TableHead className="stencil text-[10px]">ALTO COMANDO</TableHead>
+                      <TableHead className="h-11 px-5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">ALTO COMANDO</TableHead>
                     )}
                   </TableRow>
                 </TableHeader>
@@ -343,11 +324,11 @@ export function AdminModuleView({ view }: { view: AdminView }) {
                     const recordId = (row as Record<string, string>).__id;
                     const pdfPath = (row as Record<string, string>).__pdf_path;
                     return (
-                      <TableRow key={i} className="border-(--color-border)">
+                      <TableRow key={i} className="border-border">
                         {cfg.columns.map((col) => (
                           <TableCell
                             key={col.key}
-                            className={`text-sm ${col.mono ? "font-mono text-xs" : ""}`}
+                            className={`px-5 py-3.5 text-sm ${col.mono ? "font-mono text-xs tracking-wider text-(--color-olive-bright)" : ""}`}
                           >
                             {statusBadge(col.key, row[col.key]) ?? row[col.key]}
                           </TableCell>
@@ -359,21 +340,21 @@ export function AdminModuleView({ view }: { view: AdminView }) {
                                 <>
                                   <button
                                     type="button"
-                                    className="btn-ghost-olive text-[10px] px-2 py-1"
+                                    className="inline-flex items-center gap-1.5 border border-border px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground"
                                     onClick={() => void handleDownloadPdf(recordId)}
                                   >
-                                    ▾ Baixar
+                                    <Download className="size-3.5" /> Baixar
                                   </button>
                                   <button
                                     type="button"
-                                    className="btn-ghost-olive text-[10px] px-2 py-1 text-(--color-destructive)"
+                                    className="inline-flex items-center gap-1.5 border border-border px-2.5 py-1.5 text-xs text-(--color-destructive) hover:bg-secondary"
                                     onClick={() => void handleDeletePdf(recordId)}
                                   >
-                                    ✕ Remover
+                                    <X className="size-3.5" /> Remover
                                   </button>
                                 </>
                               ) : (
-                                <span className="text-(--color-stencil)">sem PDF</span>
+                                <span className="text-muted-foreground">sem PDF</span>
                               )}
                             </div>
                           </TableCell>
@@ -399,12 +380,12 @@ export function AdminModuleView({ view }: { view: AdminView }) {
                 </TableBody>
               </Table>
               {!loading && filtered.length === 0 && (
-                <p className="text-center text-xs text-(--color-stencil) py-8 stencil">
+                <p className="text-center font-mono text-xs text-muted-foreground py-10">
                   NENHUM REGISTRO — use o botão no topo para cadastrar
                 </p>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
     </div>
   );
@@ -420,40 +401,17 @@ function usesDb(view: AdminView): boolean {
   );
 }
 
+const CHAVES_STATUS = new Set(["status", "resultado", "nivel", "risco", "grau", "classificacao", "auto", "tipo"]);
+
 function statusBadge(key: string, value: string) {
-  if (key !== "status" && key !== "resultado" && key !== "nivel" && key !== "risco") return null;
+  if (!CHAVES_STATUS.has(key) || !value || value === "—") return null;
   const v = value.toLowerCase();
-  let variant: "default" | "secondary" | "destructive" | "outline" = "outline";
-  if (
-    v.includes("ativo") ||
-    v.includes("sucesso") ||
-    v.includes("apto") ||
-    v.includes("online") ||
-    v.includes("sincronizado") ||
-    v.includes("operacional") ||
-    v.includes("disponível")
-  ) {
-    variant = "default";
-  } else if (
-    v.includes("alto") ||
-    v.includes("reprov") ||
-    v.includes("inapto") ||
-    v.includes("expuls")
-  ) {
-    variant = "destructive";
-  } else if (
-    v.includes("análise") ||
-    v.includes("médio") ||
-    v.includes("amarelo") ||
-    v.includes("preparação")
-  ) {
-    variant = "secondary";
-  }
-  return (
-    <Badge variant={variant} className="font-display tracking-widest text-[10px]">
-      {value}
-    </Badge>
-  );
+  let tom: Tom = "neutro";
+  if (/ativ|sucesso|apto|online|sincroniz|operacional|disponível|conclu|^sim|baixo|leve|aprov/.test(v)) tom = "ok";
+  if (/análise|analise|em curso|secreto|confidencial/.test(v)) tom = "info";
+  if (/médio|medio|média|amarelo|preparação|pend|agend|andamento|parcial|aberto/.test(v)) tom = "alerta";
+  if (/alto|reprov|inapto|expuls|grave|ultra|falh|encerr|inativ|^não/.test(v)) tom = "perigo";
+  return <StatusBadge tom={tom}>{value}</StatusBadge>;
 }
 
 function DiscordBotPanel({

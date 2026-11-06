@@ -1,12 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import {
-  ChevronRight,
-  LogOut,
-  Shield,
-} from "lucide-react";
+import { ChevronRight, LogOut } from "lucide-react";
+import logo from "@/assets/logo-2de.png";
 import { motion } from "framer-motion";
-import { AdminThemeToggle } from "@/components/admin/AdminThemeToggle";
 import { useDiscordSession } from "@/hooks/useDiscordSession";
 import {
   Sidebar,
@@ -47,7 +43,7 @@ function isGroupActive(groupId: string, view: AdminView, entry: NavEntry): boole
 
 export function AdminSidebar({ view, onViewChange, onLogout }: Props) {
   const fetchStatus = useServerFn(getPainelStatus);
-  const { papel, desenvolvedor, pe } = useDiscordSession();
+  const { papel, desenvolvedor, pe, profile } = useDiscordSession();
   const [status, setStatus] = useState({
     bot: false,
     webhook: false,
@@ -87,33 +83,34 @@ export function AdminSidebar({ view, onViewChange, onLogout }: Props) {
     }
   }, [view]);
 
+  const nome = profile?.nick || profile?.displayName || profile?.username || "Militar";
+  const papelLabel = desenvolvedor ? "DESENVOLVEDOR" : (PAPEL_LABEL[papel ?? "membro"] ?? "MEMBRO");
+
   const btnBase =
-    "font-display tracking-widest text-xs py-2 group-data-[collapsible=icon]:!size-9 group-data-[collapsible=icon]:!p-0 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 adm-nav-btn";
-  const btnActive =
-    "bg-(--color-olive-deep) text-(--color-khaki) hover:bg-(--color-olive-deep) hover:text-(--color-khaki) adm-nav-active";
-  const btnIdle =
-    "text-(--color-stencil) hover:bg-olive-deep/10 hover:text-(--color-olive-deep)";
+    "text-[14px] h-9.5 py-2 group-data-[collapsible=icon]:!size-9 group-data-[collapsible=icon]:!p-0 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 adm-nav-btn";
+  const btnActive = "adm-nav-active text-foreground";
+  const btnIdle = "text-muted-foreground hover:text-foreground";
 
   return (
     <Sidebar
       collapsible="icon"
-      className="border-r-2 border-(--color-olive-deep) bg-(--color-khaki) adm-nav-sidebar"
+      className="border-r border-border bg-(--color-khaki) adm-nav-sidebar"
     >
-      <SidebarHeader className="border-b border-olive-deep/15 p-0">
-        <div className="flex h-14 items-center gap-2 px-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
-          <Shield className="size-5 shrink-0 text-(--color-olive-deep)" />
+      <SidebarHeader className="border-b border-border p-0">
+        <div className="flex h-16 items-center gap-3 px-4 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
+          <img src={logo} alt="2ª DE" className="size-9 shrink-0 object-contain" />
           <div className="min-w-0 overflow-hidden group-data-[collapsible=icon]:hidden">
-            <div className="stencil text-[9px] leading-none">PAINEL DE INSTRUTORES</div>
-            <div className="font-display text-sm leading-tight tracking-widest text-(--color-olive-deep)">
-              2ª DE · COMANDO
+            <div className="font-display text-base font-semibold tracking-[0.12em] leading-tight text-[#d9d2b5]">
+              PAINEL 2ª DE
             </div>
+            <div className="font-mono text-[9px] tracking-[0.12em] text-(--color-olive-bright)">COMANDO · INSTRUTORES</div>
           </div>
         </div>
       </SidebarHeader>
 
       <SidebarContent className="adm-nav-scroll">
         <SidebarGroup className="px-2 pt-4 pb-2 group-data-[collapsible=icon]:px-1.5">
-          <SidebarGroupLabel className="stencil text-[9px] mb-2 px-1 adm-nav-section-label">
+          <SidebarGroupLabel className="font-mono text-[10px] tracking-[0.16em] text-muted-foreground/70 mb-2 px-2 adm-nav-section-label">
             NAVEGAÇÃO
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -139,7 +136,7 @@ export function AdminSidebar({ view, onViewChange, onLogout }: Props) {
                         isActive={active}
                         onClick={() => onViewChange(entry.id)}
                         className={`${btnBase} ${active ? btnActive : btnIdle} ${
-                          war ? "adm-nav-war border border-destructive/40" : ""
+                          war ? "adm-nav-war" : ""
                         }`}
                       >
                         <motion.span
@@ -147,7 +144,7 @@ export function AdminSidebar({ view, onViewChange, onLogout }: Props) {
                           whileTap={{ scale: 0.92 }}
                           className="inline-flex shrink-0"
                         >
-                          <Icon className="size-4 shrink-0" />
+                          <Icon className="size-[17px] shrink-0" />
                         </motion.span>
                         <span className="group-data-[collapsible=icon]:hidden">{entry.label}</span>
                       </SidebarMenuButton>
@@ -171,9 +168,9 @@ export function AdminSidebar({ view, onViewChange, onLogout }: Props) {
                       <CollapsibleTrigger asChild>
                         <SidebarMenuButton
                           tooltip={g.label}
-                          className={`${btnBase} w-full ${groupActive ? "text-(--color-olive-deep) font-semibold" : btnIdle}`}
+                          className={`${btnBase} w-full ${groupActive ? "text-foreground" : btnIdle}`}
                         >
-                          <Icon className="size-4 shrink-0" />
+                          <Icon className="size-[17px] shrink-0" />
                           <span className="flex-1 text-left">{g.label}</span>
                           <ChevronRight
                             className={`size-3.5 shrink-0 transition-transform ${open ? "rotate-90" : ""}`}
@@ -181,7 +178,7 @@ export function AdminSidebar({ view, onViewChange, onLogout }: Props) {
                         </SidebarMenuButton>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
-                        <SidebarMenuSub className="adm-nav-sub border-l-2 border-olive-deep/25 ml-3 pl-2">
+                        <SidebarMenuSub className="adm-nav-sub border-l border-border ml-4 pl-2">
                           {g.children.map((child) => {
                             const childActive = view === child.id;
                             return (
@@ -189,11 +186,9 @@ export function AdminSidebar({ view, onViewChange, onLogout }: Props) {
                                 <SidebarMenuSubButton
                                   isActive={childActive}
                                   onClick={() => onViewChange(child.id)}
-                                  className={`text-[11px] font-display tracking-wider py-1.5 ${
-                                    childActive ? "adm-nav-sub-active" : ""
-                                  }`}
+                                  className={`text-[13px] py-1.5 ${childActive ? "adm-nav-sub-active" : "text-muted-foreground hover:text-foreground"}`}
                                 >
-                                  <span className="adm-nav-tree">├</span>
+                                  
                                   {child.label}
                                 </SidebarMenuSubButton>
                               </SidebarMenuSubItem>
@@ -210,52 +205,56 @@ export function AdminSidebar({ view, onViewChange, onLogout }: Props) {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-olive-deep/15 p-2 group-data-[collapsible=icon]:px-1.5 space-y-2">
+      <SidebarFooter className="border-t border-border p-3 group-data-[collapsible=icon]:px-1.5 gap-3">
         <div className="adm-nav-status space-y-1 px-1 group-data-[collapsible=icon]:hidden">
           {desenvolvedor && (
-            <div className="flex items-center gap-1.5 text-[9px] font-display tracking-widest text-(--color-destructive) mb-1">
-              <span className="size-1.5 rounded-full bg-(--color-destructive) shadow-[0_0_6px_rgba(220,38,38,0.6)]" />
+            <div className="flex items-center gap-1.5 font-mono text-[10px] tracking-wider text-(--color-destructive) mb-1">
+              <span className="size-1.5 rounded-full bg-(--color-destructive)" />
               MODO DESENVOLVEDOR
             </div>
           )}
           <StatusDot ok={status.bot} label={status.bot ? "BOT CONFIGURADO" : "BOT AUSENTE"} />
-          <StatusDot
-            ok={status.webhook}
-            label={status.webhook ? "WEBHOOK CONFIGURADO" : "WEBHOOK AUSENTE"}
-          />
+          <StatusDot ok={status.webhook} label={status.webhook ? "WEBHOOK CONFIGURADO" : "WEBHOOK AUSENTE"} />
         </div>
 
-        <SidebarMenu className="gap-2">
-          <SidebarMenuItem className="group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center">
-            <div className="flex w-full items-center gap-2 px-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-              <AdminThemeToggle compact className="group-data-[collapsible=icon]:mx-auto" />
-              <span className="stencil text-[8px] text-(--color-stencil) group-data-[collapsible=icon]:hidden">
-                TEMA
-              </span>
-            </div>
-          </SidebarMenuItem>
-          <SidebarMenuItem className="group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center">
-            <SidebarMenuButton
-              tooltip="Encerrar sessão"
-              onClick={onLogout}
-              className={`${btnBase} ${btnIdle}`}
-            >
-              <LogOut className="size-4 shrink-0" />
-              <span className="group-data-[collapsible=icon]:hidden">Encerrar sessão</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
+          {profile?.avatarUrl ? (
+            <img src={profile.avatarUrl} alt="" className="size-9 shrink-0 rounded-full object-cover group-data-[collapsible=icon]:hidden" />
+          ) : (
+            <span className="size-9 shrink-0 rounded-full bg-(--color-olive) flex items-center justify-center font-display text-[13px] text-[#d9d2b5] group-data-[collapsible=icon]:hidden">
+              {nome.slice(0, 2).toUpperCase()}
+            </span>
+          )}
+          <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
+            <div className="truncate text-sm text-foreground">{nome}</div>
+            <div className="font-mono text-[10px] tracking-wider text-(--color-gold)">{papelLabel}</div>
+          </div>
+          <button
+            type="button"
+            onClick={onLogout}
+            title="Encerrar sessão"
+            aria-label="Encerrar sessão"
+            className="size-8 shrink-0 flex items-center justify-center text-muted-foreground hover:text-foreground"
+          >
+            <LogOut className="size-4" />
+          </button>
+        </div>
       </SidebarFooter>
     </Sidebar>
   );
 }
 
+const PAPEL_LABEL: Record<string, string> = {
+  membro: "MEMBRO",
+  instrutor: "INSTRUTOR",
+  "alto-comando": "ALTO COMANDO",
+  desenvolvedor: "DESENVOLVEDOR",
+};
+
 function StatusDot({ ok, label }: { ok: boolean; label: string }) {
   return (
-    <div className="flex items-center gap-2 text-[9px] font-mono tracking-wide text-(--color-stencil)">
-      <span
-        className={`size-1.5 rounded-full shrink-0 ${ok ? "bg-green-600 shadow-[0_0_6px_rgba(34,197,94,0.6)]" : "bg-yellow-500"}`}
-      />
+    <div className="flex items-center gap-2 font-mono text-[10px] tracking-wide text-muted-foreground">
+      <span className={`size-1.5 rounded-full shrink-0 ${ok ? "bg-[#7fbf6a]" : "bg-[#d4a94a]"}`} />
       {label}
     </div>
   );

@@ -11,6 +11,10 @@ import {
 import { enviarComunicadoDiscord } from "@/lib/discord.functions";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { Kpi, PanelLabel, StatusBadge, TOM, type Tom } from "@/components/admin/panel-ui";
+import { ChevronDown, ExternalLink, MessageSquare, RefreshCw, Search, Send, Trash2 } from "lucide-react";
+import logo from "@/assets/logo-2de.png";
 import { AdminPageTransition } from "@/components/admin/AdminPageTransition";
 import { AdminThemeToggle } from "@/components/admin/AdminThemeToggle";
 import { CentralGuerra } from "@/components/admin/CentralGuerra";
@@ -69,6 +73,8 @@ type Row = {
   updated_at: string;
 };
 type Stats = {
+  /** Inscrições por dia, dos 14 dias até hoje (último = hoje). */
+  porDia?: number[];
   total: number;
   pendente: number;
   em_analise: number;
@@ -132,27 +138,65 @@ function Comando() {
 
   if (!authed) {
     return (
-      <div className="mx-auto max-w-md px-6 py-24">
-        <div className="field-paper p-8 relative text-center">
-          <div className="absolute -top-3 left-6 tag-rank bg-(--color-destructive)">RESTRITO</div>
-          <p className="stencil text-xs mb-2 mt-3">PAINEL MEMBRO · 2ª DE</p>
-          <p className="font-mono text-sm text-(--color-stencil)">
-            {authError ?? (checkingDiscord ? "VERIFICANDO SESSÃO…" : "REDIRECIONANDO PARA O DISCORD…")}
-          </p>
-          {authError && (
-            <button
-              type="button"
-              className="btn-olive w-full mt-6"
-              // Sessão ainda guardada = falha passageira: confere de novo em vez de pedir login.
-              onClick={() =>
-                localStorage.getItem(DISCORD_SESSION_KEY)
-                  ? window.location.reload()
-                  : iniciarLoginDiscord()
-              }
-            >
-              ▸ TENTAR NOVAMENTE
-            </button>
-          )}
+      <div className="adm2de-shell min-h-screen grid lg:grid-cols-2 bg-background text-foreground">
+        <div
+          className="hidden lg:flex flex-col justify-between p-14 bg-cover bg-center"
+          style={{ backgroundImage: "linear-gradient(180deg, #0d120a99, #0d120af2), url(/galeria/123145.webp)" }}
+        >
+          <div className="flex items-center gap-3">
+            <img src={logo} alt="2ª DE" className="h-11 w-11 object-contain" />
+            <span className="font-display text-[22px] font-semibold tracking-[0.15em] text-[#d9d2b5]">2ª DE</span>
+          </div>
+          <div className="flex flex-col gap-4">
+            <span className="font-mono text-xs tracking-[0.14em] text-(--color-olive-bright)">ÁREA RESTRITA</span>
+            <p className="font-display text-[56px] font-semibold leading-[1.05] text-[#f3f2ea]">
+              O comando da tropa
+              <br />
+              começa aqui.
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center justify-center px-6 py-16">
+          <div className="w-full max-w-105 flex flex-col gap-6">
+            <span className="font-mono text-xs tracking-[0.14em] text-(--color-olive-bright)">PAINEL · 2ª DE</span>
+            <h1 className="font-display text-4xl font-semibold">Entre com o Discord</h1>
+            <p className="text-base leading-relaxed text-muted-foreground">
+              {authError ??
+                (checkingDiscord
+                  ? "Verificando a sua sessão…"
+                  : "Abrindo o login do Discord. O acesso é liberado pelo seu cargo no servidor da 2ª DE.")}
+            </p>
+            {authError && (
+              <button
+                type="button"
+                className="h-14 w-full flex items-center justify-center gap-3 bg-[#5865f2] font-display font-semibold tracking-[0.12em] text-white hover:brightness-110"
+                // Sessão ainda guardada = falha passageira: confere de novo em vez de pedir login.
+                onClick={() =>
+                  localStorage.getItem(DISCORD_SESSION_KEY)
+                    ? window.location.reload()
+                    : iniciarLoginDiscord()
+                }
+              >
+                <MessageSquare className="size-5" />
+                {localStorage.getItem(DISCORD_SESSION_KEY) ? "TENTAR NOVAMENTE" : "ENTRAR COM DISCORD"}
+              </button>
+            )}
+            <dl className="pt-2">
+              {[
+                ["MEMBRO", "Identidade e documentos", "text-muted-foreground"],
+                ["INSTRUTOR", "+ Recrutamento", "text-(--color-olive-bright)"],
+                ["ALTO COMANDO", "+ Comando, Discord, Disciplina", "text-(--color-gold)"],
+              ].map(([k, v, c]) => (
+                <div key={k} className="flex justify-between py-3 border-t border-border">
+                  <dt className={`font-mono text-[11px] tracking-[0.14em] ${c}`}>{k}</dt>
+                  <dd className="text-sm text-muted-foreground">{v}</dd>
+                </div>
+              ))}
+            </dl>
+            <a href="/" className="font-mono text-[11px] tracking-[0.14em] text-muted-foreground hover:text-foreground">
+              ← VOLTAR AO SITE
+            </a>
+          </div>
         </div>
       </div>
     );
@@ -198,25 +242,28 @@ function CentralComando({ onLogout }: { onLogout: () => void }) {
         {/* ── Main content ─────────────────────────────────────────── */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Topbar */}
-          <motion.div
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-            className="adm-topbar border-b-2 border-(--color-olive-deep) bg-khaki/70 backdrop-blur sticky top-0 z-30 px-4 py-3 flex items-center gap-3"
-          >
-            <SidebarTrigger className="text-(--color-olive-deep) hover:bg-olive-deep/10 h-8 w-8 dark:text-(--color-stencil) dark:hover:bg-stencil/10" />
-            <div className="stencil text-xs hidden md:block">{getViewLabel(view)}</div>
-            <div className="ml-auto flex items-center gap-3">
-              <AdminThemeToggle compact className="md:hidden" />
-              <div className="text-[10px] font-mono text-(--color-stencil)">
-                {new Date().toLocaleString("pt-BR")}
-              </div>
+          <div className="adm-topbar sticky top-0 z-30 h-16 px-4 md:px-8 flex items-center gap-3 border-b border-border bg-background">
+            <SidebarTrigger className="h-8 w-8 text-muted-foreground hover:text-foreground" />
+            <div className="hidden md:flex items-center gap-2.5 font-mono text-[11px] tracking-[0.12em] uppercase">
+              <span className="text-muted-foreground/70">Painel</span>
+              <span className="text-muted-foreground/70">/</span>
+              <span className="text-[#d9d2b5]">{getViewLabel(view)}</span>
             </div>
-          </motion.div>
+            <div className="ml-auto flex items-center gap-3">
+              <div id="panel-header-slot" />
+              <AdminThemeToggle compact />
+              <a
+                href="/"
+                className="hidden sm:inline-flex h-9.5 items-center gap-2 border border-border px-3 text-[13px] text-muted-foreground hover:text-foreground"
+              >
+                <ExternalLink className="size-3.5" /> Ver site
+              </a>
+            </div>
+          </div>
 
           {/* Page */}
           <ScrollArea className="flex-1">
-            <div className="p-6 max-w-6xl">
+            <div className="p-4 md:p-8 max-w-7xl">
               <AdminPageTransition viewKey={view}>
                 <PanelContent
                   view={view}
@@ -303,6 +350,8 @@ function PanelContent({
 }
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
+const STATUS_TOM: Record<Status, Tom> = { pendente: "alerta", em_analise: "info", aprovado: "ok", reprovado: "perigo" };
+
 function Dashboard() {
   const getStats = useServerFn(obterEstatisticas);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -316,65 +365,68 @@ function Dashboard() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const cards = stats ? [
-    { label: "Total de inscrições",    value: stats.total,         sub: `${stats.ultimos7d} nos últimos 7 dias`, color: "oklch(0.40 0.07 132)" },
-    { label: "Pendentes",              value: stats.pendente,      sub: "Aguardando análise",                    color: "oklch(0.72 0.13 80)" },
-    { label: "Em análise",             value: stats.em_analise,    sub: "Em revisão pelo instrutor",             color: "oklch(0.55 0.12 230)" },
-    { label: "Aprovados",              value: stats.aprovado,      sub: `${stats.aprovadosHoje} aprovados hoje`, color: "oklch(0.50 0.13 145)" },
-    { label: "Reprovados",             value: stats.reprovado,     sub: "Inscrições indeferidas",                color: "oklch(0.48 0.18 30)" },
-    { label: "Recebidas hoje",         value: stats.hoje,          sub: "Novas inscrições no dia",               color: "oklch(0.40 0.07 132)" },
-  ] : [];
+  const hoje = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+  const porDia = stats?.porDia ?? [];
+  const maxDia = Math.max(1, ...porDia);
 
   return (
-    <div>
-      <PageHeader
-        tag="PAINEL DE INSTRUTORES"
-        title="Dashboard Operacional"
-        sub="Visão geral do sistema de recrutamento"
-      />
+    <div className="flex flex-col gap-7">
+      <PageHeader tag="PAINEL DE INSTRUTORES" title="Dashboard operacional" sub={hoje.charAt(0).toUpperCase() + hoje.slice(1)} />
 
-      {loading ? (
-        <div className="field-paper p-6 text-center stencil text-xs">CARREGANDO…</div>
+      {loading || !stats ? (
+        <div className="border border-border bg-card p-6 text-center font-mono text-xs text-muted-foreground">CARREGANDO…</div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-          {cards.map((c) => (
-            <Card key={c.label} className="field-paper border-0 shadow-none">
-              <CardHeader className="pb-2 pt-4 px-4">
-                <CardTitle className="stencil text-[10px]" style={{ color: c.color }}>
-                  {c.label}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-4 pb-4">
-                <div className="font-display text-4xl" style={{ color: c.color }}>
-                  {c.value}
-                </div>
-                <p className="text-xs text-(--color-stencil) mt-1">{c.sub}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+            <Kpi label="Total de inscrições" value={stats.total} sub={`+${stats.ultimos7d} nos últimos 7 dias`} />
+            <Kpi label="Pendentes" value={stats.pendente} sub="Aguardando análise" tom="alerta" />
+            <Kpi label="Em análise" value={stats.em_analise} sub="Com um instrutor" tom="info" />
+            <Kpi label="Aprovados" value={stats.aprovado} sub={`${stats.aprovadosHoje} aprovados hoje`} tom="ok" />
+            <Kpi label="Reprovados" value={stats.reprovado} sub="Indeferidas" tom="perigo" />
+          </div>
 
-      <Card className="field-paper border-0 shadow-none">
-        <CardHeader className="pb-2">
-          <CardTitle className="stencil text-xs">STATUS DO SISTEMA</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <StatusLine ok label="Banco de dados: operacional" />
-          <StatusLine ok label="Sistema de inscrições: ativo" />
-          <StatusLine ok={!!process.env.DISCORD_WEBHOOK_URL} label="Integração Discord: configure DISCORD_WEBHOOK_URL no .env" />
-          <StatusLine ok label="Painel admin: autenticado" />
-        </CardContent>
-      </Card>
+          <div className="grid lg:grid-cols-[1fr_400px] gap-4">
+            <div className="flex flex-col gap-5 border border-border bg-card p-6 min-h-80">
+              <div className="flex justify-between items-baseline">
+                <h2 className="font-display text-xl font-medium">Inscrições recebidas</h2>
+                <PanelLabel>ÚLTIMOS 14 DIAS · {stats.hoje} HOJE</PanelLabel>
+              </div>
+              <div className="flex-1 flex items-end gap-2.5 min-h-56">
+                {porDia.map((n, i) => {
+                  const d = new Date(Date.now() - (porDia.length - 1 - i) * 864e5);
+                  return (
+                    <div key={i} className="flex-1 h-full flex flex-col items-center justify-end gap-2" title={`${n} em ${d.toLocaleDateString("pt-BR")}`}>
+                      <span className="font-mono text-[10px] text-muted-foreground">{n || ""}</span>
+                      <div
+                        className={`w-full ${i === porDia.length - 1 ? "bg-(--color-olive-bright)" : "bg-(--color-olive-bright)/35"}`}
+                        style={{ height: `${(n / maxDia) * 100}%`, minHeight: n ? 4 : 1 }}
+                      />
+                      <span className="font-mono text-[10px] text-muted-foreground">{d.getDate()}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3 border border-border bg-card p-5">
+              <h2 className="font-display text-lg font-medium">Status do sistema</h2>
+              <StatusLine ok label="Banco de dados" />
+              <StatusLine ok label="Inscrições" />
+              <StatusLine ok={!!process.env.DISCORD_WEBHOOK_URL} label="Webhook de comunicados" />
+              <StatusLine ok label="Painel autenticado" />
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
 
 function StatusLine({ ok, label }: { ok: boolean; label: string }) {
   return (
-    <div className="flex items-center gap-2 text-xs font-mono">
-      <span className={`w-1.5 h-1.5 rounded-full ${ok ? "bg-green-600" : "bg-yellow-500"} animate-pulse inline-block`} />
-      <span className="text-(--color-stencil)">{label}</span>
+    <div className="flex items-center justify-between">
+      <span className="text-sm text-muted-foreground">{label}</span>
+      <StatusBadge tom={ok ? "ok" : "alerta"}>{ok ? "Operacional" : "Configurar"}</StatusBadge>
     </div>
   );
 }
@@ -458,93 +510,70 @@ function GestaoInscricoes({
   }));
 
   return (
-    <div>
+    <div className="flex flex-col gap-6">
       <PageHeader
         tag={tag}
         title={title}
-        sub={`${rows.length} registros carregados`}
-        action={<button onClick={load} className="btn-ghost-olive text-xs">↻ Atualizar</button>}
+        sub="Avalie as fichas, deixe observações e defina o status. O conscrito vê o resultado em Acompanhar."
+        action={
+          <button onClick={load} className="inline-flex items-center gap-2 border border-border px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground">
+            <RefreshCw className="size-4" /> Atualizar
+          </button>
+        }
       />
 
-      {/* Status chips */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        {counts.map((c) => {
-          const m = STATUS_META[c.v];
-          const active = statusFilter === c.v;
-          return (
-            <button
-              key={c.v}
-              onClick={() => setStatusFilter(active ? "todos" : c.v)}
-              className={`field-paper px-3 py-2 text-left transition-all ${active ? "ring-2 ring-(--color-olive-deep)" : ""}`}
-            >
-              <div className="stencil text-[9px]" style={{ color: m.color }}>{m.symbol} {m.label}</div>
-              <div className="font-display text-2xl">{c.n}</div>
-            </button>
-          );
-        })}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-1 p-1 border border-border bg-card">
+          {(["todos", ...(Object.keys(STATUS_META) as Status[])] as const).map((v) => {
+            const active = statusFilter === v;
+            const n = v === "todos" ? rows.length : counts.find((c) => c.v === v)?.n ?? 0;
+            return (
+              <button
+                key={v}
+                onClick={() => setStatusFilter(v)}
+                className={`flex items-center gap-2 px-3.5 py-2 text-sm ${active ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                {v === "todos" ? "Todas" : STATUS_META[v].label}
+                <span className={`font-mono text-[11px] ${active ? "text-(--color-olive-bright)" : "opacity-60"}`}>{n}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="relative w-full sm:w-80">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Nome, RG, protocolo ou Discord…"
+            className="h-10 pl-9 bg-card"
+          />
+        </div>
       </div>
 
-      {/* Filters */}
-      <Card className="field-paper border-0 shadow-none mb-4">
-        <CardContent className="pt-4 flex flex-wrap gap-3 items-end">
-          <div className="flex-1 min-w-52">
-            <label className="block stencil text-[10px] mb-1">Buscar</label>
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="nome, RG, protocolo, discord…"
-              className="font-mono text-sm bg-transparent"
-            />
-          </div>
-          <div>
-            <label className="block stencil text-[10px] mb-1">Status</label>
-            <Select
-              value={statusFilter}
-              onValueChange={(v) => setStatusFilter(v as Status | "todos")}
-            >
-              <SelectTrigger className="font-mono text-sm bg-transparent w-40">
-                <SelectValue placeholder="Todos" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos</SelectItem>
-                {(Object.keys(STATUS_META) as Status[]).map((v) => (
-                  <SelectItem key={v} value={v}>{STATUS_META[v].label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {loading && <div className="text-center stencil text-xs py-6">CARREGANDO…</div>}
-
-      {/* List */}
-      <div className="space-y-2">
+      <div className="border border-border bg-card overflow-x-auto">
+        <div className="hidden md:grid grid-cols-[150px_1fr_110px_180px_150px_130px_24px] gap-4 px-5 py-3 border-b border-border">
+          {["PROTOCOLO", "CONSCRITO", "RG", "DISCORD", "APRESENTAÇÃO", "STATUS", ""].map((h) => (
+            <PanelLabel key={h}>{h}</PanelLabel>
+          ))}
+        </div>
+        {loading && <div className="text-center font-mono text-xs text-muted-foreground py-6">CARREGANDO…</div>}
         {rows.map((r) => {
-          const m = STATUS_META[r.status];
           const open = expanded === r.id;
           return (
-            <div key={r.id} className="field-paper">
+            <div key={r.id} className={`border-b border-border last:border-b-0 ${open ? "bg-secondary" : ""}`}>
               <button
-                className="w-full p-4 flex flex-wrap items-center gap-4 text-left"
+                className="w-full grid grid-cols-[1fr_auto] md:grid-cols-[150px_1fr_110px_180px_150px_130px_24px] items-center gap-x-4 gap-y-1 px-5 py-3.5 text-left hover:bg-secondary/60"
                 onClick={() => setExpanded(open ? null : r.id)}
               >
-                <div className="font-mono text-sm w-32 shrink-0 text-(--color-stencil)">{r.protocolo}</div>
-                <div className="flex-1 min-w-40">
-                  <div className="font-display tracking-wide">{r.nome} {r.sobrenome}</div>
-                  <div className="text-xs text-(--color-stencil)">RG {r.rg} · {r.discord_id}</div>
-                </div>
-                <Badge
-                  variant={m.variant}
-                  style={{ background: m.color + "22", color: m.color, borderColor: m.color + "55" }}
-                  className="font-display tracking-widest text-[10px]"
-                >
-                  {m.symbol} {m.label}
-                </Badge>
-                <div className="text-xs text-(--color-stencil) w-28 text-right shrink-0">
-                  {new Date(r.created_at).toLocaleDateString("pt-BR")}
-                </div>
-                <span className="text-(--color-stencil) text-xs">{open ? "▲" : "▼"}</span>
+                <span className="font-mono text-xs tracking-wider text-(--color-olive-bright)">{r.protocolo}</span>
+                <span className="text-[15px] md:order-none order-first">{r.nome} {r.sobrenome}</span>
+                <span className="hidden md:block text-sm text-muted-foreground">{r.rg}</span>
+                <span className="hidden md:block text-sm text-muted-foreground truncate">{r.discord_id}</span>
+                <span className="hidden md:block text-sm text-muted-foreground">
+                  {new Date(r.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                </span>
+                <span><StatusBadge tom={STATUS_TOM[r.status]}>{STATUS_META[r.status].label}</StatusBadge></span>
+                <ChevronDown className={`hidden md:block size-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
               </button>
 
               {open && <InscricaoEditor row={r} onSave={update} onDelete={remove} />}
@@ -553,9 +582,7 @@ function GestaoInscricoes({
         })}
 
         {!loading && rows.length === 0 && (
-          <div className="text-center text-(--color-stencil) py-12 stencil text-xs">
-            NENHUMA INSCRIÇÃO ENCONTRADA
-          </div>
+          <div className="text-center text-muted-foreground py-12 font-mono text-xs">NENHUMA INSCRIÇÃO ENCONTRADA</div>
         )}
       </div>
     </div>
@@ -577,79 +604,70 @@ function InscricaoEditor({
   const [deleting, setDeleting] = useState(false);
 
   return (
-    <div className="border-t border-(--color-border) p-5 grid md:grid-cols-[1fr_300px] gap-5 reveal">
-      <div>
-        <div className="grid sm:grid-cols-2 gap-3 mb-4 text-sm font-mono">
-          <LabelValue label="TELEFONE"    value={row.telefone} />
-          <LabelValue label="DISCORD"     value={row.discord_id} />
-          <LabelValue label="RG"          value={row.rg} />
-          <LabelValue label="PROTOCOLO"   value={row.protocolo} />
-          <LabelValue label="APRESENTAÇÃO"     value={new Date(row.created_at).toLocaleString("pt-BR")} />
-          <LabelValue label="ATUALIZADO"  value={new Date(row.updated_at).toLocaleString("pt-BR")} />
-        </div>
-
-        <div>
-          <div className="stencil text-[10px] mb-1">OBSERVAÇÕES DO INSTRUTOR</div>
-          <Textarea
-            value={obs}
-            onChange={(e) => setObs(e.target.value)}
-            maxLength={2000}
-            className="font-mono text-sm bg-transparent min-h-24"
-            placeholder="Anotações de comando…"
-          />
-        </div>
+    <div className="px-5 pt-2 pb-7 grid md:grid-cols-[420px_1fr] gap-8 reveal">
+      <div className="grid grid-cols-2 gap-4 content-start">
+        <LabelValue label="TELEFONE IN GAME" value={row.telefone} />
+        <LabelValue label="DISCORD" value={row.discord_id} />
+        <LabelValue label="RG" value={row.rg} />
+        <LabelValue label="PROTOCOLO" value={row.protocolo} />
+        <LabelValue label="APRESENTAÇÃO" value={new Date(row.created_at).toLocaleString("pt-BR")} />
+        <LabelValue label="ATUALIZADO" value={new Date(row.updated_at).toLocaleString("pt-BR")} />
       </div>
 
-      <div className="space-y-3">
-        <div className="stencil text-[10px] mb-1">DEFINIR STATUS</div>
-        <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3">
+        <PanelLabel>OBSERVAÇÕES DO INSTRUTOR</PanelLabel>
+        <Textarea
+          value={obs}
+          onChange={(e) => setObs(e.target.value)}
+          maxLength={2000}
+          className="min-h-24 bg-background"
+          placeholder="Anotações de comando… (o conscrito vê este texto em Acompanhar)"
+        />
+        <PanelLabel>DEFINIR STATUS</PanelLabel>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
           {(Object.keys(STATUS_META) as Status[]).map((v) => {
-            const m = STATUS_META[v];
+            const c = TOM[STATUS_TOM[v]];
             const sel = status === v;
             return (
-              <label
+              <button
                 key={v}
-                className={`flex items-center gap-2 p-2 border cursor-pointer transition-all ${
-                  sel ? "border-(--color-olive-deep) bg-khaki/50" : "border-transparent"
-                }`}
+                type="button"
+                onClick={() => setStatus(v)}
+                aria-pressed={sel}
+                className="flex items-center justify-center gap-2 border py-2.5 text-sm"
+                style={{ borderColor: c, color: c, background: sel ? `${c}33` : "transparent" }}
               >
-                <input type="radio" name={`st-${row.id}`} checked={sel} onChange={() => setStatus(v)} />
-                <span className="font-display tracking-widest text-xs" style={{ color: m.color }}>
-                  {m.symbol} {m.label}
-                </span>
-              </label>
+                <span className="size-2 rounded-full" style={{ background: c }} />
+                {STATUS_META[v].label}
+              </button>
             );
           })}
         </div>
-
-        <Button
-          disabled={saving || deleting}
-          onClick={async () => { setSaving(true); await onSave(row, status, obs); setSaving(false); }}
-          className="btn-olive w-full"
-          variant="default"
-        >
-          {saving ? "SALVANDO…" : "▸ CONFIRMAR DECISÃO"}
-        </Button>
-
-        <p className="text-[9px] font-mono text-(--color-stencil) text-center">
-          Notificará o Discord automaticamente
-        </p>
-
-        <Separator className="my-2" />
-
-        <Button
-          type="button"
-          disabled={saving || deleting}
-          variant="destructive"
-          className="w-full font-display tracking-widest text-xs"
-          onClick={async () => {
-            setDeleting(true);
-            await onDelete(row);
-            setDeleting(false);
-          }}
-        >
-          {deleting ? "EXCLUINDO…" : "✕ EXCLUIR INSCRIÇÃO"}
-        </Button>
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+          <button
+            type="button"
+            disabled={saving || deleting}
+            className="inline-flex items-center gap-2 text-sm text-(--color-destructive) hover:underline disabled:opacity-50"
+            onClick={async () => {
+              setDeleting(true);
+              await onDelete(row);
+              setDeleting(false);
+            }}
+          >
+            <Trash2 className="size-4" /> {deleting ? "Excluindo…" : "Excluir ficha"}
+          </button>
+          <div className="flex items-center gap-3">
+            <span className="hidden sm:inline font-mono text-[10px] text-muted-foreground">AVISA O DISCORD AUTOMATICAMENTE</span>
+            <button
+              type="button"
+              disabled={saving || deleting}
+              onClick={async () => { setSaving(true); await onSave(row, status, obs); setSaving(false); }}
+              className="btn-olive px-5 py-2.5 text-sm disabled:opacity-50"
+            >
+              {saving ? "SALVANDO…" : "SALVAR AVALIAÇÃO"}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -664,10 +682,10 @@ function Comunicados() {
   const [sending, setSending] = useState(false);
 
   const tipoMeta = {
-    informativo: { label: "Informativo", color: "oklch(0.50 0.13 145)", emoji: "📣" },
-    alerta:      { label: "Alerta",      color: "oklch(0.72 0.13 80)",  emoji: "⚠️" },
-    operacao:    { label: "Operação",    color: "oklch(0.55 0.12 230)", emoji: "⚔️" },
-    urgente:     { label: "Urgente",     color: "oklch(0.48 0.18 30)",  emoji: "🚨" },
+    informativo: { label: "Informativo", color: TOM.ok, emoji: "📣" },
+    alerta:      { label: "Alerta",      color: TOM.alerta, emoji: "⚠️" },
+    operacao:    { label: "Operação",    color: TOM.info, emoji: "⚔️" },
+    urgente:     { label: "Urgente",     color: TOM.perigo, emoji: "🚨" },
   };
 
   async function submit(e: React.FormEvent) {
@@ -684,132 +702,98 @@ function Comunicados() {
     } finally { setSending(false); }
   }
 
+  const m = tipoMeta[tipo];
+
   return (
-    <div>
+    <div className="flex flex-col gap-6">
       <PageHeader
-        tag="PAINEL DE INSTRUTORES"
-        title="Central de Comunicados"
-        sub="Envio direto ao canal Discord configurado"
+        tag="CENTRAL DE COMUNICAÇÃO"
+        title="Comunicados"
+        sub="Escreva uma vez: o aviso vai para o canal de comunicados do Discord."
       />
 
-      <div className="grid md:grid-cols-[1fr_300px] gap-6">
-        <Card className="field-paper border-0 shadow-none">
-          <CardContent className="pt-5">
-            <form onSubmit={submit} className="space-y-4">
-              {/* Tipo */}
-              <div>
-                <label className="block stencil text-[10px] mb-2">TIPO DE COMUNICADO</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {(Object.keys(tipoMeta) as typeof tipo[]).map((t) => {
-                    const m = tipoMeta[t];
-                    const sel = tipo === t;
-                    return (
-                      <label
-                        key={t}
-                        className={`flex items-center gap-2 p-2 border cursor-pointer transition-all text-xs font-display tracking-widest ${
-                          sel ? "border-(--color-olive-deep) bg-khaki/50" : "border-transparent"
-                        }`}
-                      >
-                        <input type="radio" name="tipo" checked={sel} onChange={() => setTipo(t)} />
-                        <span style={{ color: m.color }}>{m.emoji} {m.label}</span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
+      <div className="grid lg:grid-cols-[1fr_440px] gap-4">
+        <form onSubmit={submit} className="flex flex-col gap-4 border border-border bg-card p-6">
+          <PanelLabel>TIPO</PanelLabel>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {(Object.keys(tipoMeta) as typeof tipo[]).map((t) => {
+              const tm = tipoMeta[t];
+              const sel = tipo === t;
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setTipo(t)}
+                  aria-pressed={sel}
+                  className="flex items-center justify-center gap-2 border py-2.5 text-sm"
+                  style={{ borderColor: tm.color, color: tm.color, background: sel ? `${tm.color}33` : "transparent" }}
+                >
+                  <span className="size-2 rounded-full" style={{ background: tm.color }} />
+                  {tm.label}
+                </button>
+              );
+            })}
+          </div>
+          <PanelLabel>TÍTULO</PanelLabel>
+          <Input
+            value={titulo}
+            onChange={(e) => setTitulo(e.target.value)}
+            maxLength={100}
+            placeholder="Ex.: CHAMADA GERAL — TREINAMENTO"
+            className="h-11 bg-background"
+          />
+          <PanelLabel>MENSAGEM</PanelLabel>
+          <Textarea
+            value={mensagem}
+            onChange={(e) => setMensagem(e.target.value)}
+            maxLength={2000}
+            rows={8}
+            placeholder="Redija o comunicado…"
+            className="bg-background resize-y"
+          />
+          <div className="flex items-center justify-between gap-3">
+            <span className="font-mono text-[10px] text-muted-foreground">{mensagem.length}/2000</span>
+            <button
+              type="submit"
+              disabled={sending || !titulo.trim() || !mensagem.trim()}
+              className="btn-olive inline-flex items-center gap-2 px-5 py-2.5 text-sm disabled:opacity-40"
+            >
+              <Send className="size-4" /> {sending ? "ENVIANDO…" : "ENVIAR COMUNICADO"}
+            </button>
+          </div>
+        </form>
 
-              <div>
-                <label className="block stencil text-[10px] mb-1">TÍTULO</label>
-                <Input
-                  value={titulo}
-                  onChange={(e) => setTitulo(e.target.value)}
-                  maxLength={100}
-                  placeholder="Ex: CHAMADA GERAL — TREINAMENTO"
-                  className="font-mono text-sm bg-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block stencil text-[10px] mb-1">MENSAGEM</label>
-                <Textarea
-                  value={mensagem}
-                  onChange={(e) => setMensagem(e.target.value)}
-                  maxLength={2000}
-                  rows={5}
-                  placeholder="Redija o comunicado operacional…"
-                  className="font-mono text-sm bg-transparent resize-y"
-                />
-                <p className="text-[9px] font-mono text-(--color-stencil) text-right mt-1">
-                  {mensagem.length}/2000
-                </p>
-              </div>
-
-              <button
-                type="submit"
-                disabled={sending || !titulo.trim() || !mensagem.trim()}
-                className="btn-olive w-full disabled:opacity-40"
-              >
-                {sending ? "TRANSMITINDO…" : "▸ TRANSMITIR PARA O DISCORD"}
-              </button>
-            </form>
-          </CardContent>
-        </Card>
-
-        <Card className="field-paper border-0 shadow-none">
-          <CardHeader className="pb-2">
-            <CardTitle className="stencil text-xs">CONFIGURAÇÃO DISCORD</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-xs font-mono text-(--color-stencil)">
-            <p>1. Crie um webhook no canal Discord desejado.</p>
-            <p>2. Copie a URL gerada.</p>
-            <p>3. Defina no <span className="font-bold">.env</span>:</p>
-            <code className="block bg-background/60 border border-(--color-border) p-2 text-[10px] break-all">
-              DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
-            </code>
-            <p>Para logs em canal separado:</p>
-            <code className="block bg-background/60 border border-(--color-border) p-2 text-[10px] break-all">
-              DISCORD_WEBHOOK_LOG_URL=https://discord.com/api/webhooks/...
-            </code>
-            <Separator className="my-2" />
-            <p className="font-display tracking-widest text-[9px] text-(--color-olive-deep)">
-              AUTOMÁTICO AO APROVAR/REPROVAR:
-            </p>
-            <ul className="list-disc list-inside space-y-1 text-[10px]">
-              <li>Nova inscrição recebida</li>
-              <li>Aprovação de recruta</li>
-              <li>Reprovação de inscrição</li>
-              <li>Mudança para em análise</li>
-            </ul>
-          </CardContent>
-        </Card>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3 border border-border bg-card p-5">
+            <PanelLabel>PRÉVIA NO DISCORD</PanelLabel>
+            <div className="flex flex-col gap-2 bg-[#2b2d31] px-4 py-3.5 border-l-4" style={{ borderColor: m.color }}>
+              <span className="text-xs font-bold" style={{ color: m.color }}>{m.emoji} {m.label.toUpperCase()}</span>
+              <span className="text-[15px] font-bold text-white break-words">{titulo || "Título do comunicado"}</span>
+              <span className="text-[13px] leading-snug text-[#dbdee1] whitespace-pre-wrap break-words">
+                {mensagem || "A mensagem aparece aqui."}
+              </span>
+              <span className="text-[11px] text-[#949ba4]">2ª DE</span>
+            </div>
+          </div>
+          <div className="flex flex-col gap-2 border border-border bg-card p-5 text-sm text-muted-foreground">
+            <PanelLabel>AVISOS AUTOMÁTICOS</PanelLabel>
+            <p>O Discord também recebe, sem ninguém enviar: nova inscrição, aprovação, reprovação e ficha em análise.</p>
+            <p className="font-mono text-[11px]">Canal: DISCORD_WEBHOOK_URL · logs: DISCORD_WEBHOOK_LOG_URL</p>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
 // ─── Shared components ────────────────────────────────────────────────────────
-function PageHeader({
-  tag, title, sub, action,
-}: {
-  tag: string; title: string; sub?: string; action?: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
-      <div>
-        <div className="stencil text-xs mb-1">{tag}</div>
-        <h1 className="text-3xl">{title}</h1>
-        {sub && <p className="text-sm text-(--color-stencil) mt-0.5">{sub}</p>}
-      </div>
-      {action}
-    </div>
-  );
-}
+const PageHeader = AdminPageHeader;
 
 function LabelValue({ label, value }: { label: string; value: string }) {
   return (
-    <div>
-      <div className="stencil text-[10px] mb-0.5">{label}</div>
-      <div>{value}</div>
+    <div className="flex flex-col gap-1">
+      <PanelLabel>{label}</PanelLabel>
+      <div className="text-[15px] break-words">{value}</div>
     </div>
   );
 }

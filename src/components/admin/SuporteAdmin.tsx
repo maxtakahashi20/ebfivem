@@ -13,6 +13,7 @@ import {
   type SuporteTicket,
 } from "@/lib/suporte.functions";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { StatusBadge } from "@/components/admin/panel-ui";
 import { ErroVerificacao } from "@/components/admin/AdminModuleView";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -183,19 +184,17 @@ export function SuporteAdmin() {
       <div className="grid lg:grid-cols-[320px_1fr] gap-4 min-h-[60vh]">
         <Card className="field-paper border-0 shadow-none">
           <CardContent className="p-3 space-y-2">
-            <div className="flex gap-1 mb-2 flex-wrap">
+            <div className="flex gap-1 mb-2 flex-wrap border-b border-border pb-2">
               {(["todos", "aberto", "em_atendimento", "encerrado"] as StatusFilter[]).map((s) => (
                 <button
                   key={s}
                   type="button"
                   onClick={() => setFilter(s)}
-                  className={`text-[10px] font-display tracking-widest px-2 py-1 border ${
-                    filter === s
-                      ? "bg-(--color-olive-deep) text-(--color-khaki) border-(--color-olive-deep)"
-                      : "border-(--color-border) text-(--color-stencil)"
+                  className={`px-3 py-1.5 text-[13px] ${
+                    filter === s ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  {s.replace("_", " ").toUpperCase()}
+                  {FILTRO_LABEL[s]}
                 </button>
               ))}
             </div>
@@ -217,10 +216,10 @@ export function SuporteAdmin() {
                     key={t.id}
                     type="button"
                     onClick={() => setSelected(t.id)}
-                    className={`w-full text-left p-3 border transition-colors ${
+                    className={`w-full text-left px-4 py-3.5 border-l-3 transition-colors ${
                       active
-                        ? "border-(--color-olive-deep) bg-khaki/60"
-                        : "border-(--color-border) hover:bg-olive-deep/5"
+                        ? "border-l-(--color-olive-bright) bg-secondary"
+                        : "border-l-transparent hover:bg-secondary/60"
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
@@ -229,10 +228,10 @@ export function SuporteAdmin() {
                       </span>
                       <StatusPill status={t.status} />
                     </div>
-                    <div className="font-display tracking-wide text-sm mt-1 wrap-break-word">
+                    <div className="text-[15px] mt-1 wrap-break-word">
                       {t.titulo || "Sem título"}
                     </div>
-                    <div className="text-[10px] font-mono text-(--color-stencil) mt-1 truncate">
+                    <div className="text-[13px] text-muted-foreground mt-1 truncate">
                       {[t.nome, t.sobrenome].filter(Boolean).join(" ") || "Conscrito anônimo"}
                     </div>
                     <div className="text-[10px] font-mono text-(--color-stencil) mt-1">
@@ -258,12 +257,12 @@ export function SuporteAdmin() {
               </div>
             ) : (
               <>
-                <header className="border-b border-(--color-border) p-4 flex flex-wrap items-center justify-between gap-3 bg-khaki/40">
+                <header className="border-b border-border px-6 py-4 flex flex-wrap items-center justify-between gap-3">
                   <div className="min-w-0">
                     <p className="stencil text-[10px] text-(--color-olive-deep)">
                       CHAMADO #{ticketAtivo.id.slice(0, 6).toUpperCase()}
                     </p>
-                    <p className="font-display tracking-widest text-(--color-olive-deep) wrap-break-word">
+                    <p className="font-display text-xl text-foreground wrap-break-word">
                       {ticketAtivo.titulo || "Sem título"}
                     </p>
                     <p className="text-[10px] font-mono text-(--color-stencil)">
@@ -290,7 +289,7 @@ export function SuporteAdmin() {
 
                 <div
                   ref={scrollRef}
-                  className="flex-1 overflow-y-auto p-4 space-y-3 bg-background/60"
+                  className="flex-1 overflow-y-auto px-6 py-5 space-y-3.5"
                 >
                   {mensagens.length === 0 && (
                     <p className="text-xs font-mono text-(--color-stencil) text-center mt-8">
@@ -302,7 +301,7 @@ export function SuporteAdmin() {
                   ))}
                 </div>
 
-                <footer className="border-t border-(--color-border) p-3 flex gap-2 bg-khaki/40">
+                <footer className="border-t border-border px-6 pt-3.5 pb-5 flex gap-2.5">
                   <input
                     type="text"
                     value={novaMensagem}
@@ -319,7 +318,7 @@ export function SuporteAdmin() {
                         : "Resposta do Alto Comando…"
                     }
                     disabled={ticketAtivo.status === "encerrado" || sending}
-                    className="flex-1 font-mono text-sm bg-transparent border border-(--color-border) px-3 py-2 disabled:opacity-50"
+                    className="flex-1 h-11.5 bg-background border border-border px-3.5 text-sm disabled:opacity-50"
                   />
                   <button
                     type="button"
@@ -339,18 +338,16 @@ export function SuporteAdmin() {
   );
 }
 
+const FILTRO_LABEL: Record<StatusFilter, string> = {
+  todos: "Todos",
+  aberto: "Abertos",
+  em_atendimento: "Em atendimento",
+  encerrado: "Encerrados",
+};
+
 function StatusPill({ status }: { status: SuporteTicket["status"] }) {
-  const color =
-    status === "aberto"
-      ? "bg-(--color-destructive)/15 text-(--color-destructive)"
-      : status === "em_atendimento"
-        ? "bg-blue-500/15 text-blue-700"
-        : "bg-(--color-olive-deep)/15 text-(--color-stencil)";
-  return (
-    <span className={`text-[9px] font-display tracking-widest px-1.5 py-0.5 ${color}`}>
-      {status.replace("_", " ").toUpperCase()}
-    </span>
-  );
+  const tom = status === "aberto" ? "alerta" : status === "em_atendimento" ? "ok" : "neutro";
+  return <StatusBadge tom={tom}>{status.replace("_", " ")}</StatusBadge>;
 }
 
 function ChatBubble({ mensagem }: { mensagem: SuporteMensagem }) {
@@ -358,14 +355,14 @@ function ChatBubble({ mensagem }: { mensagem: SuporteMensagem }) {
   const isSistema = mensagem.autor === "sistema";
   const align = isMilitar ? "items-end" : "items-start";
   const bubble = isSistema
-    ? "bg-(--color-olive-deep)/15 text-(--color-stencil) italic"
+    ? "text-muted-foreground font-mono text-[11px]"
     : isMilitar
-      ? "bg-(--color-olive-deep) text-(--color-khaki)"
-      : "bg-khaki border border-(--color-border)";
+      ? "bg-(--color-olive-bright) text-[#0d120a]"
+      : "bg-[#d9d2b51a] text-foreground";
 
   return (
     <div className={`flex flex-col gap-1 ${align}`}>
-      <div className={`max-w-[80%] px-3 py-2 text-sm ${bubble}`}>
+      <div className={`max-w-[80%] sm:max-w-105 px-4 py-3 text-[15px] leading-snug ${bubble}`}>
         {!isSistema && (
           <p className="text-[10px] font-mono opacity-80 mb-0.5">
             {mensagem.autor_nome ?? (isMilitar ? "Militar" : "Conscrito")}

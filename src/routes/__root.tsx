@@ -11,7 +11,6 @@ import { Toaster } from "@/components/ui/sonner";
 import {
   Header,
   Footer,
-  PanelBrandHeader,
   isPainelPath,
 } from "@/components/site-chrome";
 import { useRouterState } from "@tanstack/react-router";
@@ -86,7 +85,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: React.ReactNode }) {
-  const themeBootScript = `(function(){try{if(/^\\/(painel|adm2de)(\\/|$)/i.test(location.pathname)&&localStorage.getItem("${ADMIN_THEME_KEY}")==="dark"){document.documentElement.classList.add("dark")}}catch(e){}})()`;
+  const themeBootScript = `(function(){try{if(/^\\/(painel|adm2de)(\\/|$)/i.test(location.pathname)&&localStorage.getItem("${ADMIN_THEME_KEY}")!=="light"){document.documentElement.classList.add("dark")}}catch(e){}})()`;
 
   return (
     <html lang="pt-BR">
@@ -113,12 +112,9 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {painel ? (
         <AdminThemeProvider>
-          <div className="min-h-screen flex flex-col">
-            <PanelBrandHeader />
-            <main className="flex-1">
-              <Outlet />
-            </main>
-          </div>
+          <main className="min-h-screen">
+            <Outlet />
+          </main>
         </AdminThemeProvider>
       ) : (
         <div className="site-public min-h-screen flex flex-col bg-bone">

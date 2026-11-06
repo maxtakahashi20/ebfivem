@@ -176,6 +176,12 @@ export const obterEstatisticas = createServerFn({ method: "POST" })
       aprovadosHoje: all.filter(
         (r) => r.status === "aprovado" && r.created_at >= inicioHoje,
       ).length,
+      // Só contagens, sem dados de ninguém: mesmo nível de acesso das outras.
+      porDia: Array.from({ length: 14 }, (_, i) => {
+        const ini = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (13 - i));
+        const fim = new Date(ini.getFullYear(), ini.getMonth(), ini.getDate() + 1);
+        return all.filter((r) => r.created_at >= ini.toISOString() && r.created_at < fim.toISOString()).length;
+      }),
     };
   });
 

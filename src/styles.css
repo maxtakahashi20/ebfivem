@@ -84,34 +84,39 @@
   --ring: var(--olive-bright);
 }
 
+/* Painel no escuro: cores do design aprovado no pen.dev (06/11/2026). */
 .dark {
-  --background: oklch(0.14 0.018 110);
-  --foreground: oklch(0.92 0.02 90);
-  --card: oklch(0.18 0.022 110);
-  --card-foreground: oklch(0.92 0.02 90);
-  --popover: oklch(0.18 0.022 110);
-  --popover-foreground: oklch(0.92 0.02 90);
-  --primary: oklch(0.58 0.12 135);
-  --primary-foreground: oklch(0.96 0.015 90);
-  --secondary: oklch(0.22 0.028 110);
-  --secondary-foreground: oklch(0.88 0.02 90);
-  --muted: oklch(0.20 0.025 110);
-  --muted-foreground: oklch(0.68 0.02 90);
-  --accent: oklch(0.72 0.12 85);
-  --accent-foreground: oklch(0.12 0.015 110);
-  --destructive: oklch(0.55 0.18 30);
-  --destructive-foreground: oklch(0.97 0.01 90);
-  --border: oklch(0.92 0.02 90 / 12%);
-  --input: oklch(0.92 0.02 90 / 16%);
-  --ring: oklch(0.58 0.12 135);
+  --background: #10160d;
+  --foreground: #eeebdd;
+  --card: #172013;
+  --card-foreground: #eeebdd;
+  --popover: #1f2a19;
+  --popover-foreground: #eeebdd;
+  --primary: #7a9a55;
+  --primary-foreground: #0d120a;
+  --secondary: #1f2a19;
+  --secondary-foreground: #eeebdd;
+  --muted: #1f2a19;
+  --muted-foreground: #d9d2b599;
+  --accent: #1f2a19;
+  --accent-foreground: #eeebdd;
+  --destructive: #d9785a;
+  --destructive-foreground: #0d120a;
+  --border: #d9d2b51f;
+  --input: #d9d2b526;
+  --ring: #7a9a55;
+  --sidebar: #0d120a;
+  --sidebar-foreground: #d9d2b5cc;
+  --sidebar-border: #d9d2b51f;
+  --sidebar-accent: #7a9a5526;
+  --sidebar-accent-foreground: #eeebdd;
 
-  /* Military palette — night ops */
-  --olive-bright: oklch(0.56 0.11 135);
-  --olive: oklch(0.48 0.09 132);
-  --olive-deep: oklch(0.82 0.04 95);
-  --khaki: oklch(0.17 0.02 110);
-  --stencil: oklch(0.72 0.02 90);
-  --gold: oklch(0.76 0.11 85);
+  --olive-bright: #7a9a55;
+  --olive: #5e7a45;
+  --olive-deep: #eeebdd;
+  --khaki: #172013;
+  --stencil: #d9d2b599;
+  --gold: #c9a54a;
   color-scheme: dark;
 }
 
@@ -650,6 +655,51 @@
   .dark .adm-nav-status {
     border-top-color: oklch(0.92 0.02 90 / 12%);
   }
+
+  /* ─── Painel · design aprovado no pen.dev (06/11/2026) ─────────────── */
+  .adm2de-shell :is(h1, h2, h3, h4) { letter-spacing: 0; text-transform: none; }
+  .dark body { background-image: none; }
+  .dark .field-paper {
+    background: var(--color-card);
+    border-color: var(--color-border);
+    box-shadow: none;
+  }
+  .dark .stencil {
+    font-family: var(--font-mono);
+    letter-spacing: 0.12em;
+    color: var(--color-muted-foreground);
+  }
+  .dark .tag-rank {
+    background: var(--color-secondary);
+    color: var(--color-khaki-text, #d9d2b5);
+    font-family: var(--font-mono);
+    letter-spacing: 0.12em;
+    clip-path: none;
+    border: 1px solid var(--color-border);
+  }
+  .dark .btn-olive {
+    background: #7a9a55;
+    color: #0d120a;
+    border: 0;
+    box-shadow: none;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+  }
+  .dark .btn-olive:hover { filter: brightness(1.1); transform: none; }
+  .dark .adm-nav-sidebar { background: #0d120a !important; border-color: var(--color-border) !important; }
+  .dark .adm-panel-header,
+  .dark .adm-topbar { background: #10160d !important; border-color: var(--color-border) !important; }
+  .dark .adm-nav-active {
+    background: #7a9a5526 !important;
+    color: #eeebdd !important;
+    box-shadow: none;
+  }
+  .dark .adm-nav-active::before { background: #7a9a55; }
+  .dark .adm-nav-btn:hover:not([data-active="true"]) { box-shadow: none; background: #d9d2b50f; }
+  .dark .adm-nav-sub-active { color: #eeebdd !important; background: #7a9a551a !important; }
+  /* No escuro, --olive-deep vira cor de texto; como borda de "selecionado" fica verde. */
+  .dark .adm2de-shell .border-\(--color-olive-deep\) { border-color: #7a9a55; }
+  .dark .adm-nav-war:not(.adm-nav-active) { background: transparent !important; color: #d9785a !important; }
 
   /* Central de guerra — radar */
   @keyframes guerra-sweep {

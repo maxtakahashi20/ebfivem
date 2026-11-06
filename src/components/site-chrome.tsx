@@ -1,8 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { motion } from "framer-motion";
 import { MessageSquare } from "lucide-react";
 import logo from "@/assets/logo-2de.png";
-import { AdminThemeToggle } from "@/components/admin/AdminThemeToggle";
 
 const DISCORD_URL = "https://discord.gg/2TETa9Z4Fu";
 
@@ -18,40 +16,6 @@ const links = [
 
 export function isPainelPath(pathname: string) {
   return /^\/(painel|adm2de)(\/|$)/i.test(pathname);
-}
-
-function BrandMark() {
-  return (
-    <Link to="/" className="flex items-center gap-3">
-      <img src={logo} alt="2ª DE" className="h-12 w-12 object-contain drop-shadow" />
-      <div className="leading-tight">
-        <div className="font-display text-xl tracking-widest text-(--color-olive-deep)">
-          2ª DE
-        </div>
-        <div className="stencil text-[10px]">2ª DIVISÃO DO EXÉRCITO</div>
-      </div>
-    </Link>
-  );
-}
-
-/** Painel /painel: logo + título + toggle de tema. */
-export function PanelBrandHeader() {
-  return (
-    <motion.header
-      initial={{ opacity: 0, y: -8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className="adm-panel-header border-b-2 border-(--color-olive-deep) bg-khaki/70 backdrop-blur supports-backdrop-filter:bg-khaki/60 sticky top-0 z-40 shrink-0"
-    >
-      <div className="px-6 py-3 flex items-center justify-between gap-4">
-        <BrandMark />
-        <div className="flex items-center gap-3">
-          <div id="panel-header-slot" />
-          <AdminThemeToggle />
-        </div>
-      </div>
-    </motion.header>
-  );
 }
 
 /** Site público: header completo com navegação. */

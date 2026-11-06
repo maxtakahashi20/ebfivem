@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Check, Lock, Send, Undo2 } from "lucide-react";
+import { StatusBadge, type Tom } from "@/components/admin/panel-ui";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,11 +16,15 @@ import {
 } from "@/lib/patrulha.functions";
 import { getDiscordSessionToken } from "@/lib/painel-auth-storage";
 
-const STATUS_COR: Record<RelatorioPatrulha["status"], string> = {
-  enviado: "bg-yellow-600",
-  aprovado: "bg-green-700",
-  devolvido: "bg-(--color-destructive)",
+const STATUS_VISUAL: Record<RelatorioPatrulha["status"], { tom: Tom; label: string }> = {
+  enviado: { tom: "alerta", label: "Aguardando" },
+  aprovado: { tom: "ok", label: "Aprovado" },
+  devolvido: { tom: "perigo", label: "Devolvido" },
 };
+
+/** Rótulo mono em cima, campo na fonte normal. */
+const LBL =
+  "flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground [&_:is(input,textarea,select)]:font-body [&_:is(input,textarea,select)]:normal-case [&_:is(input,textarea,select)]:tracking-normal [&_:is(input,textarea,select)]:text-sm [&_:is(input,textarea,select)]:text-foreground [&_:is(input,textarea,select)]:bg-background";
 
 const hoje = () => new Date().toLocaleDateString("sv-SE");
 const VAZIO = {
@@ -135,14 +139,14 @@ export function PatrulhaPE() {
     return (
       <div>
         {header}
-        <Card className="field-paper border-0 shadow-none">
-          <CardContent className="py-10 text-center">
-            <p className="font-display tracking-widest text-(--color-olive-deep)">Acesso negado</p>
-            <p className="text-xs font-mono text-(--color-stencil)">
-              Área da Polícia do Exército. Peça ao comando o cargo da PE no Discord.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="mx-auto mt-10 max-w-115 flex flex-col items-center gap-4 border border-border bg-card p-10 text-center">
+          <span className="size-16 flex items-center justify-center border border-(--color-gold)">
+            <Lock className="size-7 text-(--color-gold)" />
+          </span>
+          <span className="font-mono text-xs tracking-[0.14em] text-(--color-gold)">ACESSO NEGADO</span>
+          <p className="font-display text-[26px] font-semibold">Área da Polícia do Exército.</p>
+          <p className="text-[15px] text-muted-foreground">Peça ao comando o cargo da PE no Discord.</p>
+        </div>
       </div>
     );
   }
@@ -153,24 +157,25 @@ export function PatrulhaPE() {
 
       <Card className="field-paper border-0 shadow-none">
         <CardContent className="pt-6">
-          <form onSubmit={onEnviar} className="grid gap-3 sm:grid-cols-3">
-            <label className="text-xs font-mono">
+          <div className="mb-4 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Novo relatório</div>
+          <form onSubmit={onEnviar} className="grid gap-4 sm:grid-cols-3">
+            <label className={`${LBL}`}>
               Data
               <Input type="date" required max={hoje()} {...campo("data")} />
             </label>
-            <label className="text-xs font-mono">
+            <label className={`${LBL}`}>
               Início
               <Input type="time" required {...campo("inicio")} />
             </label>
-            <label className="text-xs font-mono">
+            <label className={`${LBL}`}>
               Fim
               <Input type="time" required {...campo("fim")} />
             </label>
-            <label className="text-xs font-mono">
+            <label className={`${LBL}`}>
               Viatura / prefixo
               <Input required maxLength={60} placeholder="VTR PE-01" {...campo("viatura")} />
             </label>
-            <label className="text-xs font-mono sm:col-span-2">
+            <label className={`${LBL} sm:col-span-2`}>
               Área ou rota
               <Input
                 required
@@ -179,7 +184,7 @@ export function PatrulhaPE() {
                 {...campo("area")}
               />
             </label>
-            <label className="text-xs font-mono sm:col-span-3">
+            <label className={`${LBL} sm:col-span-3`}>
               Equipe
               <Input
                 required
@@ -188,37 +193,37 @@ export function PatrulhaPE() {
                 {...campo("equipe")}
               />
             </label>
-            <label className="text-xs font-mono">
+            <label className={`${LBL}`}>
               Abordagens
               <Input type="number" min={0} max={999} required {...campo("abordagens")} />
             </label>
-            <label className="text-xs font-mono">
+            <label className={`${LBL}`}>
               Prisões
               <Input type="number" min={0} max={999} required {...campo("prisoes")} />
             </label>
-            <label className="text-xs font-mono">
+            <label className={`${LBL}`}>
               Apreensões
               <Input type="number" min={0} max={999} required {...campo("apreensoes")} />
             </label>
-            <label className="text-xs font-mono sm:col-span-3">
+            <label className={`${LBL} sm:col-span-3`}>
               Ocorrências
               <Textarea maxLength={3000} rows={3} {...campo("ocorrencias")} />
             </label>
-            <label className="text-xs font-mono sm:col-span-3">
+            <label className={`${LBL} sm:col-span-3`}>
               Observações
               <Textarea maxLength={2000} rows={2} {...campo("observacoes")} />
             </label>
-            <div className="sm:col-span-3">
-              <Button type="submit" disabled={enviando}>
-                {enviando ? "Enviando…" : "Enviar relatório"}
-              </Button>
+            <div className="sm:col-span-3 flex justify-end">
+              <button type="submit" disabled={enviando} className="btn-olive inline-flex items-center gap-2 px-5 py-2.5 text-sm disabled:opacity-50">
+                <Send className="size-4" /> {enviando ? "ENVIANDO…" : "ENVIAR RELATÓRIO"}
+              </button>
             </div>
           </form>
         </CardContent>
       </Card>
 
-      <div className="flex flex-wrap gap-2 items-end">
-        <label className="text-xs font-mono">
+      <div className="flex flex-wrap gap-3 items-end">
+        <label className={`${LBL}`}>
           {permissao.comando ? "Militar, equipe ou área" : "Equipe ou área"}
           <Input
             value={filtro.busca}
@@ -226,7 +231,7 @@ export function PatrulhaPE() {
             onChange={(e) => setFiltro((f) => ({ ...f, busca: e.target.value }))}
           />
         </label>
-        <label className="text-xs font-mono">
+        <label className={`${LBL}`}>
           De
           <Input
             type="date"
@@ -234,7 +239,7 @@ export function PatrulhaPE() {
             onChange={(e) => setFiltro((f) => ({ ...f, desde: e.target.value }))}
           />
         </label>
-        <label className="text-xs font-mono">
+        <label className={`${LBL}`}>
           Até
           <Input
             type="date"
@@ -242,10 +247,10 @@ export function PatrulhaPE() {
             onChange={(e) => setFiltro((f) => ({ ...f, ate: e.target.value }))}
           />
         </label>
-        <label className="text-xs font-mono">
+        <label className={`${LBL}`}>
           Situação
           <select
-            className="block h-9 border px-2 bg-transparent"
+            className="block h-9 border border-input px-2"
             value={filtro.status}
             onChange={(e) => setFiltro((f) => ({ ...f, status: e.target.value }))}
           >
@@ -258,50 +263,54 @@ export function PatrulhaPE() {
       </div>
 
       {relatorios.length === 0 && (
-        <p className="text-sm text-(--color-stencil) font-mono">Nenhum relatório encontrado.</p>
+        <p className="py-8 text-center font-mono text-xs text-muted-foreground">NENHUM RELATÓRIO ENCONTRADO</p>
       )}
       {relatorios.map((r) => (
-        <Card key={r.id} className="field-paper border-0 shadow-none">
-          <CardContent className="pt-6 space-y-2 text-sm">
+        <Card key={r.id} className={`field-paper border-0 shadow-none ${r.status === "enviado" && permissao.comando ? "border-l-3! border-l-(--color-olive-bright)!" : ""}`}>
+          <CardContent className="pt-6 space-y-3 text-sm">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge className={STATUS_COR[r.status]}>{r.status.toUpperCase()}</Badge>
-              <span className="font-mono">
+              <StatusBadge tom={STATUS_VISUAL[r.status].tom}>{STATUS_VISUAL[r.status].label}</StatusBadge>
+              <span className="font-display text-lg">
                 {r.data.split("-").reverse().join("/")} · {r.inicio.slice(0, 5)}–{r.fim.slice(0, 5)}
               </span>
-              <span className="font-display">{r.autor_nome}</span>
-              <span className="text-(--color-stencil)">
+              <span className="text-foreground">{r.autor_nome}</span>
+              <span className="text-muted-foreground">
                 · {r.viatura} · {r.area}
               </span>
             </div>
             <p>
-              <span className="stencil text-[10px]">EQUIPE </span>
+              <span className="font-mono text-[10px] tracking-[0.14em] text-muted-foreground">EQUIPE </span>
               {r.equipe}
             </p>
-            <p className="font-mono text-xs">
+            <p className="font-mono text-xs text-muted-foreground">
               Abordagens {r.abordagens} · Prisões {r.prisoes} · Apreensões {r.apreensoes}
             </p>
             {r.ocorrencias && <p className="whitespace-pre-wrap">{r.ocorrencias}</p>}
             {r.observacoes && (
-              <p className="whitespace-pre-wrap text-(--color-stencil)">{r.observacoes}</p>
+              <p className="whitespace-pre-wrap text-muted-foreground">{r.observacoes}</p>
             )}
             {r.parecer && (
-              <p className="text-xs border-l-2 pl-2">
-                <span className="stencil text-[10px]">PARECER </span>
+              <p className="text-[13px] border-l-2 border-(--color-destructive)/60 pl-2.5 text-[#e8a58c]">
+                <span className="font-mono text-[10px] tracking-[0.14em]">PARECER </span>
                 {r.parecer} {r.revisado_por && <span>— {r.revisado_por}</span>}
               </p>
             )}
             {permissao.comando && r.status === "enviado" && (
-              <div className="flex gap-2 pt-1">
-                <Button size="sm" onClick={() => void onDecidir(r.id, "aprovado")}>
-                  Aprovar
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
+              <div className="flex justify-end gap-2.5 pt-1">
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-2 border border-(--color-destructive) px-4 py-2 font-display text-sm tracking-[0.1em] text-(--color-destructive) hover:bg-(--color-destructive)/10"
                   onClick={() => void onDecidir(r.id, "devolvido")}
                 >
-                  Devolver
-                </Button>
+                  <Undo2 className="size-4" /> DEVOLVER
+                </button>
+                <button
+                  type="button"
+                  className="btn-olive inline-flex items-center gap-2 px-4 py-2 text-sm"
+                  onClick={() => void onDecidir(r.id, "aprovado")}
+                >
+                  <Check className="size-4" /> APROVAR
+                </button>
               </div>
             )}
           </CardContent>
