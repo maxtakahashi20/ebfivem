@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -94,6 +95,13 @@ function RootShell({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
+        {/* Sem JavaScript as animações não rodam: mostra tudo em vez de deixar invisível. */}
+        <noscript
+          dangerouslySetInnerHTML={{
+            __html:
+              '<style>[style*="opacity:0"],[style*="opacity: 0"]{opacity:1!important;transform:none!important;filter:none!important}</style>',
+          }}
+        />
       </head>
       <body>
         {children}
@@ -106,6 +114,11 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // Primeira carga: o HTML do servidor já chega visível; a transição só roda ao trocar de página.
+  const navegou = useRef(false);
+  useEffect(() => {
+    navegou.current = true;
+  }, []);
   const painel =
     isPainelPath(pathname) ||
     (typeof window !== "undefined" && isPainelPath(window.location.pathname));
@@ -125,7 +138,7 @@ function RootComponent() {
             <motion.main
               key={pathname}
               className="flex-1"
-              initial={{ opacity: 0, y: 40 }}
+              initial={navegou.current ? { opacity: 0, y: 40 } : false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, ease: EASE }}
             >
