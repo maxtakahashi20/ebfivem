@@ -6,7 +6,7 @@ import { Eyebrow, Tape, btnGhostDark, btnPrimary } from "@/components/site-ui";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "2 DE" },
+      { title: "2ª DE" },
       { name: "description", content: "Portal informativo da 2ª DE. Alistamento milsim no FiveM. Fundada em 8 de outubro de 2023." },
     ],
   }),

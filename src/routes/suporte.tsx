@@ -51,7 +51,7 @@ function persist(t: StoredTicket) {
 export const Route = createFileRoute("/suporte")({
   head: () => ({
     meta: [
-      { title: "Suporte ao Conscrito · 2 DE" },
+      { title: "Suporte ao Conscrito · 2ª DE" },
       {
         name: "description",
         content:

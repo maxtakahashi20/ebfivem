@@ -20,7 +20,7 @@ export const Route = createFileRoute("/acompanhar")({
   validateSearch: (s) => searchSchema.parse(s),
   head: () => ({
     meta: [
-      { title: "Acompanhar Inscrição · 2 DE" },
+      { title: "Acompanhar Inscrição · 2ª DE" },
       {
         name: "description",
         content: "Acompanhe o status do seu alistamento com o protocolo e o RG da ficha.",

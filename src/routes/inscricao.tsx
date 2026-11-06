@@ -11,7 +11,7 @@ import { baixarComprovante } from "@/lib/inscricao-pdf";
 export const Route = createFileRoute("/inscricao")({
   head: () => ({
     meta: [
-      { title: "Alistamento · 2 DE" },
+      { title: "Alistamento · 2ª DE" },
       { name: "description", content: "Ficha oficial de alistamento da 2ª DE — 2ª Divisão do Exército." },
     ],
   }),

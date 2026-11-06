@@ -12,7 +12,7 @@ const FotoGaleriaSection = lazy(() =>
 export const Route = createFileRoute("/organograma")({
   head: () => ({
     meta: [
-      { title: "Organograma · 2 DE · Composição da Tropa" },
+      { title: "Organograma · 2ª DE · Composição da Tropa" },
       {
         name: "description",
         content:
