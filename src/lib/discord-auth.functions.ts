@@ -37,11 +37,25 @@ type DiscordApiErrorBody = { message?: string; code?: number };
 async function discordApi<T>(
   path: string,
   opts: { token: string; type?: "Bearer" | "Bot" },
+  tentativa = 0,
 ): Promise<T> {
   const authType = opts.type ?? "Bearer";
-  const res = await fetch(`https://discord.com/api${path}`, {
-    headers: { Authorization: `${authType} ${opts.token}` },
-  });
+  let res: Response;
+  try {
+    res = await fetch(`https://discord.com/api${path}`, {
+      headers: { Authorization: `${authType} ${opts.token}` },
+    });
+  } catch (e) {
+    if (tentativa > 0) throw e;
+    await new Promise((r) => setTimeout(r, 500));
+    return discordApi<T>(path, opts, 1);
+  }
+  // Limite do Discord (429) ou instabilidade (5xx): espera o que ele pedir (até 3 s) e tenta uma vez.
+  if ((res.status === 429 || res.status >= 500) && tentativa === 0) {
+    const espera = Math.min(3000, Number(res.headers.get("retry-after") ?? 0.5) * 1000 || 500);
+    await new Promise((r) => setTimeout(r, espera));
+    return discordApi<T>(path, opts, 1);
+  }
   if (!res.ok) {
     const txt = await res.text().catch(() => "");
     let parsed: DiscordApiErrorBody = {};
@@ -126,6 +140,8 @@ const CARGOS_CACHE_MS = 60_000;
 /** Se o Discord falhar, vale o último cargo confirmado pelo bot há até 10 min; depois disso, recusa. */
 const CARGOS_RESERVA_MS = 10 * 60_000;
 const cacheCargos = new Map<string, { roles: DiscordRoleTag[]; nick: string | null; em: number }>();
+/** Consultas em andamento: várias checagens do mesmo usuário ao mesmo tempo viram uma chamada só. */
+const buscando = new Map<string, Promise<{ roles: DiscordRoleTag[]; nick: string | null }>>();
 
 const foraDoServidor = (e: unknown) =>
   isDiscordApiError(e) && (e.discordCode === 10007 || e.discordCode === 10013);
@@ -143,7 +159,14 @@ async function membroAtual(
   const salvo = cacheCargos.get(profile.id);
   if (salvo && Date.now() - salvo.em < CARGOS_CACHE_MS) return salvo;
   try {
-    const atual = await fetchRolesViaBot(guildId, profile.id, botToken);
+    let consulta = buscando.get(profile.id);
+    if (!consulta) {
+      consulta = fetchRolesViaBot(guildId, profile.id, botToken).finally(() =>
+        buscando.delete(profile.id),
+      );
+      buscando.set(profile.id, consulta);
+    }
+    const atual = await consulta;
     cacheCargos.set(profile.id, { ...atual, em: Date.now() });
     return atual;
   } catch (e) {
