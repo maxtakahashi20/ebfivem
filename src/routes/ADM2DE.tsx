@@ -139,7 +139,16 @@ function Comando() {
             {authError ?? (checkingDiscord ? "VERIFICANDO SESSÃO…" : "REDIRECIONANDO PARA O DISCORD…")}
           </p>
           {authError && (
-            <button type="button" className="btn-olive w-full mt-6" onClick={iniciarLoginDiscord}>
+            <button
+              type="button"
+              className="btn-olive w-full mt-6"
+              // Sessão ainda guardada = falha passageira: confere de novo em vez de pedir login.
+              onClick={() =>
+                localStorage.getItem(DISCORD_SESSION_KEY)
+                  ? window.location.reload()
+                  : iniciarLoginDiscord()
+              }
+            >
               ▸ TENTAR NOVAMENTE
             </button>
           )}

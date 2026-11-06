@@ -271,7 +271,8 @@ export const obterUrlDiscordOAuth = createServerFn({ method: "POST" }).handler(a
     response_type: "code",
     scope: "identify guilds guilds.members.read",
     state,
-    prompt: "consent",
+    // Quem já autorizou o app volta direto, sem a tela de consentimento do Discord.
+    prompt: "none",
   });
   return {
     url: `https://discord.com/api/oauth2/authorize?${params}`,

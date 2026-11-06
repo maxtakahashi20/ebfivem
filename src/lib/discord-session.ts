@@ -1,6 +1,7 @@
 import type { DiscordProfile } from "@/lib/discord-oauth";
 
-const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+// Renovada a cada visita; cargos e permanência no servidor são conferidos a cada ação.
+const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 type SessionPayload = DiscordProfile & { exp: number };
 
