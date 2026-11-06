@@ -27,6 +27,7 @@ q -c "create role anon; create role authenticated; create role service_role bypa
   alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
   alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;"
 for f in supabase/migrations/*.sql; do q -f - < "$f" >/dev/null; done
+q -c "insert into public.militares (nome, discord_user_id, alto_comando) values ('E2E tag', '900000000000000009', true)"
 
 JS=$(openssl rand -hex 32)
 jwt() {

@@ -48,17 +48,24 @@ export function hasFullAccess(
   return isDesenvolvedor(profile) || isAltoComando(profile);
 }
 
-export type Papel = "membro" | "instrutor" | "alto-comando";
+export type Papel = "membro" | "instrutor" | "alto-comando" | "desenvolvedor";
 
-const NIVEL: Record<Papel, number> = { membro: 0, instrutor: 1, "alto-comando": 2 };
+const NIVEL: Record<Papel, number> = { membro: 0, instrutor: 1, "alto-comando": 2, desenvolvedor: 3 };
 
 export function papelAlcanca(papel: Papel, exigido: Papel): boolean {
   return NIVEL[papel] >= NIVEL[exigido];
 }
 
-/** `DISCORD_INSTRUTOR_ROLE_IDS=id1,id2,...`; vazio = só o Alto Comando atua no recrutamento. */
-export function papelDoPerfil(profile: Pick<DiscordProfile, "roles"> | null | undefined): Papel {
-  if (hasFullAccess(profile)) return "alto-comando";
+/**
+ * `DISCORD_INSTRUTOR_ROLE_IDS=id1,id2,...`; vazio = só o Alto Comando atua no recrutamento.
+ * `altoComandoNoEfetivo`: tag dada pelo desenvolvedor na tela do efetivo (coluna militares.alto_comando).
+ */
+export function papelDoPerfil(
+  profile: Pick<DiscordProfile, "roles"> | null | undefined,
+  altoComandoNoEfetivo = false,
+): Papel {
+  if (isDesenvolvedor(profile)) return "desenvolvedor";
+  if (altoComandoNoEfetivo || isAltoComando(profile)) return "alto-comando";
   return profileHasAnyRole(profile, parseRoleIds(process.env.DISCORD_INSTRUTOR_ROLE_IDS))
     ? "instrutor"
     : "membro";

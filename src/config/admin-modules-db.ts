@@ -110,6 +110,9 @@ export const MODULO_DB: Partial<Record<AdminView, ModuloDbSpec>> = {
       patente: str(r.patente) || "—",
       discord: str(r.funcao) || (r.discord_user_id ? "Vinculado" : "Manual"),
       status: str(r.status) || "Autenticado",
+      __id: str(r.id),
+      __discord: str(r.discord_user_id),
+      __alto: r.alto_comando === true ? "1" : "",
     }),
   },
   "efetivo-instrutores": {

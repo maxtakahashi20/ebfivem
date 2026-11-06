@@ -11,8 +11,7 @@ import {
   Eye,
   Gavel,
   Radio,
-  Settings,
-  Lock,
+  Code2,
   UserCircle,
   FileText,
   LifeBuoy,
@@ -67,6 +66,7 @@ const VIEWS_MEMBRO = new Set<AdminView>(["dashboard", "perfil", "documentos"]);
 /** Quem pode abrir cada tela. O que não estiver listado é do Alto Comando. */
 export function papelDaView(view: AdminView): Papel {
   if (VIEWS_MEMBRO.has(view)) return "membro";
+  if (view.startsWith("sys-") || view.startsWith("restrito-")) return "desenvolvedor";
   return view.startsWith("recrutamento-") ? "instrutor" : "alto-comando";
 }
 
@@ -108,7 +108,7 @@ const PLACEHOLDER_COPY: Record<string, { title: string; desc: string; tag?: stri
   "sys-seguranca": { title: "Segurança", desc: "Chaves e permissões.", tag: "SISTEMA" },
   "sys-sessoes": { title: "Sessões", desc: "Sessões administrativas.", tag: "SISTEMA" },
   "sys-backup": { title: "Backup", desc: "Rotinas de backup.", tag: "SISTEMA" },
-  "restrito-intel": { title: "Inteligência restrita", desc: "Somente alto comando.", tag: "RESTRITO" },
+  "restrito-intel": { title: "Inteligência restrita", desc: "Somente desenvolvedor.", tag: "RESTRITO" },
   "restrito-ops": { title: "Operações sigilosas", desc: "Classificado.", tag: "RESTRITO" },
   "restrito-docs": { title: "Documentos internos", desc: "Arquivo restrito.", tag: "RESTRITO" },
   "suporte-admin": {
@@ -262,29 +262,20 @@ export const NAV_ENTRIES: NavEntry[] = [
     },
   },
   {
+    // Só o desenvolvedor vê (papelDaView: sys-* e restrito-*).
     type: "group",
     group: {
-      id: "sistema",
-      label: "Sistema",
-      icon: Settings,
+      id: "desenvolvimento",
+      label: "Desenvolvimento",
+      icon: Code2,
       children: [
         { id: "sys-db", label: "Banco de dados" },
-        { id: "sys-api", label: "API" },
+        { id: "sys-api", label: "Requisições e API" },
         { id: "sys-seguranca", label: "Segurança" },
         { id: "sys-sessoes", label: "Sessões" },
-      ],
-    },
-  },
-  {
-    type: "group",
-    group: {
-      id: "restrito",
-      label: "Área Restrita",
-      icon: Lock,
-      children: [
-        { id: "restrito-intel", label: "Inteligência" },
-        { id: "restrito-ops", label: "Operações sigilosas" },
-        { id: "restrito-docs", label: "Documentos internos" },
+        { id: "restrito-intel", label: "Área Restrita · Inteligência" },
+        { id: "restrito-ops", label: "Área Restrita · Operações sigilosas" },
+        { id: "restrito-docs", label: "Área Restrita · Documentos internos" },
       ],
     },
   },

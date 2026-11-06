@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { useDiscordSession } from "@/hooks/useDiscordSession";
 import { getDiscordSessionToken } from "@/lib/painel-auth-storage";
+import { papelAlcanca } from "@/lib/access-control";
 import {
   encerrarTicketAdmin,
   enviarMensagemAdmin,
@@ -72,7 +73,7 @@ export function SuporteAdmin() {
   }, [listarMensagens, selected]);
 
   useEffect(() => {
-    if (papel !== "alto-comando") return;
+    if (!papelAlcanca(papel, "alto-comando")) return;
     void reloadTickets();
     const id = setInterval(reloadTickets, POLL_MS * 2);
     return () => clearInterval(id);
@@ -132,7 +133,7 @@ export function SuporteAdmin() {
     }
   };
 
-  if (!verificandoPapel && papel !== "alto-comando") {
+  if (!verificandoPapel && !papelAlcanca(papel, "alto-comando")) {
     return (
       <div>
         <AdminPageHeader

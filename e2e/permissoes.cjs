@@ -12,12 +12,14 @@ const sessao = (id, cargos, segredo = SEGREDO, exp = Date.now() + 3600e3) => {
   return body + "." + crypto.createHmac("sha256", segredo).update(body).digest("base64url");
 };
 
-const NIVEL = { membro: 0, instrutor: 1, alto: 2, dev: 2 };
+const NIVEL = { membro: 0, instrutor: 1, alto: 2, alto_tag: 2, dev: 3 };
 const SESSOES = {
   membro: sessao("900000000000000003", []),
   instrutor: sessao("900000000000000005", ["111"]),
   alto: sessao("900000000000000004", ["222"]),
   dev: sessao("900000000000000006", ["333"]),
+  // Sem cargo no Discord; Alto Comando pela tag no efetivo (e2e/ambiente.sh).
+  alto_tag: sessao("900000000000000009", []),
   forjada: sessao("900000000000000007", ["222"], "segredo-errado"),
   expirada: sessao("900000000000000008", ["222"], SEGREDO, Date.now() - 1000),
   chave_antiga: "26L5",
@@ -30,7 +32,8 @@ const U = "/src/lib/suporte.functions.ts";
 const D = "/src/lib/discord.functions.ts";
 const P = "/src/lib/admin.functions.ts";
 const ID = "00000000-0000-4000-8000-000000000000";
-const VIEWS_ALTO = ["intel-sigilosos", "intel-blacklist", "disc-sindicancias", "discord-webhooks", "efetivo-ativos", "ops-ativas", "logs-geral", "sys-db", "restrito-docs", "view-inventada"];
+const VIEWS_ALTO = ["intel-sigilosos", "intel-blacklist", "disc-sindicancias", "discord-webhooks", "efetivo-ativos", "ops-ativas", "logs-geral", "view-inventada"];
+const VIEWS_DEV = ["sys-db", "sys-api", "sys-seguranca", "restrito-docs", "restrito-intel"];
 const casos = (session) => [
   [0, P, "getPainelStatus", { session }],
   [0, I, "obterEstatisticas", { session }],
@@ -40,9 +43,11 @@ const casos = (session) => [
   [1, I, "excluirInscricao", { session, id: ID }],
   [1, A, "carregarModuloAdmin", { session, view: "recrutamento-entrevistas" }],
   ...VIEWS_ALTO.map((view) => [2, A, "carregarModuloAdmin", { session, view }]),
+  ...VIEWS_DEV.map((view) => [3, A, "carregarModuloAdmin", { session, view }]),
+  [3, A, "definirAltoComando", { session, militarId: ID, ativo: false }],
   [2, A, "criarRegistroModulo", { session, view: "disc-expulsoes", valores: { militar: "E2E", motivo: "e2e" } }],
   [2, A, "atualizarStatusDiscordBot", { session }],
-  [2, A, "baixarPdfRestrito", { session, recordId: ID }],
+  [3, A, "baixarPdfRestrito", { session, recordId: ID }],
   [2, D, "enviarComunicadoDiscord", { session, titulo: "Título e2e", mensagem: "Mensagem e2e", tipo: "informativo" }],
   [2, U, "listarTicketsAdmin", { session }],
 ];

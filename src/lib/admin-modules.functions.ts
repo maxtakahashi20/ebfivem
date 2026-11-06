@@ -381,7 +381,7 @@ export const baixarPdfRestrito = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    const autor = await exigirPapel(data.session, "alto-comando");
+    const autor = await exigirPapel(data.session, "desenvolvedor");
 
     const { data: rec, error } = await supabaseAdmin
       .from("documentos_restritos")
@@ -410,7 +410,7 @@ export const removerPdfRestrito = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    const autor = await exigirPapel(data.session, "alto-comando");
+    const autor = await exigirPapel(data.session, "desenvolvedor");
 
     const { data: rec, error } = await supabaseAdmin
       .from("documentos_restritos")
@@ -438,5 +438,30 @@ export const removerPdfRestrito = createServerFn({ method: "POST" })
     }).catch(() => {});
 
     await registrarAuditoria(autor, `PDF removido (${rec.pdf_path})`, "restrito");
+    return { ok: true };
+  });
+
+/** Tag de Alto Comando no efetivo: só o desenvolvedor concede ou retira. */
+export const definirAltoComando = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z
+      .object({ session: z.string().min(1), militarId: z.string().uuid(), ativo: z.boolean() })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const autor = await exigirPapel(data.session, "desenvolvedor");
+    const { data: militar, error } = await supabaseAdmin
+      .from("militares")
+      .update({ alto_comando: data.ativo })
+      .eq("id", data.militarId)
+      .select("nome, discord_user_id")
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!militar) throw new Error("Militar não encontrado.");
+    await registrarAuditoria(
+      autor,
+      `${data.ativo ? "Concedeu" : "Retirou"} Alto Comando: ${militar.nome}`,
+      `militar ${data.militarId} · discord ${militar.discord_user_id ?? "sem vínculo"}`,
+    );
     return { ok: true };
   });

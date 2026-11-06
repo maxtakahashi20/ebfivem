@@ -18,7 +18,8 @@ import {
   upsertDiscordMembro,
   vincularDiscordNaInscricao,
 } from "@/lib/identidade-db";
-import { isDesenvolvedor, papelDoPerfil } from "@/lib/access-control";
+import { isDesenvolvedor } from "@/lib/access-control";
+import { papelAtual } from "@/lib/papel.server";
 
 function resolveRedirectUri(): string {
   const { redirectUri } = discordConfig();
@@ -326,7 +327,7 @@ export const completarDiscordOAuth = createServerFn({ method: "POST" })
       profile,
       session,
       inscricaoId: inscricao?.id ?? null,
-      papel: papelDoPerfil(profile),
+      papel: await papelAtual(profile),
       desenvolvedor: isDesenvolvedor(profile),
     };
   });
@@ -342,7 +343,7 @@ export const validarSessaoDiscord = createServerFn({ method: "POST" })
       return {
         profile,
         session: data.session,
-        papel: papelDoPerfil(profile),
+        papel: await papelAtual(profile),
         desenvolvedor: isDesenvolvedor(profile),
       };
     }
@@ -355,7 +356,7 @@ export const validarSessaoDiscord = createServerFn({ method: "POST" })
     return {
       profile: refreshed,
       session,
-      papel: papelDoPerfil(refreshed),
+      papel: await papelAtual(refreshed),
       desenvolvedor: isDesenvolvedor(refreshed),
     };
   });
@@ -378,7 +379,7 @@ export const liberarAcessoPainelDiscord = createServerFn({ method: "POST" })
     const inscricao = await buscarInscricaoPorDiscordId(profile.id, profile.username);
     await upsertDiscordMembro(profile, inscricao?.id ?? null);
     await sincronizarMilitarEfetivo(profile);
-    return { profile, papel: papelDoPerfil(profile), desenvolvedor: isDesenvolvedor(profile) };
+    return { profile, papel: await papelAtual(profile), desenvolvedor: isDesenvolvedor(profile) };
   });
 
 export const buscarInscricaoPorDiscord = createServerFn({ method: "POST" })

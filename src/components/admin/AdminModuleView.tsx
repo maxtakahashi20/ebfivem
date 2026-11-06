@@ -17,6 +17,7 @@ import {
   baixarPdfRestrito,
   carregarModuloAdmin,
   criarRegistroModulo,
+  definirAltoComando,
   removerPdfRestrito,
   uploadPdfRestrito,
 } from "@/lib/admin-modules.functions";
@@ -50,9 +51,23 @@ export function AdminModuleView({ view }: { view: AdminView }) {
   const uploadPdf = useServerFn(uploadPdfRestrito);
   const downloadPdf = useServerFn(baixarPdfRestrito);
   const deletePdf = useServerFn(removerPdfRestrito);
+  const salvarAltoComando = useServerFn(definirAltoComando);
 
   const acessoNegado = !verificandoPapel && !papelAlcanca(papel, papelDaView(view));
   const supportsPdf = PDF_RESTRITO_VIEWS.has(view);
+  const podeDarAltoComando = view === "efetivo-ativos" && papel === "desenvolvedor";
+
+  const alternarAltoComando = async (militarId: string, ativo: boolean) => {
+    try {
+      await salvarAltoComando({ data: { session: getDiscordSessionToken(), militarId, ativo } });
+      setRows((atual) =>
+        atual.map((r) => (r.__id === militarId ? { ...r, __alto: ativo ? "1" : "" } : r)),
+      );
+      toast.success(ativo ? "Alto Comando concedido" : "Alto Comando retirado");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao salvar a tag");
+    }
+  };
 
   const reload = useCallback(() => {
     if (!usesDb(view)) return;
@@ -307,6 +322,9 @@ export function AdminModuleView({ view }: { view: AdminView }) {
                       </TableHead>
                     ))}
                     {supportsPdf && <TableHead className="stencil text-[10px]">AÇÕES</TableHead>}
+                    {podeDarAltoComando && (
+                      <TableHead className="stencil text-[10px]">ALTO COMANDO</TableHead>
+                    )}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -347,6 +365,21 @@ export function AdminModuleView({ view }: { view: AdminView }) {
                                 <span className="text-(--color-stencil)">sem PDF</span>
                               )}
                             </div>
+                          </TableCell>
+                        )}
+                        {podeDarAltoComando && (
+                          <TableCell className="text-xs">
+                            {!row.__discord ? (
+                              <span className="text-(--color-stencil)">sem Discord</span>
+                            ) : (
+                              <button
+                                type="button"
+                                className={`btn-ghost-olive text-[10px] px-2 py-1 ${row.__alto ? "text-(--color-destructive)" : ""}`}
+                                onClick={() => void alternarAltoComando(recordId, !row.__alto)}
+                              >
+                                {row.__alto ? "✕ Retirar" : "★ Conceder"}
+                              </button>
+                            )}
                           </TableCell>
                         )}
                       </TableRow>

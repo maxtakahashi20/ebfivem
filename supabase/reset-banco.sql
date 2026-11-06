@@ -545,6 +545,9 @@ REVOKE ALL ON FUNCTION public.registrar_tentativa(TEXT, INTEGER, INTEGER) FROM P
 GRANT EXECUTE ON FUNCTION public.registrar_tentativa(TEXT, INTEGER, INTEGER) TO service_role;
 
 
+-- Tag de Alto Comando dada pelo desenvolvedor no efetivo.
+ALTER TABLE public.militares ADD COLUMN IF NOT EXISTS alto_comando BOOLEAN NOT NULL DEFAULT false;
+
 NOTIFY pgrst, 'reload schema';
 
 COMMIT;
