@@ -220,7 +220,7 @@ function Acompanhar() {
                       <button
                         type="button"
                         className="underline text-ink font-mono"
-                        onClick={() => goToPainel("documentos", { protocolo: r.protocolo })}
+                        onClick={() => goToPainel("documentos", { protocolo: r.protocolo, rg: r.rg })}
                       >
                         Gerar documentos militares no painel (PDF) →
                       </button>

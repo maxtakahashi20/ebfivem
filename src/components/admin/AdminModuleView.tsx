@@ -23,6 +23,7 @@ import {
 } from "@/lib/admin-modules.functions";
 import { useDiscordSession } from "@/hooks/useDiscordSession";
 import { getDiscordSessionToken } from "@/lib/painel-auth-storage";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -37,7 +38,7 @@ import {
 
 export function AdminModuleView({ view }: { view: AdminView }) {
   const cfg = getModuleConfig(view);
-  const { papel, loading: verificandoPapel } = useDiscordSession();
+  const { papel, loading: verificandoPapel, erro: erroSessao } = useDiscordSession();
   const [search, setSearch] = useState("");
   const [rows, setRows] = useState(cfg.rows);
   const [stats, setStats] = useState<ModuleStat[]>(cfg.stats);
@@ -53,7 +54,8 @@ export function AdminModuleView({ view }: { view: AdminView }) {
   const deletePdf = useServerFn(removerPdfRestrito);
   const salvarAltoComando = useServerFn(definirAltoComando);
 
-  const acessoNegado = !verificandoPapel && !papelAlcanca(papel, papelDaView(view));
+  const acessoNegado =
+    !verificandoPapel && (erroSessao !== null || !papelAlcanca(papel, papelDaView(view)));
   const supportsPdf = PDF_RESTRITO_VIEWS.has(view);
   const podeDarAltoComando = view === "efetivo-ativos" && papel === "desenvolvedor";
 
@@ -195,6 +197,15 @@ export function AdminModuleView({ view }: { view: AdminView }) {
       toast.error(e instanceof Error ? e.message : "Falha ao remover PDF");
     }
   };
+
+  if (erroSessao) {
+    return (
+      <div>
+        <AdminPageHeader tag={cfg.tag} title={cfg.title} sub={cfg.subtitle} />
+        <ErroVerificacao mensagem={erroSessao} />
+      </div>
+    );
+  }
 
   if (acessoNegado) {
     return (
@@ -558,6 +569,23 @@ function EntrevistasPanel({
             </div>
           ))
         )}
+      </CardContent>
+    </Card>
+  );
+}
+
+/** O cargo não pôde ser conferido (Discord ou banco fora): não é "acesso negado". */
+export function ErroVerificacao({ mensagem }: { mensagem: string }) {
+  return (
+    <Card className="field-paper border-0 shadow-none">
+      <CardContent className="py-10 text-center space-y-3">
+        <p className="font-display tracking-widest text-(--color-olive-deep)">
+          Não foi possível verificar seu cargo
+        </p>
+        <p className="text-xs font-mono text-(--color-stencil) max-w-md mx-auto">{mensagem}</p>
+        <Button size="sm" variant="outline" onClick={() => window.location.reload()}>
+          Tentar de novo
+        </Button>
       </CardContent>
     </Card>
   );

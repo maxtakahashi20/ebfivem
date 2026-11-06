@@ -3,9 +3,10 @@ import { useServerFn } from "@tanstack/react-start";
 import { DocumentosMilitares } from "@/components/military/DocumentosMilitares";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { buscarInscricaoPorDiscord } from "@/lib/discord-auth.functions";
-import { buscarFichaParaDocumento } from "@/lib/inscricoes.functions";
+import { buscarFichaParaDocumento, consultarFicha } from "@/lib/inscricoes.functions";
+import { toast } from "sonner";
 import { getDiscordSessionToken } from "@/lib/painel-auth-storage";
-import { limparPendingDocProtocolo, pendingDocProtocolo } from "@/lib/painel-nav";
+import { limparPendingDocProtocolo, pendingDocProtocolo, pendingDocRg } from "@/lib/painel-nav";
 
 type Inscricao = {
   protocolo: string;
@@ -27,6 +28,7 @@ function normalizeProtocolo(raw: string): string {
 export function DocumentosPainel() {
   const buscarDiscord = useServerFn(buscarInscricaoPorDiscord);
   const buscarFicha = useServerFn(buscarFichaParaDocumento);
+  const consultar = useServerFn(consultarFicha);
   const [militar, setMilitar] = useState<{
     nome: string;
     sobrenome: string;
@@ -47,10 +49,16 @@ export function DocumentosPainel() {
       if (pendingProto) {
         const p = normalizeProtocolo(pendingProto) || pendingProto;
         if (/^EB-[0-9A-F]{8}$/.test(p)) {
-          // Quem não é instrutor cai na própria ficha, logo abaixo.
-          const row = (await buscarFicha({ data: { session, protocolo: p } }).catch(
-            () => null,
-          )) as Inscricao | null;
+          // Com RG (veio de /acompanhar), basta a prova de dono; sem RG, só instrutor.
+          const rg = pendingDocRg();
+          const row = (await (
+            rg
+              ? consultar({ data: { protocolo: p, rg } }).then((r) => r[0] ?? null)
+              : buscarFicha({ data: { session, protocolo: p } })
+          ).catch((e) => {
+            toast.error(e instanceof Error ? e.message : "Não foi possível carregar a ficha.");
+            return null;
+          })) as Inscricao | null;
           if (cancelled) return;
           limparPendingDocProtocolo();
           if (row?.status === "aprovado") {

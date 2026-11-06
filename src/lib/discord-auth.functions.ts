@@ -122,29 +122,44 @@ async function fetchRolesViaBot(
 }
 
 const CARGOS_CACHE_MS = 60_000;
-const cacheCargos = new Map<string, { roles: DiscordRoleTag[]; exp: number }>();
+/** Se o Discord falhar, vale o último cargo confirmado pelo bot há até 10 min; depois disso, recusa. */
+const CARGOS_RESERVA_MS = 10 * 60_000;
+const cacheCargos = new Map<string, { roles: DiscordRoleTag[]; nick: string | null; em: number }>();
 
 const foraDoServidor = (e: unknown) =>
   isDiscordApiError(e) && (e.discordCode === 10007 || e.discordCode === 10013);
 
 /**
- * Cargos de agora, não os gravados na sessão (que vale 7 dias): cargo removido perde efeito em até 1 min.
- * ponytail: cache por instância; se o Discord cair, vale o cargo assinado até ele voltar.
+ * Cargos e apelido de agora, nunca os gravados na sessão (que vale 7 dias).
+ * Cargo removido perde efeito em até 1 min; quem saiu do servidor perde a sessão.
+ * ponytail: cache por instância; compartilhar (Redis/tabela) se o limite do Discord apertar.
  */
-export async function cargosAtuais(profile: DiscordProfile): Promise<DiscordRoleTag[]> {
+async function membroAtual(
+  profile: DiscordProfile,
+): Promise<{ roles: DiscordRoleTag[]; nick: string | null }> {
   const { guildId, botToken } = discordConfig();
-  if (!guildId || !botToken) return profile.roles;
+  if (!guildId || !botToken) return { roles: profile.roles, nick: profile.nick ?? null };
   const salvo = cacheCargos.get(profile.id);
-  if (salvo && salvo.exp > Date.now()) return salvo.roles;
+  if (salvo && Date.now() - salvo.em < CARGOS_CACHE_MS) return salvo;
   try {
-    const { roles } = await fetchRolesViaBot(guildId, profile.id, botToken);
-    cacheCargos.set(profile.id, { roles, exp: Date.now() + CARGOS_CACHE_MS });
-    return roles;
+    const atual = await fetchRolesViaBot(guildId, profile.id, botToken);
+    cacheCargos.set(profile.id, { ...atual, em: Date.now() });
+    return atual;
   } catch (e) {
-    if (foraDoServidor(e)) throw new Error("Você não faz parte do servidor Discord da 2ª DE.");
-    console.warn("[discord] cargosAtuais:", e);
-    return profile.roles;
+    if (foraDoServidor(e)) {
+      cacheCargos.delete(profile.id);
+      throw new Error("Sessão Discord encerrada: você não faz parte do servidor Discord da 2ª DE.");
+    }
+    console.warn("[discord] membroAtual:", e);
+    if (salvo && Date.now() - salvo.em < CARGOS_RESERVA_MS) return salvo;
+    throw new Error(
+      "Não foi possível confirmar seus cargos no Discord agora. Tente de novo em instantes.",
+    );
   }
+}
+
+export async function cargosAtuais(profile: DiscordProfile): Promise<DiscordRoleTag[]> {
+  return (await membroAtual(profile)).roles;
 }
 
 function rolesLoadWarning(e: unknown): string {
@@ -160,10 +175,7 @@ function rolesLoadWarning(e: unknown): string {
   return "Não foi possível carregar cargos. Verifique DISCORD_BOT_TOKEN e se o bot está no servidor 2ª DE.";
 }
 
-async function enrichProfileWithRoles(
-  profile: DiscordProfile,
-  guildId: string,
-): Promise<DiscordProfile> {
+async function enrichProfileWithRoles(profile: DiscordProfile): Promise<DiscordProfile> {
   const { botToken } = discordConfig();
   if (!botToken) {
     return {
@@ -175,22 +187,14 @@ async function enrichProfileWithRoles(
     };
   }
 
-  try {
-    const { roles, nick } = await fetchRolesViaBot(guildId, profile.id, botToken);
-    return {
-      ...profile,
-      roles,
-      nick: nick ?? profile.nick,
-      rolesWarning: roles.length === 0 ? "Nenhum cargo além de @everyone no servidor 2ª DE." : undefined,
-    };
-  } catch (e) {
-    console.warn("[discord] enrichProfileWithRoles:", e);
-    return {
-      ...profile,
-      roles: foraDoServidor(e) ? [] : profile.roles,
-      rolesWarning: rolesLoadWarning(e),
-    };
-  }
+  const { roles, nick } = await membroAtual(profile);
+  return {
+    ...profile,
+    roles,
+    nick: nick ?? profile.nick,
+    rolesWarning:
+      roles.length === 0 ? "Nenhum cargo além de @everyone no servidor 2ª DE." : undefined,
+  };
 }
 
 async function buildProfile(accessToken: string, guildId: string): Promise<DiscordProfile> {
@@ -244,10 +248,7 @@ async function buildProfile(accessToken: string, guildId: string): Promise<Disco
     rolesWarning = "DISCORD_BOT_TOKEN ausente — cargos não podem ser exibidos.";
   }
 
-  const displayName =
-    nick?.trim() ||
-    user.global_name?.trim() ||
-    user.username;
+  const displayName = nick?.trim() || user.global_name?.trim() || user.username;
 
   return {
     id: user.id,
@@ -314,11 +315,7 @@ export const completarDiscordOAuth = createServerFn({ method: "POST" })
     await upsertDiscordMembro(profile, inscricao?.id ?? null);
     await sincronizarMilitarEfetivo(profile);
     if (inscricao) {
-      await vincularDiscordNaInscricao(
-        inscricao.id,
-        profile.id,
-        `${profile.username}`,
-      );
+      await vincularDiscordNaInscricao(inscricao.id, profile.id, `${profile.username}`);
       if (inscricao.status === "aprovado") {
         await sincronizarIdentidadeMilitar(inscricao, profile.id);
       }
@@ -341,23 +338,25 @@ export const validarSessaoDiscord = createServerFn({ method: "POST" })
 
     const { guildId } = discordConfig();
     if (!guildId) {
+      const papel = await papelAtual(profile);
       return {
         profile,
         session: data.session,
-        papel: await papelAtual(profile),
+        papel,
         desenvolvedor: isDesenvolvedor(profile),
       };
     }
 
-    const refreshed = await enrichProfileWithRoles(profile, guildId);
+    const refreshed = await enrichProfileWithRoles(profile);
     const session = await signDiscordSession(refreshed);
     const inscricao = await buscarInscricaoPorDiscordId(refreshed.id, refreshed.username);
     await upsertDiscordMembro(refreshed, inscricao?.id ?? null);
     await sincronizarMilitarEfetivo(refreshed);
+    const papel = await papelAtual(refreshed);
     return {
       profile: refreshed,
       session,
-      papel: await papelAtual(refreshed),
+      papel,
       desenvolvedor: isDesenvolvedor(refreshed),
     };
   });
@@ -368,15 +367,12 @@ export const encerrarSessaoDiscord = createServerFn({ method: "POST" }).handler(
 
 /** Abre o painel para quem ainda está no servidor Discord da 2ª DE. */
 export const liberarAcessoPainelDiscord = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) =>
-    z.object({ session: z.string().min(1) }).parse(input),
-  )
+  .inputValidator((input: unknown) => z.object({ session: z.string().min(1) }).parse(input))
   .handler(async ({ data }) => {
     const assinado = await verifyDiscordSession(data.session);
     if (!assinado) throw new Error("Sessão Discord inválida ou expirada.");
-    await cargosAtuais(assinado);
     const { guildId } = discordConfig();
-    const profile = guildId ? await enrichProfileWithRoles(assinado, guildId) : assinado;
+    const profile = guildId ? await enrichProfileWithRoles(assinado) : assinado;
     const inscricao = await buscarInscricaoPorDiscordId(profile.id, profile.username);
     await upsertDiscordMembro(profile, inscricao?.id ?? null);
     await sincronizarMilitarEfetivo(profile);
@@ -384,16 +380,14 @@ export const liberarAcessoPainelDiscord = createServerFn({ method: "POST" })
   });
 
 export const buscarInscricaoPorDiscord = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) =>
-    z.object({ session: z.string().min(1) }).parse(input),
-  )
+  .inputValidator((input: unknown) => z.object({ session: z.string().min(1) }).parse(input))
   .handler(async ({ data }) => {
     let profile = await verifyDiscordSession(data.session);
     if (!profile) throw new Error("Sessão inválida");
 
     const { guildId } = discordConfig();
     if (guildId) {
-      profile = await enrichProfileWithRoles(profile, guildId);
+      profile = await enrichProfileWithRoles(profile);
     }
 
     const inscricao = await buscarInscricaoPorDiscordId(profile.id, profile.username);

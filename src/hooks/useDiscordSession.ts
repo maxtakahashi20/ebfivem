@@ -19,13 +19,15 @@ export function useDiscordSession() {
   const [papel, setPapel] = useState<Papel>("membro");
   const [desenvolvedor, setDesenvolvedor] = useState(false);
   const [loading, setLoading] = useState(true);
+  /** Falha que não é de sessão (Discord ou banco fora): não é "acesso negado". */
+  const [erro, setErro] = useState<string | null>(null);
 
   const validar = useServerFn(validarSessaoDiscord);
   const obterUrl = useServerFn(obterUrlDiscordOAuth);
   const encerrar = useServerFn(encerrarSessaoDiscord);
 
   const refresh = useCallback(
-    async (token?: string | null) => {
+    async (token?: string | null, tentativa = 0): Promise<void> => {
       const s = token ?? (typeof window !== "undefined" ? localStorage.getItem(DISCORD_SESSION_KEY) : null);
       if (!s) {
         setProfile(null);
@@ -44,6 +46,7 @@ export function useDiscordSession() {
         setSession(nextSession);
         setPapel(flags.papel ?? "membro");
         setDesenvolvedor(Boolean(flags.desenvolvedor));
+        setErro(null);
         localStorage.setItem(DISCORD_SESSION_KEY, nextSession);
       } catch (e) {
         const msg = e instanceof Error ? e.message : "";
@@ -53,10 +56,15 @@ export function useDiscordSession() {
           setSession(null);
           setPapel("membro");
           setDesenvolvedor(false);
+        } else if (tentativa < 3) {
+          // Falha passageira: continua "verificando" e tenta de novo (2 s, 4 s, 8 s).
+          await new Promise((r) => setTimeout(r, 2000 * 2 ** tentativa));
+          return refresh(s, tentativa + 1);
+        } else {
+          setErro(msg);
         }
-      } finally {
-        setLoading(false);
       }
+      setLoading(false);
     },
     [validar],
   );
@@ -100,6 +108,7 @@ export function useDiscordSession() {
     papel,
     desenvolvedor,
     loading,
+    erro,
     login,
     logout,
     refresh,

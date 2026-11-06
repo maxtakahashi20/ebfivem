@@ -13,6 +13,7 @@ import {
   type SuporteTicket,
 } from "@/lib/suporte.functions";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { ErroVerificacao } from "@/components/admin/AdminModuleView";
 import { Card, CardContent } from "@/components/ui/card";
 
 const POLL_MS = 3000;
@@ -21,7 +22,7 @@ const MAX_LEN = 2000;
 type StatusFilter = "todos" | "aberto" | "em_atendimento" | "encerrado";
 
 export function SuporteAdmin() {
-  const { papel, loading: verificandoPapel } = useDiscordSession();
+  const { papel, loading: verificandoPapel, erro: erroSessao } = useDiscordSession();
   const listarTickets = useServerFn(listarTicketsAdmin);
   const listarMensagens = useServerFn(listarMensagensAdmin);
   const enviar = useServerFn(enviarMensagemAdmin);
@@ -133,7 +134,7 @@ export function SuporteAdmin() {
     }
   };
 
-  if (!verificandoPapel && !papelAlcanca(papel, "alto-comando")) {
+  if (!verificandoPapel && (erroSessao || !papelAlcanca(papel, "alto-comando"))) {
     return (
       <div>
         <AdminPageHeader
@@ -141,19 +142,23 @@ export function SuporteAdmin() {
           title="Suporte ao conscrito"
           sub="Chat ao vivo com candidatos da 2ª DE."
         />
-        <Card className="field-paper border-0 shadow-none">
-          <CardContent className="py-10 text-center space-y-3">
-            <div className="tag-rank bg-(--color-destructive) text-[10px] inline-block">
-              RESTRITO · ALTO COMANDO
-            </div>
-            <p className="font-display tracking-widest text-(--color-olive-deep)">
-              Acesso negado
-            </p>
-            <p className="text-xs font-mono text-(--color-stencil) max-w-md mx-auto">
-              Apenas o Alto Comando atende o suporte ao conscrito.
-            </p>
-          </CardContent>
-        </Card>
+        {erroSessao ? (
+          <ErroVerificacao mensagem={erroSessao} />
+        ) : (
+          <Card className="field-paper border-0 shadow-none">
+            <CardContent className="py-10 text-center space-y-3">
+              <div className="tag-rank bg-(--color-destructive) text-[10px] inline-block">
+                RESTRITO · ALTO COMANDO
+              </div>
+              <p className="font-display tracking-widest text-(--color-olive-deep)">
+                Acesso negado
+              </p>
+              <p className="text-xs font-mono text-(--color-stencil) max-w-md mx-auto">
+                Apenas o Alto Comando atende o suporte ao conscrito.
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
     );
   }
@@ -267,9 +272,7 @@ export function SuporteAdmin() {
                     </p>
                     <p className="text-[10px] font-mono text-(--color-stencil)">
                       Status:{" "}
-                      <span className="uppercase">
-                        {ticketAtivo.status.replace("_", " ")}
-                      </span>
+                      <span className="uppercase">{ticketAtivo.status.replace("_", " ")}</span>
                       {ticketAtivo.atendente_nome &&
                         ` · atendido por ${ticketAtivo.atendente_nome}`}
                     </p>
@@ -321,11 +324,7 @@ export function SuporteAdmin() {
                   <button
                     type="button"
                     onClick={() => void handleSend()}
-                    disabled={
-                      !novaMensagem.trim() ||
-                      sending ||
-                      ticketAtivo.status === "encerrado"
-                    }
+                    disabled={!novaMensagem.trim() || sending || ticketAtivo.status === "encerrado"}
                     className="btn-olive text-xs disabled:opacity-50"
                   >
                     {sending ? "…" : "▸ ENVIAR"}
