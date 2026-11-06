@@ -45,7 +45,8 @@ import {
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { EASE, Stagger } from "@/components/motion";
 
 export const Route = createFileRoute("/painel")({
   head: () => ({
@@ -380,13 +381,13 @@ function Dashboard() {
         <div className="border border-border bg-card p-6 text-center font-mono text-xs text-muted-foreground">CARREGANDO…</div>
       ) : (
         <>
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          <Stagger className="grid grid-cols-2 lg:grid-cols-5 gap-4">
             <Kpi label="Total de inscrições" value={stats.total} sub={`+${stats.ultimos7d} nos últimos 7 dias`} />
             <Kpi label="Pendentes" value={stats.pendente} sub="Aguardando análise" tom="alerta" />
             <Kpi label="Em análise" value={stats.em_analise} sub="Com um instrutor" tom="info" />
             <Kpi label="Aprovados" value={stats.aprovado} sub={`${stats.aprovadosHoje} aprovados hoje`} tom="ok" />
             <Kpi label="Reprovados" value={stats.reprovado} sub="Indeferidas" tom="perigo" />
-          </div>
+          </Stagger>
 
           <div className="grid lg:grid-cols-[1fr_400px] gap-4">
             <div className="flex flex-col gap-5 border border-border bg-card p-6 min-h-80">
@@ -400,9 +401,13 @@ function Dashboard() {
                   return (
                     <div key={i} className="flex-1 h-full flex flex-col items-center justify-end gap-2" title={`${n} em ${d.toLocaleDateString("pt-BR")}`}>
                       <span className="font-mono text-[10px] text-muted-foreground">{n || ""}</span>
-                      <div
-                        className={`w-full ${i === porDia.length - 1 ? "bg-(--color-olive-bright)" : "bg-(--color-olive-bright)/35"}`}
+                      {/* Barras crescem de baixo, uma depois da outra */}
+                      <motion.div
+                        className={`w-full origin-bottom ${i === porDia.length - 1 ? "bg-(--color-olive-bright)" : "bg-(--color-olive-bright)/35"}`}
                         style={{ height: `${(n / maxDia) * 100}%`, minHeight: n ? 4 : 1 }}
+                        initial={{ scaleY: 0 }}
+                        animate={{ scaleY: 1 }}
+                        transition={{ duration: 0.6, delay: 0.3 + i * 0.05, ease: EASE }}
                       />
                       <span className="font-mono text-[10px] text-muted-foreground">{d.getDate()}</span>
                     </div>
@@ -560,10 +565,16 @@ function GestaoInscricoes({
           ))}
         </div>
         {loading && <div className="text-center font-mono text-xs text-muted-foreground py-6">CARREGANDO…</div>}
-        {rows.map((r) => {
+        {rows.map((r, i) => {
           const open = expanded === r.id;
           return (
-            <div key={r.id} className={`border-b border-border last:border-b-0 ${open ? "bg-secondary" : ""}`}>
+            <motion.div
+              key={r.id}
+              className={`border-b border-border last:border-b-0 ${open ? "bg-secondary" : ""}`}
+              initial={{ opacity: 0, x: -24 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.35, delay: Math.min(i, 20) * 0.03, ease: EASE }}
+            >
               <button
                 className="w-full grid grid-cols-[1fr_auto] md:grid-cols-[150px_1fr_110px_180px_150px_130px_24px] items-center gap-x-4 gap-y-1 px-5 py-3.5 text-left hover:bg-secondary/60"
                 onClick={() => setExpanded(open ? null : r.id)}
@@ -579,8 +590,20 @@ function GestaoInscricoes({
                 <ChevronDown className={`hidden md:block size-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
               </button>
 
-              {open && <InscricaoEditor row={r} onSave={update} onDelete={remove} />}
-            </div>
+              <AnimatePresence initial={false}>
+                {open && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: EASE }}
+                    className="overflow-hidden"
+                  >
+                    <InscricaoEditor row={r} onSave={update} onDelete={remove} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
           );
         })}
 

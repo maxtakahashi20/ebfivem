@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
+import { EASE, Stagger } from "@/components/motion";
 import type { AdminView } from "@/config/admin-nav";
 import { papelDaView } from "@/config/admin-nav";
 import { papelAlcanca } from "@/lib/access-control";
@@ -37,6 +39,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+
+/** Linha de tabela animada: as primeiras entram em sequência. */
+const MotionRow = motion.create(TableRow);
 
 export function AdminModuleView({ view }: { view: AdminView }) {
   const cfg = getModuleConfig(view);
@@ -272,11 +277,15 @@ export function AdminModuleView({ view }: { view: AdminView }) {
       )}
 
       {stats.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+        // key: quando os cartões mudam (dados carregados), o grupo anima de novo em vez de deixar os novos escondidos
+        <Stagger
+          key={stats.map((s) => s.label).join("|")}
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6"
+        >
           {stats.map((s) => (
             <Kpi key={s.label} label={s.label} value={s.value} sub={s.sub} />
           ))}
-        </div>
+        </Stagger>
       )}
 
       {cfg.variant === "discord" && view === "discord-bot" && (
@@ -324,7 +333,13 @@ export function AdminModuleView({ view }: { view: AdminView }) {
                     const recordId = (row as Record<string, string>).__id;
                     const pdfPath = (row as Record<string, string>).__pdf_path;
                     return (
-                      <TableRow key={i} className="border-border">
+                      <MotionRow
+                        key={i}
+                        className="border-border"
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: Math.min(i, 20) * 0.03, ease: EASE }}
+                      >
                         {cfg.columns.map((col) => (
                           <TableCell
                             key={col.key}
@@ -374,7 +389,7 @@ export function AdminModuleView({ view }: { view: AdminView }) {
                             )}
                           </TableCell>
                         )}
-                      </TableRow>
+                      </MotionRow>
                     );
                   })}
                 </TableBody>

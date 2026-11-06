@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
+import { EASE } from "@/components/motion";
 import { useDiscordSession } from "@/hooks/useDiscordSession";
 import { getDiscordSessionToken } from "@/lib/painel-auth-storage";
 import { papelAlcanca } from "@/lib/access-control";
@@ -209,11 +211,15 @@ export function SuporteAdmin() {
             )}
 
             <div className="space-y-1 max-h-[60vh] overflow-y-auto">
-              {tickets.map((t) => {
+              {tickets.map((t, i) => {
                 const active = t.id === selected;
                 return (
-                  <button
+                  <motion.button
                     key={t.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: Math.min(i, 15) * 0.04, ease: EASE }}
+                    whileHover={{ x: 4 }}
                     type="button"
                     onClick={() => setSelected(t.id)}
                     className={`w-full text-left px-4 py-3.5 border-l-3 transition-colors ${
@@ -242,7 +248,7 @@ export function SuporteAdmin() {
                         minute: "2-digit",
                       })}
                     </div>
-                  </button>
+                  </motion.button>
                 );
               })}
             </div>
@@ -361,7 +367,12 @@ function ChatBubble({ mensagem }: { mensagem: SuporteMensagem }) {
       : "bg-[#d9d2b51a] text-foreground";
 
   return (
-    <div className={`flex flex-col gap-1 ${align}`}>
+    <motion.div
+      className={`flex flex-col gap-1 ${align}`}
+      initial={{ opacity: 0, x: isSistema ? 0 : isMilitar ? 40 : -40, scale: 0.9 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      transition={{ type: "spring", stiffness: 320, damping: 26 }}
+    >
       <div className={`max-w-[80%] sm:max-w-105 px-4 py-3 text-[15px] leading-snug ${bubble}`}>
         {!isSistema && (
           <p className="text-[10px] font-mono opacity-80 mb-0.5">
@@ -376,6 +387,6 @@ function ChatBubble({ mensagem }: { mensagem: SuporteMensagem }) {
           minute: "2-digit",
         })}
       </span>
-    </div>
+    </motion.div>
   );
 }

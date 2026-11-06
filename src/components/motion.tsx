@@ -51,7 +51,7 @@ const grupo: Variants = {
   hidden: {},
   show: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
 };
-const item: Variants = {
+export const item: Variants = {
   hidden: { opacity: 0, y: 28, scale: 0.97 },
   show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.55, ease: EASE } },
 };
@@ -127,17 +127,18 @@ export function CountUp({ value, className }: { value: string; className?: strin
   const ref = useRef<HTMLSpanElement>(null);
   const visivel = useInView(ref, { once: true });
   const numerico = /^\d+$/.test(value);
-  const [atual, setAtual] = useState(numerico ? "0".padStart(value.length, "0") : value);
+  const largura = value.startsWith("0") ? value.length : 1;
+  const [atual, setAtual] = useState(numerico ? "0".padStart(largura, "0") : value);
 
   useEffect(() => {
     if (!numerico || !visivel) return;
     const controle = animate(0, Number(value), {
       duration: 1.4,
       ease: EASE,
-      onUpdate: (v) => setAtual(String(Math.round(v)).padStart(value.length, "0")),
+      onUpdate: (v) => setAtual(String(Math.round(v)).padStart(largura, "0")),
     });
     return () => controle.stop();
-  }, [numerico, visivel, value]);
+  }, [numerico, visivel, value, largura]);
 
   return (
     <span ref={ref} className={className}>
