@@ -21,6 +21,7 @@ jobs:
           BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
         run: |
           apk add --no-cache gnupg >/dev/null
+          set -o pipefail  # sem isto, um pg_dump que falha gera backup vazio com job verde
           pg_dump "$DATABASE_URL" --no-owner --no-privileges --schema=public \
             | gzip \
             | gpg --batch --yes --pinentry-mode loopback --passphrase "$BACKUP_PASSPHRASE" \
