@@ -2,6 +2,8 @@ import { createFileRoute, useHydrated } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Search } from "lucide-react";
+import { FieldLabel, PageHero, btnPrimary, inputClass } from "@/components/site-ui";
 import { z } from "zod";
 import { consultarFicha } from "@/lib/inscricoes.functions";
 import { IdentidadeMilitarDigital } from "@/components/military/IdentidadeMilitarDigital";
@@ -35,12 +37,19 @@ type Inscricao = {
   created_at: string; updated_at: string;
 };
 
-const STATUS_LABEL: Record<Inscricao["status"], { txt: string; color: string }> = {
-  pendente:    { txt: "Pendente · Aguardando análise",     color: "oklch(0.72 0.13 80)" },
-  em_analise:  { txt: "Em análise pelo instrutor",         color: "oklch(0.55 0.12 230)" },
-  aprovado:    { txt: "Aprovado · Apresente-se ao posto",  color: "oklch(0.50 0.13 145)" },
-  reprovado:   { txt: "Reprovado · Veja observações",      color: "oklch(0.48 0.18 30)" },
+const STATUS_LABEL: Record<Inscricao["status"], { txt: string; color: string; etapa: number }> = {
+  pendente:    { txt: "Pendente · Aguardando análise",     color: "#d4a94a", etapa: 0 },
+  em_analise:  { txt: "Em análise pelo instrutor",         color: "#5b8fc4", etapa: 1 },
+  aprovado:    { txt: "Aprovado · Apresente-se ao posto",  color: "#5e9a55", etapa: 3 },
+  reprovado:   { txt: "Reprovado · Veja observações",      color: "#c0583a", etapa: 2 },
 };
+
+const ETAPAS = [
+  ["Ficha recebida", "Protocolo gerado"],
+  ["Em análise", "Instrutor avaliando"],
+  ["Resultado", "Aprovado ou reprovado"],
+  ["Apresentação", "Compareça ao posto"],
+];
 
 /** Aceita EB-XXXXXXXX ou EBXXXXXXXX (hex 8 caracteres). */
 function normalizeProtocolo(raw: string): string {
@@ -83,120 +92,154 @@ function Acompanhar() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-16">
-      <div className="stencil text-xs mb-2">PAINEL DO CONSCRITO</div>
-      <h1 className="text-4xl mb-2">Acompanhar Alistamento</h1>
-      <p className="text-(--color-stencil) mb-8">
-        Informe o protocolo recebido ao enviar a ficha (ex.: EB-A1B2C3D4) e o seu RG.
-      </p>
-
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (!normalizeProtocolo(protocolo)) {
-            toast.error("Protocolo inválido. Use EB- seguido de 8 caracteres (ex.: EB-A1B2C3D4).");
-            return;
-          }
-          if (!/^\d{1,8}$/.test(rg)) {
-            toast.error("Informe um RG numérico de 1 a 8 dígitos.");
-            return;
-          }
-          void buscar(protocolo, rg);
-        }}
-        className="field-paper p-5 flex flex-col gap-4"
-      >
-        <div className="flex flex-col sm:flex-row gap-3 items-end">
-          <div className="flex-1 w-full">
-            <label className="block stencil text-[11px] mb-1">RG</label>
+    <div className="bg-bone text-ink">
+      <PageHero
+        eyebrow="PAINEL DO CONSCRITO"
+        title="Acompanhe sua ficha."
+        sub="Informe o protocolo do comprovante (ex.: EB-A1B2C3D4) e o RG da ficha para ver em que etapa está o seu alistamento."
+        img="/galeria/12.webp"
+      />
+      <div className="mx-auto max-w-5xl px-4 sm:px-10 py-20 md:py-24 flex flex-col gap-12">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!normalizeProtocolo(protocolo)) {
+              toast.error("Protocolo inválido. Use EB- seguido de 8 caracteres (ex.: EB-A1B2C3D4).");
+              return;
+            }
+            if (!/^\d{1,8}$/.test(rg)) {
+              toast.error("Informe um RG numérico de 1 a 8 dígitos.");
+              return;
+            }
+            void buscar(protocolo, rg);
+          }}
+          className="flex flex-col md:flex-row md:items-end gap-4 bg-paper border border-ink/20 p-6 sm:p-8"
+        >
+          <label className="flex-1">
+            <FieldLabel>PROTOCOLO</FieldLabel>
+            <input
+              type="text"
+              value={protocolo}
+              onChange={(e) => setProtocolo(e.target.value.toUpperCase().replace(/[^EB0-9A-F-]/gi, "").slice(0, 11))}
+              className={`${inputClass} font-mono`}
+              placeholder="EB-XXXXXXXX"
+            />
+          </label>
+          <label className="md:w-70">
+            <FieldLabel>RG</FieldLabel>
             <input
               type="text"
               inputMode="numeric"
               value={rg}
               onChange={(e) => setRg(e.target.value.replace(/\D/g, "").slice(0, 8))}
-              className="w-full bg-transparent border border-(--color-input) px-3 py-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-(--color-olive-deep)"
+              className={inputClass}
               placeholder="Até 8 dígitos"
             />
-          </div>
-          <button type="submit" disabled={loading || !hidratado} className="btn-olive shrink-0">
-            {loading ? "CONSULTANDO…" : "▸ CONSULTAR"}
+          </label>
+          <button type="submit" disabled={loading || !hidratado} className={btnPrimary}>
+            {loading ? "CONSULTANDO…" : "CONSULTAR"} <Search className="h-4.5 w-4.5" />
           </button>
-        </div>
-        <div>
-          <label className="block stencil text-[11px] mb-1">Protocolo</label>
-          <input
-            type="text"
-            value={protocolo}
-            onChange={(e) => setProtocolo(e.target.value.toUpperCase().replace(/[^EB0-9A-F-]/gi, "").slice(0, 11))}
-            className="w-full bg-transparent border border-(--color-input) px-3 py-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-(--color-olive-deep)"
-            placeholder="EB-XXXXXXXX"
-          />
-        </div>
-      </form>
+        </form>
 
-      <div className="mt-8 space-y-4">
-        {rows === null && (
-          <div className="text-center text-(--color-stencil) py-8 stencil text-xs">
-            AGUARDANDO CONSULTA
-          </div>
-        )}
-        {rows && rows.length === 0 && (
-          <div className="field-paper p-6 text-center reveal">
-            <div className="stamp text-(--color-destructive) mb-3">SEM REGISTRO</div>
-            <p>Nenhuma ficha localizada com este protocolo e RG.</p>
-          </div>
-        )}
-        {rows && rows.map((r, i) => {
-          const s = STATUS_LABEL[r.status];
-          return (
-            <div key={r.protocolo} className="field-paper p-6 relative reveal" style={{ animationDelay: `${i * 0.05}s` }}>
-              <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
-                <div>
-                  <div className="stencil text-[11px]">PROTOCOLO</div>
-                  <div className="font-mono text-lg">{r.protocolo}</div>
-                </div>
-                <div className="px-3 py-1 font-display tracking-widest text-xs text-white" style={{ background: s.color }}>
-                  {s.txt}
-                </div>
-              </div>
-              <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1 text-sm">
-                <div><span className="stencil text-[10px]">CONSCRITO: </span>{r.nome} {r.sobrenome}</div>
-                <div><span className="stencil text-[10px]">RG: </span>{r.rg}</div>
-                <div><span className="stencil text-[10px]">APRESENTAÇÃO: </span>{new Date(r.created_at).toLocaleString("pt-BR")}</div>
-                <div><span className="stencil text-[10px]">ATUALIZAÇÃO: </span>{new Date(r.updated_at).toLocaleString("pt-BR")}</div>
-              </div>
-              {r.observacoes_instrutor && (
-                <div className="mt-4 p-3 border border-dashed border-(--color-olive-deep)">
-                  <div className="stencil text-[10px] mb-1">OBSERVAÇÕES DO INSTRUTOR</div>
-                  <p className="text-sm">{r.observacoes_instrutor}</p>
-                </div>
-              )}
-              {r.status === "aprovado" && (
-                <div className="mt-6 pt-6 border-t border-(--color-border)">
-                  <IdentidadeMilitarDigital
-                    aprovado
-                    discordProfile={discordProfile}
-                    dados={{
-                      protocolo: r.protocolo,
-                      nome: r.nome,
-                      sobrenome: r.sobrenome,
-                      rg: r.rg,
-                      created_at: r.created_at,
-                    }}
-                  />
-                  <p className="mt-4 text-center text-xs">
-                    <button
-                      type="button"
-                      className="underline text-(--color-olive-deep) font-mono"
-                      onClick={() => goToPainel("documentos", { protocolo: r.protocolo })}
-                    >
-                      Gerar documentos militares no painel (PDF) →
-                    </button>
-                  </p>
-                </div>
-              )}
+        <div className="flex flex-col gap-6">
+          {rows === null && (
+            <div className="py-6 text-center font-mono text-xs tracking-[0.2em] text-mute">AGUARDANDO CONSULTA</div>
+          )}
+          {rows && rows.length === 0 && (
+            <div className="bg-paper border border-ink/20 p-8 text-center reveal">
+              <div className="stamp text-(--color-destructive) mb-3">SEM REGISTRO</div>
+              <p>Nenhuma ficha localizada com este protocolo e RG.</p>
             </div>
-          );
-        })}
+          )}
+          {rows && rows.map((r, i) => {
+            const s = STATUS_LABEL[r.status];
+            return (
+              <div key={r.protocolo} className="bg-ink text-bone reveal" style={{ animationDelay: `${i * 0.05}s` }}>
+                <div className="flex flex-wrap items-center justify-between gap-4 px-6 sm:px-9 py-7 border-b border-sand/15">
+                  <div className="flex flex-col gap-1.5">
+                    <div className="font-mono text-[11px] tracking-[0.15em] text-sand/60">PROTOCOLO</div>
+                    <div className="font-mono text-2xl sm:text-3xl tracking-[0.15em] text-field">{r.protocolo}</div>
+                  </div>
+                  <div
+                    className="inline-flex items-center gap-2.5 px-4 py-2.5 border font-mono text-xs tracking-widest uppercase"
+                    style={{ borderColor: s.color, background: `${s.color}26`, color: s.color }}
+                  >
+                    <span className="h-2 w-2 rounded-full" style={{ background: s.color }} />
+                    {s.txt}
+                  </div>
+                </div>
+                <ol className="grid grid-cols-2 md:grid-cols-4 gap-3 px-6 sm:px-9 py-8">
+                  {ETAPAS.map(([t, d], idx) => {
+                    const feito = idx < s.etapa;
+                    const atual = idx === s.etapa;
+                    return (
+                      <li key={t} className="flex flex-col gap-3">
+                        <span
+                          className="h-1 w-full"
+                          style={{ background: atual ? s.color : feito ? "var(--color-field)" : "#d9d2b526" }}
+                        />
+                        <span className={`font-display text-xl ${feito || atual ? "text-bone" : "text-sand/50"}`}>{t}</span>
+                        <span className="text-sm text-sand/60">{d}</span>
+                      </li>
+                    );
+                  })}
+                </ol>
+                <dl className="grid grid-cols-2 md:grid-cols-4 gap-6 px-6 sm:px-9 pb-8">
+                  {[
+                    ["CONSCRITO", `${r.nome} ${r.sobrenome}`],
+                    ["RG", r.rg],
+                    ["APRESENTAÇÃO", new Date(r.created_at).toLocaleString("pt-BR")],
+                    ["ATUALIZAÇÃO", new Date(r.updated_at).toLocaleString("pt-BR")],
+                  ].map(([k, v]) => (
+                    <div key={k} className="flex flex-col gap-1.5">
+                      <dt className="font-mono text-[11px] tracking-[0.15em] text-sand/60">{k}</dt>
+                      <dd className="text-[17px]">{v}</dd>
+                    </div>
+                  ))}
+                </dl>
+                {r.observacoes_instrutor && (
+                  <div className="mx-6 sm:mx-9 mb-8 p-4 border border-dashed border-sand/30">
+                    <div className="font-mono text-[11px] tracking-[0.15em] text-brass mb-1.5">OBSERVAÇÕES DO INSTRUTOR</div>
+                    <p className="text-sand">{r.observacoes_instrutor}</p>
+                  </div>
+                )}
+                {r.status === "aprovado" && (
+                  <div className="bg-bone text-ink p-6 sm:p-9">
+                    <IdentidadeMilitarDigital
+                      aprovado
+                      discordProfile={discordProfile}
+                      dados={{
+                        protocolo: r.protocolo,
+                        nome: r.nome,
+                        sobrenome: r.sobrenome,
+                        rg: r.rg,
+                        created_at: r.created_at,
+                      }}
+                    />
+                    <p className="mt-4 text-center text-xs">
+                      <button
+                        type="button"
+                        className="underline text-ink font-mono"
+                        onClick={() => goToPainel("documentos", { protocolo: r.protocolo })}
+                      >
+                        Gerar documentos militares no painel (PDF) →
+                      </button>
+                    </p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <ul className="flex flex-wrap gap-x-6 gap-y-3">
+          {Object.values(STATUS_LABEL).map((s) => (
+            <li key={s.txt} className="flex items-center gap-2.5 text-sm text-mute">
+              <span className="h-2.5 w-2.5 rounded-full" style={{ background: s.color }} />
+              {s.txt}
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );

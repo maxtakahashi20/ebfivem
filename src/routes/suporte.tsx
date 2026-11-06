@@ -2,7 +2,9 @@ import { createFileRoute, useHydrated } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { ArrowRight, Send } from "lucide-react";
 import { Turnstile } from "@/components/Turnstile";
+import { FieldLabel, PageHero, btnPrimary, inputClass } from "@/components/site-ui";
 import {
   abrirOuObterTicket,
   enviarMensagemConscrito,
@@ -184,55 +186,68 @@ function SuportePage() {
     setNome("");
   };
 
+  const hero = (
+    <PageHero
+      eyebrow="SUPORTE · 2ª DE"
+      title="Fale com os Guerreiros."
+      sub="Abra um chamado e converse em tempo real com o Alto Comando. Sem login, sem formulário longo."
+      img="/galeria/1153.webp"
+    />
+  );
+
   if (!stored) {
     return (
-      <div className="mx-auto max-w-md px-6 py-16">
-        <div className="field-paper p-8 space-y-5">
-          <div>
-            <p className="stencil text-xs text-(--color-olive-deep)">SUPORTE · 2ª DE</p>
-            <h1 className="font-display text-2xl tracking-widest text-(--color-olive-deep) mt-1">
-              Fale com os Guerreiros
-            </h1>
-            <p className="text-sm text-(--color-stencil) mt-2">
-              Dê um título ao seu chamado e descreva o assunto. O Alto Comando responde em tempo
-              real assim que abrir o atendimento.
-            </p>
-          </div>
-          <form onSubmit={handleOpenTicket} className="space-y-3">
-            <div>
-              <label className="stencil text-[10px] mb-1 block">NOME DO TICKET *</label>
+      <div className="bg-bone text-ink">
+        {hero}
+        <div className="mx-auto max-w-7xl px-4 sm:px-10 py-20 md:py-24 flex flex-col lg:flex-row gap-12 lg:gap-20">
+          <form onSubmit={handleOpenTicket} className="lg:w-110 shrink-0 flex flex-col gap-5 bg-paper border border-ink/20 p-6 sm:p-9">
+            <h2 className="font-display text-[28px] font-medium">Novo chamado</h2>
+            <label className="block">
+              <FieldLabel>NOME DO TICKET *</FieldLabel>
               <input
                 type="text"
                 value={titulo}
                 onChange={(e) => setTitulo(e.target.value.slice(0, 120))}
                 placeholder="Ex.: Dúvida sobre prova física"
-                className="w-full font-mono text-sm bg-transparent border border-(--color-border) px-3 py-2"
+                className={inputClass}
                 required
                 minLength={3}
                 maxLength={120}
               />
-            </div>
-            <div>
-              <label className="stencil text-[10px] mb-1 block">
-                SEU NOME <span className="opacity-60">(opcional)</span>
-              </label>
+            </label>
+            <label className="block">
+              <FieldLabel>SEU NOME (opcional)</FieldLabel>
               <input
                 type="text"
                 value={nome}
                 onChange={(e) => setNome(e.target.value.slice(0, 120))}
                 placeholder="Como devemos te chamar?"
-                className="w-full font-mono text-sm bg-transparent border border-(--color-border) px-3 py-2"
+                className={inputClass}
                 maxLength={120}
               />
-            </div>
+            </label>
             <Turnstile key={turnstileVersao} onToken={setTurnstileToken} />
-            <button type="submit" className="btn-olive w-full" disabled={submitting || !hidratado}>
-              {submitting ? "ABRINDO…" : "▸ ABRIR CHAMADO"}
+            <button type="submit" className={`${btnPrimary} w-full`} disabled={submitting || !hidratado}>
+              {submitting ? "ABRINDO…" : "ABRIR CHAMADO"} <ArrowRight className="h-4.5 w-4.5" />
             </button>
+            <p className="font-mono text-xs text-mute">O chamado fica salvo por 7 dias neste navegador.</p>
           </form>
-          <p className="text-[10px] font-mono text-(--color-stencil) text-center">
-            O ticket fica salvo por 7 dias neste navegador.
-          </p>
+          <ol className="flex-1">
+            <li className="font-mono text-xs tracking-[0.2em] text-(--color-olive)">COMO FUNCIONA</li>
+            {[
+              ["Dê um título ao chamado", "Um assunto curto, como “Dúvida sobre prova física”."],
+              ["Converse em tempo real", "O Alto Comando responde aqui mesmo, assim que abrir o atendimento."],
+              ["Volte quando quiser", "O chamado fica salvo neste navegador por 7 dias."],
+            ].map(([t, d], i) => (
+              <li key={t} className="flex gap-5 py-6 border-b border-ink/20">
+                <span className="font-display text-[28px] text-field">{String(i + 1).padStart(2, "0")}</span>
+                <div className="flex flex-col gap-1.5">
+                  <span className="font-display text-[21px] font-medium">{t}</span>
+                  <span className="text-[15px] text-mute">{d}</span>
+                </div>
+              </li>
+            ))}
+          </ol>
         </div>
       </div>
     );
@@ -241,81 +256,69 @@ function SuportePage() {
   const tituloDisplay = ticket?.titulo ?? stored.titulo;
   const nomeDisplay =
     [ticket?.nome, ticket?.sobrenome].filter(Boolean).join(" ") || stored.nome || "Conscrito";
+  const encerrado = ticket?.status === "encerrado";
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-10">
-      <div className="field-paper border-(--color-border) overflow-hidden flex flex-col h-[70vh] min-h-[480px]">
-        <header className="border-b border-(--color-border) p-4 flex flex-wrap items-center justify-between gap-3 bg-khaki/40">
-          <div className="min-w-0">
-            <p className="stencil text-[10px] text-(--color-olive-deep) truncate">
-              CHAMADO · {tituloDisplay}
-            </p>
-            <p className="font-display tracking-widest text-(--color-olive-deep) truncate">
-              {nomeDisplay}
-            </p>
-            <p className="text-[10px] font-mono text-(--color-stencil)">
-              Status:{" "}
-              <span className="uppercase">
-                {(ticket?.status ?? "aberto").replace("_", " ")}
-              </span>
-              {ticket?.atendente_nome && ` · atendido por ${ticket.atendente_nome}`}
-            </p>
+    <div className="bg-bone text-ink">
+      {hero}
+      <div className="mx-auto max-w-5xl px-4 sm:px-10 py-14 md:py-20">
+        <div className="bg-ink text-bone flex flex-col h-[70vh] min-h-120">
+          <header className="flex flex-wrap items-center justify-between gap-3 px-5 sm:px-7 py-5 border-b border-sand/15">
+            <div className="min-w-0 flex flex-col gap-1">
+              <p className="font-mono text-[11px] tracking-widest text-field truncate uppercase">CHAMADO · {tituloDisplay}</p>
+              <p className="font-display text-[22px] truncate">{nomeDisplay}</p>
+              <p className="font-mono text-[11px] text-sand/60">
+                Status: <span className="uppercase">{(ticket?.status ?? "aberto").replace("_", " ")}</span>
+                {ticket?.atendente_nome && ` · atendido por ${ticket.atendente_nome}`}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleSair}
+              className="border border-sand/40 px-4 py-2 font-display text-xs tracking-[0.15em] text-sand hover:bg-sand hover:text-night transition"
+            >
+              SAIR DO CHAT
+            </button>
+          </header>
+
+          <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 sm:px-7 py-6 flex flex-col gap-4">
+            {mensagens.length === 0 && (
+              <p className="font-mono text-xs text-sand/50 text-center mt-8">Aguardando primeira mensagem…</p>
+            )}
+            {mensagens.map((m) => (
+              <ChatBubble key={m.id} mensagem={m} />
+            ))}
+            {encerrado && (
+              <p className="font-mono text-xs text-center text-[#e08a6c] pt-4">Atendimento encerrado.</p>
+            )}
           </div>
-          <button
-            type="button"
-            onClick={handleSair}
-            className="btn-ghost-olive text-[10px]"
-          >
-            SAIR DO CHAT
-          </button>
-        </header>
 
-        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-background/60">
-          {mensagens.length === 0 && (
-            <p className="text-xs font-mono text-(--color-stencil) text-center mt-8">
-              Aguardando primeira mensagem…
-            </p>
-          )}
-          {mensagens.map((m) => (
-            <ChatBubble key={m.id} mensagem={m} />
-          ))}
-          {ticket?.status === "encerrado" && (
-            <p className="text-xs font-mono text-center text-(--color-destructive) pt-4">
-              Atendimento encerrado.
-            </p>
-          )}
+          <footer className="flex gap-3 px-5 sm:px-7 pt-4 pb-6 border-t border-sand/15">
+            <input
+              type="text"
+              value={novaMensagem}
+              onChange={(e) => setNovaMensagem(e.target.value.slice(0, MAX_LEN))}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  void handleSend();
+                }
+              }}
+              placeholder={encerrado ? "Atendimento encerrado" : "Digite sua mensagem…"}
+              disabled={encerrado || sending}
+              className="flex-1 h-13 bg-night border border-sand/20 px-4 text-bone placeholder:text-sand/40 focus:outline-none focus:ring-2 focus:ring-field disabled:opacity-50"
+            />
+            <button
+              type="button"
+              onClick={() => void handleSend()}
+              disabled={!novaMensagem.trim() || sending || encerrado}
+              aria-label="Enviar mensagem"
+              className="h-13 w-13 shrink-0 bg-field text-night flex items-center justify-center hover:brightness-110 disabled:opacity-50"
+            >
+              <Send className="h-5 w-5" />
+            </button>
+          </footer>
         </div>
-
-        <footer className="border-t border-(--color-border) p-3 flex gap-2 bg-khaki/40">
-          <input
-            type="text"
-            value={novaMensagem}
-            onChange={(e) => setNovaMensagem(e.target.value.slice(0, MAX_LEN))}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                void handleSend();
-              }
-            }}
-            placeholder={
-              ticket?.status === "encerrado"
-                ? "Atendimento encerrado"
-                : "Digite sua mensagem…"
-            }
-            disabled={ticket?.status === "encerrado" || sending}
-            className="flex-1 font-mono text-sm bg-transparent border border-(--color-border) px-3 py-2 disabled:opacity-50"
-          />
-          <button
-            type="button"
-            onClick={() => void handleSend()}
-            disabled={
-              !novaMensagem.trim() || sending || ticket?.status === "encerrado"
-            }
-            className="btn-olive text-xs disabled:opacity-50"
-          >
-            {sending ? "…" : "▸ ENVIAR"}
-          </button>
-        </footer>
       </div>
     </div>
   );
@@ -323,30 +326,24 @@ function SuportePage() {
 
 function ChatBubble({ mensagem }: { mensagem: SuporteMensagem }) {
   const isConscrito = mensagem.autor === "conscrito";
-  const isSistema = mensagem.autor === "sistema";
-  const align = isConscrito ? "items-end" : "items-start";
-  const bubble = isSistema
-    ? "bg-(--color-olive-deep)/15 text-(--color-stencil) italic"
-    : isConscrito
-      ? "bg-(--color-olive-deep) text-(--color-khaki)"
-      : "bg-khaki border border-(--color-border)";
+  const hora = new Date(mensagem.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+  if (mensagem.autor === "sistema") {
+    return (
+      <p className="text-center font-mono text-[11px] text-sand/50">
+        {mensagem.mensagem} · {hora}
+      </p>
+    );
+  }
 
   return (
-    <div className={`flex flex-col gap-1 ${align}`}>
-      <div className={`max-w-[80%] px-3 py-2 text-sm ${bubble}`}>
-        {!isSistema && (
-          <p className="text-[10px] font-mono opacity-80 mb-0.5">
-            {mensagem.autor_nome ?? (isConscrito ? "Conscrito" : "Militar")}
-          </p>
-        )}
-        <p className="whitespace-pre-wrap wrap-break-word">{mensagem.mensagem}</p>
+    <div className={`flex ${isConscrito ? "justify-end" : "justify-start"}`}>
+      <div className={`max-w-[80%] sm:max-w-110 px-4.5 py-3.5 flex flex-col gap-1.5 ${isConscrito ? "bg-field text-night" : "bg-sand/12 text-bone"}`}>
+        <p className={`font-mono text-[11px] ${isConscrito ? "text-night/70" : "text-sand/60"}`}>
+          {mensagem.autor_nome ?? (isConscrito ? "Você" : "Militar")} · {hora}
+        </p>
+        <p className="whitespace-pre-wrap wrap-break-word leading-snug">{mensagem.mensagem}</p>
       </div>
-      <span className="text-[9px] font-mono text-(--color-stencil)">
-        {new Date(mensagem.created_at).toLocaleTimeString("pt-BR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })}
-      </span>
     </div>
   );
 }

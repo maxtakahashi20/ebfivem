@@ -123,7 +123,7 @@ function RootComponent() {
           </div>
         </AdminThemeProvider>
       ) : (
-        <div className="min-h-screen flex flex-col">
+        <div className="site-public min-h-screen flex flex-col bg-bone">
           <Header />
           <main className="flex-1">
             <Outlet />

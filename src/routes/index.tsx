@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowRight, ChevronRight, Star } from "lucide-react";
 import banner from "@/assets/banner-2de.jpg";
+import { Eyebrow, Tape, btnGhostDark, btnPrimary } from "@/components/site-ui";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -23,7 +25,7 @@ const valores = [
 
 // História e Propósito da 2ª DE
 const fatos = [
-  { n: "08 OUT 2023", t: "Fundação da 2ª DE", d: "Nasce a 2ª Divisão do Exército com o propósito de trazer o milsim para dentro do FiveM brasileiro, aproximando jovens e adultos do militarismo." },
+  { n: "08 OUT 2023", t: "Fundação", d: "Nasce a 2ª Divisão do Exército com o propósito de trazer o milsim para dentro do FiveM brasileiro, aproximando jovens e adultos do militarismo." },
   { n: "PROPÓSITO", t: "Milsim com Imersão Total", d: "Reproduzir, em ambiente FiveM controlado, a hierarquia, a disciplina e os procedimentos operacionais do Exército Brasileiro, com o máximo de realismo possível." },
   { n: "DOUTRINA", t: "Hierarquia e Disciplina", d: "Toda a tropa é regida por regulamento interno espelhado nos valores do Exército Brasileiro: patriotismo, civismo, lealdade, probidade." },
   { n: "FORMAÇÃO", t: "Instrução Contínua", d: "Conscritos passam por instrução de ordem unida, tiro virtual, patrulha urbana e operações de escolta, sob avaliação de instrutores designados." },
@@ -36,170 +38,205 @@ const comando = [
   { posto: "GENERAL DE DIVISÃO", nome: "Rafael", funcao: "Subcomandante da 2ª DE" },
 ];
 
+const ficha = [
+  ["OPERAÇÃO", "Alistamento 2ª DE"],
+  ["SETOR", "Recrutamento geral"],
+  ["EFETIVO", "Comunidade FiveM"],
+  ["CONDIÇÃO", "Aberto p/ inscrição"],
+];
+
+const numeros = [
+  ["08.10.23", "Fundação"],
+  ["11", "Batalhões e unidades"],
+  ["04", "Brigadas de bioma"],
+  ["06", "Valores da doutrina"],
+];
+
+const visao = [
+  "Operações conjuntas e instrução constante",
+  "Tropa instruída, organizada e motivada",
+  "Regulamento interno respeitado por todos",
+  "Comunidade brasileira em ambiente FiveM",
+];
+
 function Index() {
   return (
-    <div>
+    <div className="bg-bone text-ink">
       {/* HERO */}
-      <section className="relative overflow-hidden border-b-2 border-[color:var(--color-olive-deep)]">
-        <div
-          className="absolute inset-0 -z-10 bg-cover bg-center"
-          style={{ backgroundImage: `url(${banner})` }}
-        />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-black/80 via-[color:var(--color-olive-deep)]/85 to-black/70" />
-        <div className="absolute inset-0 -z-10 opacity-25"
-          style={{
-            backgroundImage:
-              "repeating-linear-gradient(45deg, rgba(0,0,0,0.4) 0 2px, transparent 2px 8px)",
-          }}
-        />
-        <div className="mx-auto max-w-6xl px-6 py-24 md:py-32 grid md:grid-cols-[1.4fr_1fr] gap-10 items-center text-[color:var(--color-khaki)]">
-          <div className="reveal">
-            <div className="tag-rank mb-6 bg-[color:var(--color-olive-bright)] text-white">
-              ◆ ALISTAMENTO ABERTO · 2026
-            </div>
-            <h1 className="font-display text-5xl md:text-7xl leading-[0.95] mb-6">
-              2ª Divisão<br/>
-              <span className="text-[color:var(--color-olive-bright)]">do Exército.</span>
-            </h1>
-            <p className="max-w-xl text-base md:text-lg opacity-95 mb-8 font-body">
-              A 2ª DE é uma comunidade milsim dedicada a aproximar jovens e adultos do militarismo
-              dentro do FiveM, com o máximo de imersão possível. Apresente-se, registre sua ficha
-              e siga a hierarquia.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Link to="/inscricao" className="btn-olive text-base">
-                ▸ Iniciar Alistamento
-              </Link>
-              <Link to="/acompanhar" className="btn-ghost-olive text-[color:var(--color-khaki)] border-[color:var(--color-khaki)] hover:bg-[color:var(--color-khaki)] hover:text-[color:var(--color-olive-deep)]">
-                Acompanhar Inscrição
-              </Link>
-            </div>
-          </div>
-
-          <div className="reveal" style={{ animationDelay: ".15s" }}>
-            <div className="field-paper bg-[color:var(--color-khaki)] text-[color:var(--color-olive-deep)] p-6 relative">
-              <div className="absolute -top-3 left-4 tag-rank">FICHA · 01-A</div>
-              <div className="stencil text-xs mb-3">CLASSIFICAÇÃO: PÚBLICO</div>
-              <pre className="font-mono text-[12px] leading-relaxed whitespace-pre-wrap">
-{`OPERAÇÃO   : ALISTAMENTO 2ª DE
-SETOR      : RECRUTAMENTO GERAL
-EFETIVO    : COMUNIDADE FIVEM
-PROTOCOLO  : EB-XX-XXXXXX
-CONDIÇÃO   : ABERTO P/ INSCRIÇÃO
-
-> SIRVA À TROPA
-> HONRE A HIERARQUIA
-> CONSTRUA A IMERSÃO`}
-              </pre>
-              <div className="mt-6 flex justify-end">
-                <div className="stamp-2de">2ª DE</div>
+      <section
+        className="bg-night bg-cover bg-center"
+        style={{
+          backgroundImage: `linear-gradient(90deg, #0d120ae6, #0d120a00 70%), linear-gradient(180deg, #0d120a66, #0d120ad9 55%, #0d120a), url(${banner})`,
+        }}
+      >
+        <div className="mx-auto max-w-7xl px-4 sm:px-10 pt-24 md:pt-40">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-12 pb-16">
+            <div className="flex flex-col gap-7 max-w-3xl reveal">
+              <div className="inline-flex w-fit items-center gap-2.5 border border-field px-3.5 py-2 font-mono text-xs tracking-[0.15em] text-sand">
+                <span className="h-2 w-2 rounded-full bg-field animate-pulse" />
+                ALISTAMENTO ABERTO · TURMA {new Date().getFullYear()}
+              </div>
+              <h1 className="font-display font-semibold text-6xl md:text-[92px] leading-[0.95] tracking-tight text-bone">
+                SIRVA À TROPA.
+                <br />
+                HONRE A HIERARQUIA.
+              </h1>
+              <p className="text-lg md:text-xl leading-relaxed text-sand/90 max-w-xl">
+                A 2ª Divisão do Exército é a comunidade milsim do FiveM que leva a hierarquia, a
+                disciplina e os procedimentos do Exército Brasileiro para dentro do jogo, com o
+                máximo de imersão.
+              </p>
+              <div className="flex flex-wrap gap-3.5">
+                <Link to="/inscricao" className={btnPrimary}>
+                  INICIAR ALISTAMENTO <ArrowRight className="h-4.5 w-4.5" />
+                </Link>
+                <Link to="/acompanhar" className={btnGhostDark}>
+                  ACOMPANHAR INSCRIÇÃO
+                </Link>
               </div>
             </div>
+
+            <div className="w-full lg:w-85 shrink-0 bg-night/80 border border-field/40 backdrop-blur-md reveal" style={{ animationDelay: ".15s" }}>
+              <div className="flex justify-between px-5 py-3.5 border-b border-field/40 font-mono text-xs tracking-[0.15em]">
+                <span className="text-field">FICHA · 01-A</span>
+                <span className="text-sand/60">PÚBLICO</span>
+              </div>
+              <dl className="px-5 pt-2 pb-5">
+                {ficha.map(([k, v]) => (
+                  <div key={k} className="flex justify-between py-3 border-b border-sand/10">
+                    <dt className="font-mono text-[11px] tracking-widest text-sand/50">{k}</dt>
+                    <dd className={k === "CONDIÇÃO" ? "text-field" : "text-sand"}>{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-7 border-t border-sand/15">
+            {numeros.map(([n, l]) => (
+              <div key={l} className="flex flex-col gap-1.5">
+                <div className="font-display text-4xl text-bone">{n}</div>
+                <div className="font-mono text-[11px] tracking-[0.15em] text-sand/60 uppercase">{l}</div>
+              </div>
+            ))}
           </div>
         </div>
-        <div className="divider-tape" />
       </section>
+      <Tape thick />
 
       {/* MISSÃO */}
-      <section className="grad-1">
-        <div className="mx-auto max-w-6xl px-6 py-20 grid md:grid-cols-2 gap-12 items-start">
-          <div className="reveal">
-            <div className="stencil text-xs mb-2">SEÇÃO I · OBJETIVO</div>
-            <h2 className="text-3xl md:text-4xl mb-4">Missão da 2ª DE</h2>
-            <p className="text-[color:var(--color-stencil)] leading-relaxed">
-              Trazer o milsim para dentro do FiveM, aproximando jovens e adultos do militarismo com
-              o máximo de imersão possível. Reproduzimos hierarquia, disciplina e procedimentos
-              operacionais inspirados no Exército Brasileiro, em um ambiente fictício controlado.
-            </p>
-            <p className="text-[color:var(--color-stencil)] leading-relaxed mt-4">
-              Cada conscrito que se apresenta é avaliado por um instrutor designado. A tropa é
-              construída pela seriedade dos integrantes e pelo respeito à cadeia de comando.
-            </p>
-          </div>
-          <div className="field-paper p-6 relative scan overflow-hidden reveal">
-            <div className="stencil text-xs mb-3">VISÃO OPERACIONAL</div>
-            <h3 className="text-2xl mb-3">Imersão, hierarquia e camaradagem.</h3>
-            <ul className="space-y-2 text-sm">
-              <li className="flex gap-2"><span className="text-[color:var(--color-olive-bright)]">▸</span> Operações conjuntas e instrução constante.</li>
-              <li className="flex gap-2"><span className="text-[color:var(--color-olive-bright)]">▸</span> Tropa instruída, organizada e motivada.</li>
-              <li className="flex gap-2"><span className="text-[color:var(--color-olive-bright)]">▸</span> Regulamento interno respeitado por todos.</li>
-              <li className="flex gap-2"><span className="text-[color:var(--color-olive-bright)]">▸</span> Comunidade brasileira em ambiente FiveM.</li>
-            </ul>
-          </div>
+      <section className="mx-auto max-w-7xl px-4 sm:px-10 py-20 md:py-30 grid lg:grid-cols-[1fr_560px] gap-12 lg:gap-20 items-center">
+        <div className="flex flex-col gap-6 reveal">
+          <Eyebrow>SEÇÃO I · OBJETIVO</Eyebrow>
+          <h2 className="font-display font-semibold text-4xl md:text-[56px] leading-[1.05]">
+            Milsim de verdade, dentro do FiveM.
+          </h2>
+          <p className="text-lg leading-relaxed text-mute">
+            Reproduzimos hierarquia, disciplina e procedimentos operacionais inspirados no Exército
+            Brasileiro, em um ambiente fictício e controlado. Cada conscrito que se apresenta é
+            avaliado por um instrutor designado.
+          </p>
+          <ul className="pt-2">
+            {visao.map((t) => (
+              <li key={t} className="flex items-center gap-4 py-4 border-t border-ink/20 text-[17px]">
+                <ChevronRight className="h-4.5 w-4.5 text-field shrink-0" /> {t}
+              </li>
+            ))}
+          </ul>
         </div>
+        <figure
+          className="relative h-110 md:h-155 bg-cover bg-center flex items-end reveal"
+          style={{ backgroundImage: "linear-gradient(180deg, #0d120a00 50%, #0d120ae6), url(/galeria/1153.webp)" }}
+        >
+          <figcaption className="w-full flex justify-between px-6 py-5 font-mono text-[11px] tracking-[0.15em]">
+            <span className="text-field">REGISTRO DE OPERAÇÃO</span>
+            <span className="text-sand/70">ARQUIVO 2ª DE</span>
+          </figcaption>
+        </figure>
       </section>
 
       {/* VALORES */}
-      <section className="grad-2 border-y-2 border-[color:var(--color-olive-deep)] py-20">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="stencil text-xs mb-2">SEÇÃO II · DOUTRINA</div>
-          <h2 className="text-3xl md:text-4xl mb-3">Valores do Exército Brasileiro</h2>
-          <p className="text-[color:var(--color-stencil)] mb-10 max-w-2xl">
-            Os valores oficiais do Exército Brasileiro que servem de base para a conduta dentro da 2ª DE.
-          </p>
-          <div className="grid md:grid-cols-3 gap-5">
+      <section className="bg-ink text-bone">
+        <div className="mx-auto max-w-7xl px-4 sm:px-10 py-20 md:py-28 flex flex-col gap-14">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+            <div className="flex flex-col gap-5">
+              <Eyebrow dark>SEÇÃO II · DOUTRINA</Eyebrow>
+              <h2 className="font-display font-semibold text-4xl md:text-[52px]">Valores do Exército Brasileiro</h2>
+            </div>
+            <p className="text-[17px] leading-relaxed text-sand/70 max-w-sm">
+              A base de conduta de cada integrante da 2ª DE, do conscrito ao Alto Comando.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 border-t border-sand/15">
             {valores.map((v, i) => (
-              <div key={v.k} className="field-paper p-5 reveal" style={{ animationDelay: `${i * 0.05}s` }}>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="h-8 w-8 bg-[color:var(--color-olive-deep)] text-[color:var(--color-olive-bright)] flex items-center justify-center font-display text-sm">
-                    {String(i + 1).padStart(2, "0")}
-                  </div>
-                  <h3 className="text-lg">{v.k}</h3>
-                </div>
-                <p className="text-sm text-[color:var(--color-stencil)]">{v.d}</p>
+              <div
+                key={v.k}
+                className="flex flex-col gap-3.5 py-8 lg:px-10 lg:first:pl-0 lg:[&:nth-child(3n+1)]:pl-0 lg:[&:not(:nth-child(3n+1))]:border-l border-sand/15 border-b reveal"
+                style={{ animationDelay: `${i * 0.05}s` }}
+              >
+                <div className="font-mono text-[13px] text-brass">{String(i + 1).padStart(2, "0")}</div>
+                <h3 className="font-display text-[28px] font-medium">{v.k}</h3>
+                <p className="leading-relaxed text-sand/70">{v.d}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* HISTÓRIA E PROPÓSITO */}
-      <section className="grad-3 py-20 text-[color:var(--color-khaki)]">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="stencil text-xs mb-2 text-[color:var(--color-gold)]">SEÇÃO III · DOCUMENTO HISTÓRICO</div>
-          <h2 className="text-3xl md:text-4xl mb-3 text-white">História e Propósito da 2ª DE</h2>
-          <p className="text-[color:var(--color-khaki)] mb-10 max-w-2xl">
-            Da fundação em 8 de outubro de 2023 até as operações de hoje — o que a 2ª DE é, e por que existe.
-          </p>
-          <ol className="relative border-l-2 border-[color:var(--color-gold)] ml-3 space-y-8">
+      {/* LINHA DO TEMPO + ALTO COMANDO */}
+      <section className="bg-paper">
+        <div className="mx-auto max-w-7xl px-4 sm:px-10 py-20 md:py-28 flex flex-col gap-14">
+          <div className="flex flex-col gap-5">
+            <Eyebrow>SEÇÃO III · DOCUMENTO HISTÓRICO</Eyebrow>
+            <h2 className="font-display font-semibold text-4xl md:text-[52px]">De 8 de outubro de 2023 até hoje.</h2>
+          </div>
+          <ol className="grid sm:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-6">
             {fatos.map((f, i) => (
-              <li key={f.n} className="pl-6 reveal" style={{ animationDelay: `${i * 0.05}s` }}>
-                <span className="absolute -left-[11px] mt-1 h-5 w-5 rounded-full bg-[color:var(--color-gold)] border-2 border-white" />
-                <div className="font-display text-xl tracking-widest text-[color:var(--color-gold)]">{f.n} · {f.t}</div>
-                <div className="text-sm text-[color:var(--color-khaki)]">{f.d}</div>
+              <li key={f.n} className="flex flex-col gap-3.5 reveal" style={{ animationDelay: `${i * 0.05}s` }}>
+                <div className="flex items-center">
+                  <span className={`h-3.5 w-3.5 rounded-full shrink-0 ${i === fatos.length - 1 ? "bg-field" : "bg-ink"}`} />
+                  {i < fatos.length - 1 && <span className="h-0.5 flex-1 bg-ink/20" />}
+                </div>
+                <div className="font-mono text-xs tracking-[0.15em] text-(--color-olive)">{f.n}</div>
+                <div className="font-display text-2xl font-medium">{f.t}</div>
+                <p className="text-[15px] leading-relaxed text-mute">{f.d}</p>
               </li>
             ))}
           </ol>
-
-          {/* ALTO COMANDO ATUAL */}
-          <div className="mt-16">
-            <div className="stencil text-xs mb-2 text-[color:var(--color-gold)]">ALTO COMANDO · EM EXERCÍCIO</div>
-            <h3 className="text-2xl md:text-3xl mb-6 text-white">Comandantes Atuais da 2ª DE</h3>
-            <div className="grid md:grid-cols-2 gap-5">
-              {comando.map((c) => (
-                <div key={c.nome} className="field-paper p-6 text-[color:var(--color-stencil)] reveal">
-                  <div className="tag-rank mb-3">{c.posto}</div>
-                  <div className="font-display text-2xl text-[color:var(--color-olive-deep)] tracking-wider">{c.nome}</div>
-                  <div className="text-sm mt-1">{c.funcao}</div>
-                </div>
-              ))}
+          <div className="grid lg:grid-cols-[360px_1fr_1fr] gap-6 pt-6">
+            <div className="flex flex-col gap-2.5">
+              <div className="font-mono text-xs tracking-[0.2em] text-(--color-olive)">ALTO COMANDO · EM EXERCÍCIO</div>
+              <div className="font-display text-3xl font-medium">Quem comanda a 2ª DE hoje.</div>
             </div>
+            {comando.map((c) => (
+              <div key={c.nome} className="flex items-center gap-5 p-6 bg-ink reveal">
+                <div className="h-16 w-16 shrink-0 bg-night border border-brass flex items-center justify-center">
+                  <Star className="h-6.5 w-6.5 text-brass" />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <div className="font-mono text-[11px] tracking-[0.15em] text-brass">{c.posto}</div>
+                  <div className="font-display text-[28px] font-medium text-bone">{c.nome}</div>
+                  <div className="text-[15px] text-sand/70">{c.funcao}</div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* CTA FINAL */}
-      <section className="relative overflow-hidden grad-4">
-        <div className="absolute inset-0 -z-10 opacity-15"
-          style={{ backgroundImage: "repeating-linear-gradient(0deg, rgba(255,255,255,0.4) 0 1px, transparent 1px 12px)" }} />
-        <div className="mx-auto max-w-6xl px-6 py-20 text-center text-[color:var(--color-khaki)]">
-          <div className="stencil text-xs text-[color:var(--color-olive-bright)] mb-2">CONVOCAÇÃO</div>
-          <h2 className="text-4xl md:text-5xl mb-4">A tropa conta com você.</h2>
-          <p className="opacity-90 mb-8 max-w-2xl mx-auto">
-            Preencha sua ficha de alistamento. Sua candidatura será analisada por um instrutor designado da 2ª DE.
+      {/* CONVOCAÇÃO */}
+      <section
+        className="bg-night bg-cover bg-center"
+        style={{ backgroundImage: "linear-gradient(#0d120ad9, #0d120ad9), url(/galeria/12.webp)" }}
+      >
+        <div className="mx-auto max-w-7xl px-4 sm:px-10 py-28 md:py-36 flex flex-col items-center gap-7 text-center">
+          <div className="font-mono text-[13px] tracking-[0.3em] text-field">CONVOCAÇÃO</div>
+          <h2 className="font-display font-semibold text-5xl md:text-[80px] text-bone">A tropa conta com você.</h2>
+          <p className="text-lg md:text-xl text-sand/90 max-w-2xl">
+            Preencha sua ficha. Um instrutor designado da 2ª DE analisa cada candidatura.
           </p>
-          <Link to="/inscricao" className="btn-olive text-base">
-            ▸ Apresentar-se ao Comando
+          <Link to="/inscricao" className={btnPrimary}>
+            APRESENTAR-SE AO COMANDO <ArrowRight className="h-4.5 w-4.5" />
           </Link>
         </div>
       </section>

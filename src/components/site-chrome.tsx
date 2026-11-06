@@ -1,8 +1,8 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { motion } from "framer-motion";
+import { MessageSquare } from "lucide-react";
 import logo from "@/assets/logo-2de.png";
 import { SfxToggle } from "@/components/SfxToggle";
-import { PainelMembroButton } from "@/components/PainelMembroButton";
 import { AdminThemeToggle } from "@/components/admin/AdminThemeToggle";
 
 const DISCORD_URL = "https://discord.gg/2TETa9Z4Fu";
@@ -60,86 +60,93 @@ export function Header() {
   const path = useRouterState({ select: (s) => s.location.pathname });
 
   return (
-    <header className="border-b-2 border-(--color-olive-deep) bg-khaki/70 backdrop-blur supports-backdrop-filter:bg-khaki/60 sticky top-0 z-40">
-      <div className="mx-auto max-w-6xl px-6 py-3 flex items-center gap-6">
-        <BrandMark />
-        <nav className="ml-auto flex items-center gap-1 flex-wrap">
-          {links.map((l) => {
-            const active = path === l.to;
-            return (
-              <Link
-                key={l.to}
-                to={l.to}
-                className={`px-3 py-2 font-display tracking-widest text-xs border-b-2 transition-colors ${
-                  active
-                    ? "border-(--color-olive-bright) text-(--color-olive-deep)"
-                    : "border-transparent text-(--color-stencil) hover:text-(--color-olive-deep)"
-                }`}
-              >
-                {l.label}
-              </Link>
-            );
-          })}
-          <PainelMembroButton />
-          <a
-            href={DISCORD_URL}
-            target="_blank"
-            rel="noreferrer"
-            className="ml-2 tag-rank bg-(--color-olive-bright) hover:opacity-90 shrink-0"
-          >
-            ◆ Discord
-          </a>
+    <header className="sticky top-0 z-40 bg-night/95 backdrop-blur border-b border-(--color-olive)/60">
+      <div className="mx-auto max-w-7xl px-4 sm:px-10 h-20 flex items-center gap-6">
+        <Link to="/" className="flex items-center gap-3 shrink-0">
+          <img src={logo} alt="2ª DE" className="h-11 w-11 object-contain" />
+          <div className="leading-tight">
+            <div className="font-display text-xl font-semibold tracking-[0.15em] text-sand">2ª DE</div>
+            <div className="font-mono text-[10px] tracking-[0.15em] text-field">2ª DIVISÃO DO EXÉRCITO</div>
+          </div>
+        </Link>
+        <nav className="ml-auto hidden lg:flex items-center gap-7">
+          {links.map((l) => (
+            <Link
+              key={l.to}
+              to={l.to}
+              className={`font-display text-[13px] tracking-[0.15em] uppercase transition-colors ${
+                path === l.to ? "text-field" : "text-sand/70 hover:text-sand"
+              }`}
+            >
+              {l.label}
+            </Link>
+          ))}
         </nav>
+        <a
+          href={DISCORD_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="ml-auto lg:ml-0 inline-flex items-center gap-2 bg-field px-4 py-2.5 font-display text-[13px] font-semibold tracking-[0.15em] text-night hover:brightness-110 shrink-0"
+        >
+          <MessageSquare className="h-4 w-4" /> DISCORD
+        </a>
       </div>
-      <div className="divider-tape" />
+      <nav className="lg:hidden flex gap-6 overflow-x-auto px-4 pb-3 sm:px-10">
+        {links.map((l) => (
+          <Link
+            key={l.to}
+            to={l.to}
+            className={`shrink-0 font-display text-xs tracking-[0.15em] uppercase ${
+              path === l.to ? "text-field" : "text-sand/70"
+            }`}
+          >
+            {l.label}
+          </Link>
+        ))}
+      </nav>
     </header>
   );
 }
+
+const footerCols = [
+  { h: "PORTAL", items: links.slice(0, 3) },
+  { h: "CONSCRITO", items: links.slice(3, 6) },
+];
 
 export function Footer({ pathname }: { pathname: string }) {
   if (isPainelPath(pathname)) return null;
 
   return (
-    <footer className="mt-24 border-t-2 border-(--color-olive-deep) bg-(--color-olive-deep) text-(--color-khaki)">
-      <div className="mx-auto max-w-6xl px-6 py-10 grid md:grid-cols-3 gap-8 text-sm">
-        <div>
-          <div className="font-display tracking-widest text-(--color-gold) mb-2">
-            2ª DE · 2ª DIVISÃO DO EXÉRCITO
+    <footer className="bg-night text-sand">
+      <div className="mx-auto max-w-7xl px-4 sm:px-10 pt-14 pb-8 flex flex-col gap-10">
+        <div className="flex flex-col md:flex-row md:justify-between gap-10">
+          <div className="max-w-sm flex flex-col gap-4">
+            <img src={logo} alt="2ª DE" className="h-14 w-14 object-contain" />
+            <p className="text-sm leading-relaxed text-sand/70">
+              Comunidade milsim no FiveM. Hierarquia, disciplina e imersão desde 8 de outubro de 2023.
+            </p>
           </div>
-          <p className="opacity-80">
-            Comunidade milsim brasileira dentro do FiveM. Fundada em 8 de outubro de 2023.
-          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-10 md:gap-16">
+            {footerCols.map((c) => (
+              <div key={c.h} className="flex flex-col gap-3">
+                <div className="font-mono text-[11px] tracking-[0.2em] text-field">{c.h}</div>
+                {c.items.map((l) => (
+                  <Link key={l.to} to={l.to} className="text-[15px] hover:text-bone">{l.label}</Link>
+                ))}
+              </div>
+            ))}
+            <div className="flex flex-col gap-3">
+              <div className="font-mono text-[11px] tracking-[0.2em] text-field">OFICIAL</div>
+              <a href={DISCORD_URL} target="_blank" rel="noreferrer" className="text-[15px] hover:text-bone">Discord</a>
+              <Link to="/autoria" className="text-[15px] hover:text-bone">Autoria</Link>
+            </div>
+          </div>
         </div>
-        <div>
-          <div className="font-display tracking-widest text-(--color-gold) mb-2">DOUTRINA</div>
-          <ul className="space-y-1 opacity-80">
-            <li>Disciplina</li>
-            <li>Hierarquia</li>
-            <li>Imersão</li>
-            <li>Camaradagem</li>
-          </ul>
-        </div>
-        <div>
-          <div className="font-display tracking-widest text-(--color-gold) mb-2">COMUNICAÇÃO</div>
-          <a
-            href={DISCORD_URL}
-            target="_blank"
-            rel="noreferrer"
-            className="underline opacity-90 hover:opacity-100"
-          >
-            discord.gg/2TETa9Z4Fu
-          </a>
-          <p className="opacity-70 mt-2 text-xs">Canal oficial · Convocação 24h</p>
-        </div>
-        </div>
-      <div className="text-center text-[10px] tracking-widest opacity-70 pb-6 px-4 space-y-2">
-        <div className="flex justify-center">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 pt-5 border-t border-(--color-olive)/50 font-mono text-[11px] tracking-wider text-sand/50">
+          <span>© {new Date().getFullYear()} 2ª DE · TODOS OS DIREITOS RESERVADOS</span>
           <SfxToggle />
+          <span>COMUNIDADE FICTÍCIA · SEM VÍNCULO COM O EXÉRCITO BRASILEIRO</span>
         </div>
-        <p>
-          © {new Date().getFullYear()} 2ª DE · 2ª DIVISÃO DO EXÉRCITO · DIREITOS RESERVADOS · USO
-          FICTÍCIO
-        </p>
       </div>
     </footer>
   );

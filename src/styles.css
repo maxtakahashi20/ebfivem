@@ -5,6 +5,15 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* Site público: cores fixas (não mudam com o tema escuro do painel). */
+  --color-night: #0d120a;
+  --color-ink: #1f2a17;
+  --color-field: #7a9a55;
+  --color-sand: #d9d2b5;
+  --color-paper: #eeebdd;
+  --color-bone: #f3f2ea;
+  --color-brass: #c9a54a;
+  --color-mute: #4a5240;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -123,6 +132,7 @@
       repeating-linear-gradient(90deg, rgba(255,255,255,0.018) 0 1px, transparent 1px 6px);
   }
   h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: 0.04em; text-transform: uppercase; }
+  .site-public :is(h1, h2, h3, h4) { letter-spacing: normal; text-transform: none; }
 }
 
 @layer components {

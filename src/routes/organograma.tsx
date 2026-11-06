@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
+import { Mountain, Sun, Trees, Waves } from "lucide-react";
+import { Eyebrow, PageHero } from "@/components/site-ui";
 
 const FotoGaleriaSection = lazy(() =>
   import("@/components/organograma/FotoGaleria").then((m) => ({
@@ -44,10 +46,10 @@ const unidades = [
 ];
 
 const biomas = [
-  { sigla: "CIOpC", nome: "Centro de Instrução de Operações na Caatinga", bioma: "Caatinga" },
-  { sigla: "1ª BDA INF SL", nome: "1ª Brigada de Infantaria de Selva", bioma: "Selva amazônica" },
-  { sigla: "10º BIL MTH", nome: "10º Batalhão de Infantaria Leve Montanha", bioma: "Montanha" },
-  { sigla: "18ª BDA INF Pantanal", nome: "18ª Brigada de Infantaria de Pantanal", bioma: "Pantanal" },
+  { sigla: "CIOpC", nome: "Centro de Instrução de Operações na Caatinga", bioma: "Caatinga", icon: Sun },
+  { sigla: "1ª BDA INF SL", nome: "1ª Brigada de Infantaria de Selva", bioma: "Selva amazônica", icon: Trees },
+  { sigla: "10º BIL MTH", nome: "10º Batalhão de Infantaria Leve Montanha", bioma: "Montanha", icon: Mountain },
+  { sigla: "18ª BDA INF Pantanal", nome: "18ª Brigada de Infantaria de Pantanal", bioma: "Pantanal", icon: Waves },
 ];
 
 function BrasaoImg({
@@ -75,104 +77,84 @@ function BrasaoImg({
   );
 }
 
+const ramos = [
+  ["APOIO", "Logística e Saúde"],
+  ["COMBATE", "Infantaria e Blindados"],
+  ["AVIAÇÃO", "Pantera"],
+  ["OP. ESPECIAIS", "COPESP"],
+];
+
+function NoComando({ posto, nome, dark }: { posto: string; nome: string; dark?: boolean }) {
+  return (
+    <div className={`flex flex-col items-center gap-1.5 px-8 py-4.5 border border-(--color-olive) text-center ${dark ? "bg-ink" : "bg-paper w-full"}`}>
+      <div className={`font-mono text-[11px] tracking-[0.15em] ${dark ? "text-brass" : "text-(--color-olive)"}`}>{posto}</div>
+      <div className={`font-display text-[22px] font-medium ${dark ? "text-bone" : "text-ink"}`}>{nome}</div>
+    </div>
+  );
+}
+
 function OrganogramaPage() {
   return (
-    <div>
-      <section className="grad-3 border-b-2 border-(--color-olive-deep) text-(--color-khaki)">
-        <div className="mx-auto max-w-6xl px-6 py-20">
-          <div className="stencil text-xs mb-2 text-(--color-gold)">
-            DOCUMENTO ORG · COMPOSIÇÃO DA TROPA
-          </div>
-          <h1 className="font-display text-4xl md:text-6xl leading-tight text-white mb-4">
-            Organograma da 2ª DE
-          </h1>
-          <p className="max-w-2xl opacity-90 mb-6">
-            Estrutura operacional da 2ª Divisão do Exército, organizada em batalhões,
-            brigadas e unidades de especialização inspiradas diretamente no Exército Brasileiro.
-          </p>
-          <a href="#galeria" className="btn-olive inline-block text-xs tracking-widest">
-            ▸ VER GALERIA DE FOTOS
-          </a>
-        </div>
-      </section>
+    <div className="bg-bone text-ink">
+      <PageHero
+        eyebrow="COMPOSIÇÃO DA TROPA"
+        title="Batalhões, brigadas e especializações."
+        sub="A estrutura da 2ª DE, inspirada nas unidades do Exército Brasileiro, do apoio logístico às operações especiais."
+        img="/galeria/123145.webp"
+      />
 
-      <section className="grad-1 py-20">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="stencil text-xs mb-2">SEÇÃO I · BATALHÕES E UNIDADES</div>
-          <h2 className="text-3xl md:text-4xl mb-3">Batalhões e Brigadas</h2>
-          <p className="text-(--color-stencil) mb-10 max-w-2xl">
-            Cada unidade possui seu próprio brasão, doutrina e missão dentro da estrutura da 2ª DE.
-          </p>
-
-          <div className="grid md:grid-cols-3 gap-4 mb-10">
-            {BRASOES.slice(0, 3).map((b) => (
-              <BrasaoImg
-                key={b.src}
-                src={b.src}
-                alt={b.alt}
-                loading="eager"
-                className="w-full h-auto border-2 border-(--color-olive-deep) bg-(--color-khaki) p-3"
-              />
-            ))}
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4 mb-10">
-            <BrasaoImg
-              src={BRASOES[3].src}
-              alt={BRASOES[3].alt}
-              className="w-full h-auto border-2 border-(--color-olive-deep) bg-(--color-khaki) p-3"
-            />
-            <div className="field-paper p-5">
-              <div className="tag-rank mb-3">COMANDO · OP. ESPECIAIS</div>
-              <p className="text-sm text-(--color-stencil)">
-                O COPESP integra e comanda as operações especiais da 2ª DE, com apoio direto do
-                Centro de Instrução de Operações Especiais (C I OP ESP), responsável pela
-                formação e qualificação dos operadores.
-              </p>
+      {/* CADEIA DE COMANDO */}
+      <section className="mx-auto max-w-7xl px-4 sm:px-10 pt-20 md:pt-24 flex flex-col items-center">
+        <NoComando dark posto="COMANDANTE · GEN EX" nome="Arthur Vieira" />
+        <span className="h-7 w-0.5 bg-(--color-olive)" />
+        <NoComando dark posto="SUBCOMANDANTE · GEN DIV" nome="Rafael" />
+        <span className="h-7 w-0.5 bg-(--color-olive)" />
+        <div className="w-full grid grid-cols-2 lg:grid-cols-4 gap-6 lg:px-30 border-t-2 border-(--color-olive)">
+          {ramos.map(([a, b]) => (
+            <div key={a} className="flex flex-col items-center">
+              <span className="h-6 w-0.5 bg-(--color-olive)" />
+              <NoComando posto={a} nome={b} />
             </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-3">
-            {unidades.map((u, i) => (
-              <div key={u.sigla} className="field-paper p-4 reveal" style={{ animationDelay: `${i * 0.03}s` }}>
-                <div className="flex items-center gap-3 mb-1">
-                  <div className="tag-rank">{u.sigla}</div>
-                  <div className="font-display text-sm tracking-wider text-(--color-olive-deep)">
-                    {u.nome}
-                  </div>
-                </div>
-                <div className="text-xs text-(--color-stencil) pl-1">{u.funcao}</div>
-              </div>
-            ))}
-          </div>
+          ))}
         </div>
       </section>
 
-      <section className="grad-2 border-y-2 border-(--color-olive-deep) py-20">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="stencil text-xs mb-2">SEÇÃO II · ESPECIALIZAÇÕES POR BIOMA</div>
-          <h2 className="text-3xl md:text-4xl mb-3">Batalhões e Brigadas de Biomas</h2>
-          <p className="text-(--color-stencil) mb-10 max-w-3xl">
-            Conheça os batalhões e brigadas de especialização em biomas dentro da doutrina do
-            Exército Brasileiro, replicados na 2ª DE para operações em terrenos diversos.
-          </p>
+      {/* UNIDADES */}
+      <section className="mx-auto max-w-7xl px-4 sm:px-10 py-20 flex flex-col gap-10">
+        <div className="flex flex-col gap-4">
+          <Eyebrow>SEÇÃO I · BATALHÕES E UNIDADES</Eyebrow>
+          <h2 className="font-display font-semibold text-4xl md:text-5xl">{unidades.length} unidades em operação</h2>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {BRASOES.slice(0, 4).map((b) => (
+            <BrasaoImg key={b.src} src={b.src} alt={b.alt} loading="eager" className="w-full h-60 object-contain bg-ink p-4" />
+          ))}
+        </div>
+        <ol>
+          {unidades.map((u, i) => (
+            <li key={u.sigla} className="flex flex-wrap md:flex-nowrap items-center gap-x-6 gap-y-2 py-4.5 border-b border-ink/20">
+              <span className="font-mono text-xs text-mute w-6">{String(i + 1).padStart(2, "0")}</span>
+              <span className="w-37.5 shrink-0 bg-ink px-2.5 py-1.5 font-display text-sm tracking-wide text-sand">{u.sigla}</span>
+              <span className="font-display text-xl flex-1 min-w-60">{u.nome}</span>
+              <span className="text-[15px] text-mute md:w-95">{u.funcao}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
 
-          <BrasaoImg
-            src={BRASOES[4].src}
-            alt={BRASOES[4].alt}
-            className="w-full h-auto border-2 border-(--color-olive-deep) bg-(--color-khaki) p-3 mb-8"
-          />
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
-            {biomas.map((u, i) => (
-              <div key={u.sigla} className="field-paper p-4 reveal" style={{ animationDelay: `${i * 0.05}s` }}>
-                <div className="tag-rank mb-2">{u.sigla}</div>
-                <div className="font-display text-sm text-(--color-olive-deep) tracking-wider mb-1">
-                  {u.nome}
-                </div>
-                <div className="text-xs text-(--color-stencil)">
-                  Bioma: <span className="font-bold">{u.bioma}</span>
-                </div>
+      {/* BIOMAS */}
+      <section className="bg-ink text-bone">
+        <div className="mx-auto max-w-7xl px-4 sm:px-10 py-20 md:py-24 flex flex-col gap-10">
+          <Eyebrow dark>SEÇÃO II · ESPECIALIZAÇÕES POR BIOMA</Eyebrow>
+          <h2 className="font-display font-semibold text-4xl md:text-5xl">Preparada para cada terreno do Brasil.</h2>
+          <BrasaoImg src={BRASOES[4].src} alt={BRASOES[4].alt} className="w-full h-auto max-h-80 object-contain bg-night p-4" />
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {biomas.map((u) => (
+              <div key={u.sigla} className="flex flex-col gap-4 p-7 border border-sand/20 reveal">
+                <u.icon className="h-7 w-7 text-brass" />
+                <div className="font-mono text-xs tracking-[0.15em] text-brass uppercase">{u.bioma}</div>
+                <div className="font-display text-[26px] font-medium">{u.sigla}</div>
+                <p className="text-[15px] leading-relaxed text-sand/70">{u.nome}</p>
               </div>
             ))}
           </div>
@@ -181,22 +163,20 @@ function OrganogramaPage() {
 
       <Suspense
         fallback={
-          <section id="galeria" className="grad-4 py-16 text-(--color-khaki)">
-            <div className="mx-auto max-w-6xl px-6 text-center font-mono text-sm opacity-70">
-              Carregando galeria…
-            </div>
+          <section id="galeria" className="bg-night py-16 text-center font-mono text-sm text-sand/70">
+            Carregando galeria…
           </section>
         }
       >
         <FotoGaleriaSection />
       </Suspense>
 
-      <section className="grad-3 border-t-2 border-(--color-olive-deep) py-16 text-(--color-khaki)">
-        <div className="mx-auto max-w-4xl px-6 text-center">
-          <div className="stencil text-xs text-(--color-olive-bright) mb-2">AVISO INSTITUCIONAL</div>
-          <p className="opacity-90">
-            Todos os brasões e nomenclaturas são referências ao Exército Brasileiro, utilizadas
-            na 2ª DE exclusivamente para fins de imersão, entretenimento e roleplay dentro do FiveM.
+      <section className="bg-paper py-14">
+        <div className="mx-auto max-w-4xl px-4 sm:px-10 text-center flex flex-col gap-2">
+          <div className="font-mono text-xs tracking-[0.2em] text-(--color-olive)">AVISO INSTITUCIONAL</div>
+          <p className="text-mute">
+            Todos os brasões e nomenclaturas são referências ao Exército Brasileiro, utilizadas na 2ª DE
+            exclusivamente para fins de imersão, entretenimento e roleplay dentro do FiveM.
           </p>
         </div>
       </section>
