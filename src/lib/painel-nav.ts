@@ -22,5 +22,5 @@ export function limparPendingDocProtocolo() {
 
 export function goToPainel(view: AdminView = "perfil", extras?: { protocolo?: string }) {
   queuePainelView(view, extras);
-  window.location.assign("/ADM2DE");
+  window.location.assign("/painel");
 }

@@ -18,7 +18,7 @@ const links = [
 ];
 
 export function isPainelPath(pathname: string) {
-  return /^\/adm2de(\/|$)/i.test(pathname);
+  return /^\/(painel|adm2de)(\/|$)/i.test(pathname);
 }
 
 function BrandMark() {
@@ -35,7 +35,7 @@ function BrandMark() {
   );
 }
 
-/** Painel /ADM2DE: logo + título + toggle de tema. */
+/** Painel /painel: logo + título + toggle de tema. */
 export function PanelBrandHeader() {
   return (
     <motion.header

@@ -36,7 +36,7 @@ export function PerfilMilitar({ variant = "public", onOpenDocumentos }: Props) {
     if (
       session
     ) {
-      void navigate({ to: "/ADM2DE" });
+      void navigate({ to: "/painel" });
     }
   }, [session, navigate, variant]);
 

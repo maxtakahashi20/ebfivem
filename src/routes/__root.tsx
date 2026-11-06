@@ -87,7 +87,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: React.ReactNode }) {
-  const themeBootScript = `(function(){try{if(/^\\/adm2de(\\/|$)/i.test(location.pathname)&&localStorage.getItem("${ADMIN_THEME_KEY}")==="dark"){document.documentElement.classList.add("dark")}}catch(e){}})()`;
+  const themeBootScript = `(function(){try{if(/^\\/(painel|adm2de)(\\/|$)/i.test(location.pathname)&&localStorage.getItem("${ADMIN_THEME_KEY}")==="dark"){document.documentElement.classList.add("dark")}}catch(e){}})()`;
 
   return (
     <html lang="pt-BR">

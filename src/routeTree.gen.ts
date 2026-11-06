@@ -9,62 +9,23 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SuporteRouteImport } from './routes/suporte'
-import { Route as PerfilRouteImport } from './routes/perfil'
-import { Route as OrganogramaRouteImport } from './routes/organograma'
-import { Route as InscricaoRouteImport } from './routes/inscricao'
-import { Route as IdentidadeRouteImport } from './routes/identidade'
-import { Route as HistoriaRouteImport } from './routes/historia'
-import { Route as DocumentosRouteImport } from './routes/documentos'
-import { Route as AutoriaRouteImport } from './routes/autoria'
-import { Route as AcompanharRouteImport } from './routes/acompanhar'
-import { Route as ADM2DERouteImport } from './routes/ADM2DE'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ADM2DERouteImport } from './routes/ADM2DE'
+import { Route as AcompanharRouteImport } from './routes/acompanhar'
+import { Route as AutoriaRouteImport } from './routes/autoria'
+import { Route as DocumentosRouteImport } from './routes/documentos'
+import { Route as HistoriaRouteImport } from './routes/historia'
+import { Route as IdentidadeRouteImport } from './routes/identidade'
+import { Route as InscricaoRouteImport } from './routes/inscricao'
+import { Route as OrganogramaRouteImport } from './routes/organograma'
+import { Route as PainelRouteImport } from './routes/painel'
+import { Route as PerfilRouteImport } from './routes/perfil'
+import { Route as SuporteRouteImport } from './routes/suporte'
 import { Route as AuthDiscordCallbackRouteImport } from './routes/auth/discord.callback'
 
-const SuporteRoute = SuporteRouteImport.update({
-  id: '/suporte',
-  path: '/suporte',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PerfilRoute = PerfilRouteImport.update({
-  id: '/perfil',
-  path: '/perfil',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OrganogramaRoute = OrganogramaRouteImport.update({
-  id: '/organograma',
-  path: '/organograma',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InscricaoRoute = InscricaoRouteImport.update({
-  id: '/inscricao',
-  path: '/inscricao',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IdentidadeRoute = IdentidadeRouteImport.update({
-  id: '/identidade',
-  path: '/identidade',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HistoriaRoute = HistoriaRouteImport.update({
-  id: '/historia',
-  path: '/historia',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DocumentosRoute = DocumentosRouteImport.update({
-  id: '/documentos',
-  path: '/documentos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AutoriaRoute = AutoriaRouteImport.update({
-  id: '/autoria',
-  path: '/autoria',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AcompanharRoute = AcompanharRouteImport.update({
-  id: '/acompanhar',
-  path: '/acompanhar',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ADM2DERoute = ADM2DERouteImport.update({
@@ -72,9 +33,54 @@ const ADM2DERoute = ADM2DERouteImport.update({
   path: '/ADM2DE',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AcompanharRoute = AcompanharRouteImport.update({
+  id: '/acompanhar',
+  path: '/acompanhar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AutoriaRoute = AutoriaRouteImport.update({
+  id: '/autoria',
+  path: '/autoria',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocumentosRoute = DocumentosRouteImport.update({
+  id: '/documentos',
+  path: '/documentos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HistoriaRoute = HistoriaRouteImport.update({
+  id: '/historia',
+  path: '/historia',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IdentidadeRoute = IdentidadeRouteImport.update({
+  id: '/identidade',
+  path: '/identidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InscricaoRoute = InscricaoRouteImport.update({
+  id: '/inscricao',
+  path: '/inscricao',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrganogramaRoute = OrganogramaRouteImport.update({
+  id: '/organograma',
+  path: '/organograma',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PainelRoute = PainelRouteImport.update({
+  id: '/painel',
+  path: '/painel',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PerfilRoute = PerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SuporteRoute = SuporteRouteImport.update({
+  id: '/suporte',
+  path: '/suporte',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthDiscordCallbackRoute = AuthDiscordCallbackRouteImport.update({
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/identidade': typeof IdentidadeRoute
   '/inscricao': typeof InscricaoRoute
   '/organograma': typeof OrganogramaRoute
+  '/painel': typeof PainelRoute
   '/perfil': typeof PerfilRoute
   '/suporte': typeof SuporteRoute
   '/auth/discord/callback': typeof AuthDiscordCallbackRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/identidade': typeof IdentidadeRoute
   '/inscricao': typeof InscricaoRoute
   '/organograma': typeof OrganogramaRoute
+  '/painel': typeof PainelRoute
   '/perfil': typeof PerfilRoute
   '/suporte': typeof SuporteRoute
   '/auth/discord/callback': typeof AuthDiscordCallbackRoute
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   '/identidade': typeof IdentidadeRoute
   '/inscricao': typeof InscricaoRoute
   '/organograma': typeof OrganogramaRoute
+  '/painel': typeof PainelRoute
   '/perfil': typeof PerfilRoute
   '/suporte': typeof SuporteRoute
   '/auth/discord/callback': typeof AuthDiscordCallbackRoute
@@ -138,6 +147,7 @@ export interface FileRouteTypes {
     | '/identidade'
     | '/inscricao'
     | '/organograma'
+    | '/painel'
     | '/perfil'
     | '/suporte'
     | '/auth/discord/callback'
@@ -152,6 +162,7 @@ export interface FileRouteTypes {
     | '/identidade'
     | '/inscricao'
     | '/organograma'
+    | '/painel'
     | '/perfil'
     | '/suporte'
     | '/auth/discord/callback'
@@ -166,6 +177,7 @@ export interface FileRouteTypes {
     | '/identidade'
     | '/inscricao'
     | '/organograma'
+    | '/painel'
     | '/perfil'
     | '/suporte'
     | '/auth/discord/callback'
@@ -181,6 +193,7 @@ export interface RootRouteChildren {
   IdentidadeRoute: typeof IdentidadeRoute
   InscricaoRoute: typeof InscricaoRoute
   OrganogramaRoute: typeof OrganogramaRoute
+  PainelRoute: typeof PainelRoute
   PerfilRoute: typeof PerfilRoute
   SuporteRoute: typeof SuporteRoute
   AuthDiscordCallbackRoute: typeof AuthDiscordCallbackRoute
@@ -188,67 +201,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/suporte': {
-      id: '/suporte'
-      path: '/suporte'
-      fullPath: '/suporte'
-      preLoaderRoute: typeof SuporteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/perfil': {
-      id: '/perfil'
-      path: '/perfil'
-      fullPath: '/perfil'
-      preLoaderRoute: typeof PerfilRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/organograma': {
-      id: '/organograma'
-      path: '/organograma'
-      fullPath: '/organograma'
-      preLoaderRoute: typeof OrganogramaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/inscricao': {
-      id: '/inscricao'
-      path: '/inscricao'
-      fullPath: '/inscricao'
-      preLoaderRoute: typeof InscricaoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/identidade': {
-      id: '/identidade'
-      path: '/identidade'
-      fullPath: '/identidade'
-      preLoaderRoute: typeof IdentidadeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/historia': {
-      id: '/historia'
-      path: '/historia'
-      fullPath: '/historia'
-      preLoaderRoute: typeof HistoriaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/documentos': {
-      id: '/documentos'
-      path: '/documentos'
-      fullPath: '/documentos'
-      preLoaderRoute: typeof DocumentosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/autoria': {
-      id: '/autoria'
-      path: '/autoria'
-      fullPath: '/autoria'
-      preLoaderRoute: typeof AutoriaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/acompanhar': {
-      id: '/acompanhar'
-      path: '/acompanhar'
-      fullPath: '/acompanhar'
-      preLoaderRoute: typeof AcompanharRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ADM2DE': {
@@ -258,11 +215,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ADM2DERouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/acompanhar': {
+      id: '/acompanhar'
+      path: '/acompanhar'
+      fullPath: '/acompanhar'
+      preLoaderRoute: typeof AcompanharRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/autoria': {
+      id: '/autoria'
+      path: '/autoria'
+      fullPath: '/autoria'
+      preLoaderRoute: typeof AutoriaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/documentos': {
+      id: '/documentos'
+      path: '/documentos'
+      fullPath: '/documentos'
+      preLoaderRoute: typeof DocumentosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/historia': {
+      id: '/historia'
+      path: '/historia'
+      fullPath: '/historia'
+      preLoaderRoute: typeof HistoriaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/identidade': {
+      id: '/identidade'
+      path: '/identidade'
+      fullPath: '/identidade'
+      preLoaderRoute: typeof IdentidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inscricao': {
+      id: '/inscricao'
+      path: '/inscricao'
+      fullPath: '/inscricao'
+      preLoaderRoute: typeof InscricaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/organograma': {
+      id: '/organograma'
+      path: '/organograma'
+      fullPath: '/organograma'
+      preLoaderRoute: typeof OrganogramaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/painel': {
+      id: '/painel'
+      path: '/painel'
+      fullPath: '/painel'
+      preLoaderRoute: typeof PainelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/perfil': {
+      id: '/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof PerfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/suporte': {
+      id: '/suporte'
+      path: '/suporte'
+      fullPath: '/suporte'
+      preLoaderRoute: typeof SuporteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/discord/callback': {
@@ -285,6 +305,7 @@ const rootRouteChildren: RootRouteChildren = {
   IdentidadeRoute: IdentidadeRoute,
   InscricaoRoute: InscricaoRoute,
   OrganogramaRoute: OrganogramaRoute,
+  PainelRoute: PainelRoute,
   PerfilRoute: PerfilRoute,
   SuporteRoute: SuporteRoute,
   AuthDiscordCallbackRoute: AuthDiscordCallbackRoute,

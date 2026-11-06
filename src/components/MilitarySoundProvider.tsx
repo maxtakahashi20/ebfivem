@@ -16,7 +16,7 @@ export function MilitarySoundProvider() {
   useEffect(() => {
     initMilitarySounds();
     if (!isMilitarySoundsEnabled()) return;
-    if (prevPath.current !== pathname && !/^\/adm2de/i.test(pathname)) {
+    if (prevPath.current !== pathname && !/^\/(painel|adm2de)/i.test(pathname)) {
       playRadioSquawk();
     }
     prevPath.current = pathname;

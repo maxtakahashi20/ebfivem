@@ -4,6 +4,6 @@ import { queuePainelView } from "@/lib/painel-nav";
 export const Route = createFileRoute("/identidade")({
   beforeLoad: () => {
     queuePainelView("perfil");
-    throw redirect({ to: "/ADM2DE" });
+    throw redirect({ to: "/painel" });
   },
 });

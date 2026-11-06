@@ -33,7 +33,7 @@ function DiscordCallbackPage() {
 
     if (error) {
       toast.error("Login Discord cancelado ou negado.");
-      window.location.assign("/ADM2DE");
+      window.location.assign("/painel");
       return;
     }
     if (!code || !state) {
@@ -44,7 +44,7 @@ function DiscordCallbackPage() {
     const saved = sessionStorage.getItem(DISCORD_OAUTH_STATE_KEY);
     if (!saved || saved !== state) {
       toast.error("Sessão OAuth expirada. Clique em Painel Membro e tente de novo.");
-      window.location.assign("/ADM2DE");
+      window.location.assign("/painel");
       return;
     }
 
@@ -60,7 +60,7 @@ function DiscordCallbackPage() {
         sessionStorage.setItem(PENDING_VIEW_KEY, "perfil");
 
         toast.success(`Bem-vindo, ${profile.displayName}`);
-        window.location.assign("/ADM2DE");
+        window.location.assign("/painel");
       } catch (e) {
         started.current = false;
         const text = e instanceof Error ? e.message : "Falha na autenticação";
