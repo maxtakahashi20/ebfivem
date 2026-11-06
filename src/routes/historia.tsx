@@ -4,7 +4,7 @@ import { PageHero } from "@/components/site-ui";
 export const Route = createFileRoute("/historia")({
   head: () => ({
     meta: [
-      { title: "História · 2ª DE" },
+      { title: "História · 2 DE" },
       { name: "description", content: "História da 2ª Divisão do Exército — fundada em 8 de outubro de 2023." },
     ],
   }),

@@ -5,7 +5,7 @@ import { PageHero, btnPrimary } from "@/components/site-ui";
 export const Route = createFileRoute("/autoria")({
   head: () => ({
     meta: [
-      { title: "Autoria · 2ª DE" },
+      { title: "Autoria · 2 DE" },
       { name: "description", content: "Direitos autorais e autoria da 2ª Divisão do Exército." },
     ],
   }),
