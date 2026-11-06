@@ -47,7 +47,7 @@ function isGroupActive(groupId: string, view: AdminView, entry: NavEntry): boole
 
 export function AdminSidebar({ view, onViewChange, onLogout }: Props) {
   const fetchStatus = useServerFn(getPainelStatus);
-  const { papel, desenvolvedor } = useDiscordSession();
+  const { papel, desenvolvedor, pe } = useDiscordSession();
   const [status, setStatus] = useState({
     bot: false,
     webhook: false,
@@ -63,14 +63,15 @@ export function AdminSidebar({ view, onViewChange, onLogout }: Props) {
   });
 
   const visibleEntries = useMemo<NavEntry[]>(() => {
-    const pode = (id: string) => papelAlcanca(papel, papelDaView(id));
+    // A PE é por cargo próprio, fora da escada de papéis; o servidor confere de novo.
+    const pode = (id: string) => (id.startsWith("pe-") ? pe : papelAlcanca(papel, papelDaView(id)));
     return NAV_ENTRIES.flatMap((entry) => {
       if (entry.type === "single") return pode(entry.id) ? [entry] : [];
       const children = entry.group.children.filter((c) => pode(c.id));
       if (children.length === 0) return [];
       return [{ type: "group" as const, group: { ...entry.group, children } }];
     });
-  }, [papel]);
+  }, [papel, pe]);
 
   useEffect(() => {
     fetchStatus({ data: { session: getDiscordSessionToken() } })

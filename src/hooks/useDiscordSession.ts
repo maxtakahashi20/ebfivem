@@ -18,6 +18,8 @@ export function useDiscordSession() {
   const [session, setSession] = useState<string | null>(null);
   const [papel, setPapel] = useState<Papel>("membro");
   const [desenvolvedor, setDesenvolvedor] = useState(false);
+  /** Polícia do Exército (ou quem a comanda): vê "Relatórios de patrulha". */
+  const [pe, setPe] = useState(false);
   const [loading, setLoading] = useState(true);
   /** Falha que não é de sessão (Discord ou banco fora): não é "acesso negado". */
   const [erro, setErro] = useState<string | null>(null);
@@ -34,6 +36,7 @@ export function useDiscordSession() {
         setSession(null);
         setPapel("membro");
         setDesenvolvedor(false);
+        setPe(false);
         setLoading(false);
         return;
       }
@@ -41,11 +44,12 @@ export function useDiscordSession() {
         const res = await validar({ data: { session: s } });
         const p = res.profile;
         const nextSession = res.session ?? s;
-        const flags = res as { papel?: Papel; desenvolvedor?: boolean };
+        const flags = res as { papel?: Papel; desenvolvedor?: boolean; pe?: boolean };
         setProfile(p);
         setSession(nextSession);
         setPapel(flags.papel ?? "membro");
         setDesenvolvedor(Boolean(flags.desenvolvedor));
+        setPe(Boolean(flags.pe));
         setErro(null);
         localStorage.setItem(DISCORD_SESSION_KEY, nextSession);
       } catch (e) {
@@ -56,6 +60,7 @@ export function useDiscordSession() {
           setSession(null);
           setPapel("membro");
           setDesenvolvedor(false);
+          setPe(false);
         } else if (tentativa < 3) {
           // Falha passageira: continua "verificando" e tenta de novo (2 s, 4 s, 8 s).
           await new Promise((r) => setTimeout(r, 2000 * 2 ** tentativa));
@@ -91,6 +96,7 @@ export function useDiscordSession() {
     setSession(null);
     setPapel("membro");
     setDesenvolvedor(false);
+    setPe(false);
   }, [encerrar]);
 
   const setSessionToken = useCallback(
@@ -107,6 +113,7 @@ export function useDiscordSession() {
     session,
     papel,
     desenvolvedor,
+    pe,
     loading,
     erro,
     login,

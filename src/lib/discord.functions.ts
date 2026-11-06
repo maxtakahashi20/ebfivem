@@ -283,3 +283,43 @@ export const enviarComunicadoDiscord = createServerFn({ method: "POST" })
     });
     return { ok: true };
   });
+
+/** Relatório de patrulha da PE no canal da PE (`DISCORD_WEBHOOK_PE_URL`; sem ele, não envia). */
+export async function notificarPatrulha(r: {
+  autor: string;
+  data: string;
+  inicio: string;
+  fim: string;
+  viatura: string;
+  equipe: string;
+  area: string;
+  abordagens: number;
+  prisoes: number;
+  apreensoes: number;
+  ocorrencias?: string | null;
+}): Promise<void> {
+  const url = trimEnvUrl(process.env.DISCORD_WEBHOOK_PE_URL);
+  if (!url) return;
+  const fields: DiscordEmbed["fields"] = [
+    { name: "PATRULHEIRO", value: r.autor, inline: true },
+    { name: "HORÁRIO", value: `${r.data.split("-").reverse().join("/")} · ${r.inicio}–${r.fim}`, inline: true },
+    { name: "VIATURA", value: r.viatura, inline: true },
+    { name: "ÁREA", value: r.area, inline: true },
+    { name: "EQUIPE", value: r.equipe },
+    {
+      name: "NÚMEROS",
+      value: `Abordagens: ${r.abordagens} · Prisões: ${r.prisoes} · Apreensões: ${r.apreensoes}`,
+    },
+  ];
+  if (r.ocorrencias) fields.push({ name: "OCORRÊNCIAS", value: r.ocorrencias });
+  const res = await postWebhook(
+    url,
+    buildPayload({
+      title: "🚓 RELATÓRIO DE PATRULHA — PE",
+      color: 0x8d6e63,
+      fields,
+      footer: { text: "2ª DE · Polícia do Exército" },
+    }),
+  );
+  if (!res.ok) console.warn("[pe] webhook:", res.status, res.detail);
+}

@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import type { Papel } from "@/lib/access-control";
 import {
+  Siren,
   LayoutDashboard,
   Radar,
   UserPlus,
@@ -59,13 +60,15 @@ export const IMPLEMENTED_VIEWS = new Set<AdminView>([
   "comunicados",
   "documentos",
   "suporte-admin",
+  "pe-patrulha",
 ]);
 
 const VIEWS_MEMBRO = new Set<AdminView>(["dashboard", "perfil", "documentos"]);
 
 /** Quem pode abrir cada tela. O que não estiver listado é do Alto Comando. */
 export function papelDaView(view: AdminView): Papel {
-  if (VIEWS_MEMBRO.has(view)) return "membro";
+  // "pe-*": a checagem real é o cargo da PE, no servidor (src/lib/pe.server.ts).
+  if (VIEWS_MEMBRO.has(view) || view.startsWith("pe-")) return "membro";
   if (view.startsWith("sys-") || view.startsWith("restrito-")) return "desenvolvedor";
   return view.startsWith("recrutamento-") ? "instrutor" : "alto-comando";
 }
@@ -204,6 +207,15 @@ export const NAV_ENTRIES: NavEntry[] = [
         { id: "efetivo-ativos", label: "Militares" },
         { id: "efetivo-instrutores", label: "Instrutores" },
       ],
+    },
+  },
+  {
+    type: "group",
+    group: {
+      id: "pe",
+      label: "Polícia do Exército",
+      icon: Siren,
+      children: [{ id: "pe-patrulha", label: "Relatórios de patrulha" }],
     },
   },
   {

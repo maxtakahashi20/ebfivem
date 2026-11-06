@@ -12,7 +12,7 @@ const sessao = (id, cargos, segredo = SEGREDO, exp = Date.now() + 3600e3) => {
   return body + "." + crypto.createHmac("sha256", segredo).update(body).digest("base64url");
 };
 
-const NIVEL = { membro: 0, instrutor: 1, alto: 2, alto_tag: 2, dev: 3 };
+const NIVEL = { membro: 0, instrutor: 1, alto: 2, alto_tag: 2, dev: 3, pe: 0, pe2: 0, pe_cmd: 0 };
 const SESSOES = {
   membro: sessao("900000000000000003", []),
   instrutor: sessao("900000000000000005", ["111"]),
@@ -20,6 +20,10 @@ const SESSOES = {
   dev: sessao("900000000000000006", ["333"]),
   // Sem cargo no Discord; Alto Comando pela tag no efetivo (e2e/ambiente.sh).
   alto_tag: sessao("900000000000000009", []),
+  // Polícia do Exército: cargo próprio, fora da escada (DISCORD_PE_*_ROLE_IDS).
+  pe: sessao("900000000000000010", ["444"]),
+  pe2: sessao("900000000000000011", ["444"]),
+  pe_cmd: sessao("900000000000000012", ["555"]),
   forjada: sessao("900000000000000007", ["222"], "segredo-errado"),
   expirada: sessao("900000000000000008", ["222"], SEGREDO, Date.now() - 1000),
   chave_antiga: "26L5",
@@ -51,7 +55,7 @@ const casos = (session) => [
   [2, D, "enviarComunicadoDiscord", { session, titulo: "Título e2e", mensagem: "Mensagem e2e", tipo: "informativo" }],
   [2, U, "listarTicketsAdmin", { session }],
 ];
-const negado = (m) => /Acesso restrito|Sessão Discord|too_small/.test(m || "");
+const negado = (m) => /Acesso restrito|Sessão Discord|too_small|Só o comando/.test(m || "");
 
 (async () => {
   const b = await chromium.launch();
@@ -87,6 +91,50 @@ const negado = (m) => /Acesso restrito|Sessão Discord|too_small/.test(m || "");
       }
     }
   }
+  // PE: quem lista e quem decide; o resto da casa não entra.
+  const T = "/src/lib/patrulha.functions.ts";
+  const LISTA_PE = ["pe", "pe2", "pe_cmd", "alto", "alto_tag", "dev"];
+  const DECIDE_PE = ["pe_cmd", "alto", "alto_tag", "dev"];
+  for (const [nome, s] of Object.entries(SESSOES)) {
+    for (const [f, d, pode] of [
+      ["listarRelatoriosPatrulha", { session: s }, LISTA_PE],
+      ["decidirRelatorioPatrulha", { session: s, id: ID, status: "aprovado" }, DECIDE_PE],
+    ]) {
+      total++;
+      const r = await chamar(T, f, d);
+      const deve = pode.includes(nome);
+      if (deve === negado(r.err)) {
+        erros++;
+        console.error(`ERRADO ${nome} ${f}: ${deve ? "devia liberar" : "devia negar"} (${(r.err || "liberou").slice(0, 80)})`);
+      }
+    }
+  }
+  // Fluxo: a PE envia, outro patrulheiro não vê, o comando vê e aprova.
+  const resultado = (m, f, d) =>
+    pg.evaluate(async ([m, f, d]) => (await import(m))[f]({ data: d }), [m, f, d]);
+  const confere = (ok, msg) => {
+    total++;
+    if (!ok) {
+      erros++;
+      console.error("ERRADO PE: " + msg);
+    }
+  };
+  const rel = { data: "2026-11-06", inicio: "20:00", fim: "22:30", viatura: "VTR PE-01", equipe: "E2E, Fulano", area: "Centro", abordagens: 3, prisoes: 1, apreensoes: 0, ocorrencias: "Abordagem na praça." };
+  await resultado(T, "enviarRelatorioPatrulha", { session: SESSOES.pe, relatorio: rel });
+  const doPe = await resultado(T, "listarRelatoriosPatrulha", { session: SESSOES.pe });
+  confere(doPe.relatorios.length === 1 && !doPe.comando, "patrulheiro devia ver só o próprio relatório");
+  const doPe2 = await resultado(T, "listarRelatoriosPatrulha", { session: SESSOES.pe2 });
+  confere(doPe2.relatorios.length === 0, "outro patrulheiro viu relatório alheio");
+  const doCmd = await resultado(T, "listarRelatoriosPatrulha", { session: SESSOES.pe_cmd, busca: "Centro" });
+  confere(doCmd.comando && doCmd.relatorios.length === 1, "comando da PE devia ver todos");
+  const semMotivo = await chamar(T, "decidirRelatorioPatrulha", { session: SESSOES.pe_cmd, id: doCmd.relatorios[0].id, status: "devolvido" });
+  confere(!!semMotivo.err, "devolução sem motivo foi aceita");
+  await resultado(T, "decidirRelatorioPatrulha", { session: SESSOES.pe_cmd, id: doCmd.relatorios[0].id, status: "aprovado" });
+  const depois = await resultado(T, "listarRelatoriosPatrulha", { session: SESSOES.pe, status: "aprovado" });
+  confere(depois.relatorios[0]?.revisado_por?.includes("900000000000000012"), "aprovação não registrou quem revisou");
+  const malicioso = await resultado(T, "listarRelatoriosPatrulha", { session: SESSOES.pe_cmd, busca: "x,autor_discord_id.neq.0" }).catch((e) => ({ err: e.message }));
+  confere(malicioso.relatorios?.length === 0, "busca conseguiu mudar o filtro " + JSON.stringify(malicioso).slice(0, 120));
+
   const soRg = await chamar(I, "consultarFicha", { rg: "11111" });
   total++;
   if (!soRg.err) {

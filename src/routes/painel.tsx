@@ -18,6 +18,7 @@ import { AdminModuleView } from "@/components/admin/AdminModuleView";
 import { UltimoProtocolo } from "@/components/admin/UltimoProtocolo";
 import { DocumentosPainel } from "@/components/admin/DocumentosPainel";
 import { SuporteAdmin } from "@/components/admin/SuporteAdmin";
+import { PatrulhaPE } from "@/components/admin/PatrulhaPE";
 import { PerfilMilitar } from "@/components/military/PerfilMilitar";
 import { PENDING_VIEW_KEY } from "@/lib/painel-nav";
 import { useDiscordSession } from "@/hooks/useDiscordSession";
@@ -294,6 +295,8 @@ function PanelContent({
       return <Comunicados />;
     case "suporte-admin":
       return <SuporteAdmin />;
+    case "pe-patrulha":
+      return <PatrulhaPE />;
     default:
       return <AdminModuleView view={view} />;
   }

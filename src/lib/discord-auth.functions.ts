@@ -20,6 +20,7 @@ import {
 } from "@/lib/identidade-db";
 import { isDesenvolvedor } from "@/lib/access-control";
 import { papelAtual } from "@/lib/papel.server";
+import { acessoPE } from "@/lib/pe.server";
 
 function resolveRedirectUri(): string {
   const { redirectUri } = discordConfig();
@@ -344,6 +345,7 @@ export const validarSessaoDiscord = createServerFn({ method: "POST" })
         session: data.session,
         papel,
         desenvolvedor: isDesenvolvedor(profile),
+        pe: acessoPE(profile, papel).pe,
       };
     }
 
@@ -358,6 +360,7 @@ export const validarSessaoDiscord = createServerFn({ method: "POST" })
       session,
       papel,
       desenvolvedor: isDesenvolvedor(refreshed),
+      pe: acessoPE(refreshed, papel).pe,
     };
   });
 
