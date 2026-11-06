@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ArrowUpRight } from "lucide-react";
+import { motion } from "framer-motion";
 import { PageHero, btnPrimary } from "@/components/site-ui";
+import { Reveal, cardHover } from "@/components/motion";
 
 export const Route = createFileRoute("/autoria")({
   head: () => ({
@@ -41,24 +43,24 @@ function Autoria() {
       />
       <div className="mx-auto max-w-5xl px-4 sm:px-10 py-20 md:py-25">
         {clausulas.map((c, i) => (
-          <section key={c.k} className="flex gap-6 md:gap-12 py-10 border-b border-ink/20 reveal">
+          <Reveal as="section" key={c.k} x={i % 2 ? 40 : -40} y={0} className="flex gap-6 md:gap-12 py-10 border-b border-ink/20">
             <div className="font-display text-[28px] text-field shrink-0">§ {i + 1}</div>
             <div className="flex flex-col gap-2.5">
               <div className="font-mono text-xs tracking-[0.15em] text-(--color-olive)">{c.k}</div>
               <h2 className="font-display text-3xl font-medium">{c.t}</h2>
               <p className="text-lg leading-relaxed text-mute">{c.x}</p>
             </div>
-          </section>
+          </Reveal>
         ))}
-        <div className="mt-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5 bg-ink px-6 sm:px-9 py-8">
+        <Reveal className="mt-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5 bg-ink px-6 sm:px-9 py-8">
           <div className="flex flex-col gap-2">
             <div className="font-mono text-xs tracking-[0.15em] text-field">CONTATO OFICIAL</div>
             <div className="font-display text-2xl sm:text-[28px] text-bone">discord.gg/2TETa9Z4Fu</div>
           </div>
-          <a href="https://discord.gg/2TETa9Z4Fu" target="_blank" rel="noreferrer" className={btnPrimary}>
+          <motion.a {...cardHover} href="https://discord.gg/2TETa9Z4Fu" target="_blank" rel="noreferrer" className={btnPrimary}>
             ENTRAR NO DISCORD <ArrowUpRight className="h-4.5 w-4.5" />
-          </a>
-        </div>
+          </motion.a>
+        </Reveal>
         <p className="mt-6 text-right font-mono text-[11px] tracking-wider text-mute">
           © {new Date().getFullYear()} 2ª DE · TODOS OS DIREITOS RESERVADOS
         </p>

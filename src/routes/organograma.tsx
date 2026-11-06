@@ -1,7 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
 import { Mountain, Sun, Trees, Waves } from "lucide-react";
+import { motion } from "framer-motion";
 import { Eyebrow, PageHero } from "@/components/site-ui";
+import { EASE, Reveal, SplitTitle, Stagger, StaggerItem } from "@/components/motion";
+
+/** Traço vertical da cadeia de comando que se desenha de cima para baixo. */
+function Linha({ className, delay = 0 }: { className: string; delay?: number }) {
+  return (
+    <motion.span
+      className={`${className} origin-top`}
+      initial={{ scaleY: 0 }}
+      whileInView={{ scaleY: 1 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.4, delay, ease: EASE }}
+    />
+  );
+}
 
 const FotoGaleriaSection = lazy(() =>
   import("@/components/organograma/FotoGaleria").then((m) => ({
@@ -105,59 +120,83 @@ function OrganogramaPage() {
 
       {/* CADEIA DE COMANDO */}
       <section className="mx-auto max-w-7xl px-4 sm:px-10 pt-20 md:pt-24 flex flex-col items-center">
-        <NoComando dark posto="COMANDANTE · GEN EX" nome="Arthur Vieira" />
-        <span className="h-7 w-0.5 bg-(--color-olive)" />
-        <NoComando dark posto="SUBCOMANDANTE · GEN DIV" nome="Rafael" />
-        <span className="h-7 w-0.5 bg-(--color-olive)" />
-        <div className="w-full grid grid-cols-2 lg:grid-cols-4 gap-6 lg:px-30 border-t-2 border-(--color-olive)">
+        <Reveal y={-20}>
+          <NoComando dark posto="COMANDANTE · GEN EX" nome="Arthur Vieira" />
+        </Reveal>
+        <Linha className="h-7 w-0.5 bg-(--color-olive)" delay={0.3} />
+        <Reveal y={-20} delay={0.45}>
+          <NoComando dark posto="SUBCOMANDANTE · GEN DIV" nome="Rafael" />
+        </Reveal>
+        <Linha className="h-7 w-0.5 bg-(--color-olive)" delay={0.75} />
+        <motion.div
+          className="w-full grid grid-cols-2 lg:grid-cols-4 gap-6 lg:px-30 border-t-2 border-(--color-olive)"
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.12, delayChildren: 0.9 } } }}
+        >
           {ramos.map(([a, b]) => (
-            <div key={a} className="flex flex-col items-center">
+            <StaggerItem key={a} hover className="flex flex-col items-center">
               <span className="h-6 w-0.5 bg-(--color-olive)" />
               <NoComando posto={a} nome={b} />
-            </div>
+            </StaggerItem>
           ))}
-        </div>
+        </motion.div>
       </section>
 
       {/* UNIDADES */}
       <section className="mx-auto max-w-7xl px-4 sm:px-10 py-20 flex flex-col gap-10">
-        <div className="flex flex-col gap-4">
+        <Reveal className="flex flex-col gap-4">
           <Eyebrow>SEÇÃO I · BATALHÕES E UNIDADES</Eyebrow>
-          <h2 className="font-display font-semibold text-4xl md:text-5xl">{unidades.length} unidades em operação</h2>
-        </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <SplitTitle as="h2" text={`${unidades.length} unidades em operação`} className="font-display font-semibold text-4xl md:text-5xl" />
+        </Reveal>
+        <Stagger className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {BRASOES.slice(0, 4).map((b) => (
-            <BrasaoImg key={b.src} src={b.src} alt={b.alt} loading="eager" className="w-full h-60 object-contain bg-ink p-4" />
+            <StaggerItem key={b.src} hover>
+              <BrasaoImg src={b.src} alt={b.alt} loading="eager" className="w-full h-60 object-contain bg-ink p-4" />
+            </StaggerItem>
           ))}
-        </div>
-        <ol>
+        </Stagger>
+        <Stagger as="ol">
           {unidades.map((u, i) => (
-            <li key={u.sigla} className="flex flex-wrap md:flex-nowrap items-center gap-x-6 gap-y-2 py-4.5 border-b border-ink/20">
+            <StaggerItem as="li" key={u.sigla} className="flex flex-wrap md:flex-nowrap items-center gap-x-6 gap-y-2 py-4.5 border-b border-ink/20">
               <span className="font-mono text-xs text-mute w-6">{String(i + 1).padStart(2, "0")}</span>
               <span className="w-37.5 shrink-0 bg-ink px-2.5 py-1.5 font-display text-sm tracking-wide text-sand">{u.sigla}</span>
               <span className="font-display text-xl flex-1 min-w-60">{u.nome}</span>
               <span className="text-[15px] text-mute md:w-95">{u.funcao}</span>
-            </li>
+            </StaggerItem>
           ))}
-        </ol>
+        </Stagger>
       </section>
 
       {/* BIOMAS */}
       <section className="bg-ink text-bone">
         <div className="mx-auto max-w-7xl px-4 sm:px-10 py-20 md:py-24 flex flex-col gap-10">
-          <Eyebrow dark>SEÇÃO II · ESPECIALIZAÇÕES POR BIOMA</Eyebrow>
-          <h2 className="font-display font-semibold text-4xl md:text-5xl">Preparada para cada terreno do Brasil.</h2>
-          <BrasaoImg src={BRASOES[4].src} alt={BRASOES[4].alt} className="w-full h-auto max-h-80 object-contain bg-night p-4" />
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Reveal>
+            <Eyebrow dark>SEÇÃO II · ESPECIALIZAÇÕES POR BIOMA</Eyebrow>
+          </Reveal>
+          <SplitTitle as="h2" text="Preparada para cada terreno do Brasil." className="font-display font-semibold text-4xl md:text-5xl" />
+          <Reveal>
+            <BrasaoImg src={BRASOES[4].src} alt={BRASOES[4].alt} className="w-full h-auto max-h-80 object-contain bg-night p-4" />
+          </Reveal>
+          <Stagger className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {biomas.map((u) => (
-              <div key={u.sigla} className="flex flex-col gap-4 p-7 border border-sand/20 reveal">
-                <u.icon className="h-7 w-7 text-brass" />
+              <StaggerItem key={u.sigla} hover className="flex flex-col gap-4 p-7 border border-sand/20 hover:border-brass/60 transition-colors">
+                <motion.span
+                  className="w-fit"
+                  initial={{ rotate: -180, scale: 0 }}
+                  whileInView={{ rotate: 0, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ type: "spring", stiffness: 150, damping: 12, delay: 0.3 }}
+                >
+                  <u.icon className="h-7 w-7 text-brass" />
+                </motion.span>
                 <div className="font-mono text-xs tracking-[0.15em] text-brass uppercase">{u.bioma}</div>
                 <div className="font-display text-[26px] font-medium">{u.sigla}</div>
                 <p className="text-[15px] leading-relaxed text-sand/70">{u.nome}</p>
-              </div>
+              </StaggerItem>
             ))}
-          </div>
+          </Stagger>
         </div>
       </section>
 
@@ -172,13 +211,13 @@ function OrganogramaPage() {
       </Suspense>
 
       <section className="bg-paper py-14">
-        <div className="mx-auto max-w-4xl px-4 sm:px-10 text-center flex flex-col gap-2">
+        <Reveal className="mx-auto max-w-4xl px-4 sm:px-10 text-center flex flex-col gap-2">
           <div className="font-mono text-xs tracking-[0.2em] text-(--color-olive)">AVISO INSTITUCIONAL</div>
           <p className="text-mute">
             Todos os brasões e nomenclaturas são referências ao Exército Brasileiro, utilizadas na 2ª DE
             exclusivamente para fins de imersão, entretenimento e roleplay dentro do FiveM.
           </p>
-        </div>
+        </Reveal>
       </section>
     </div>
   );

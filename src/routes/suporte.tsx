@@ -4,7 +4,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ArrowRight, Send } from "lucide-react";
 import { Turnstile } from "@/components/Turnstile";
+import { motion } from "framer-motion";
 import { FieldLabel, PageHero, btnPrimary, inputClass } from "@/components/site-ui";
+import { EASE, Reveal, Stagger, StaggerItem } from "@/components/motion";
 import {
   abrirOuObterTicket,
   enviarMensagemConscrito,
@@ -200,7 +202,8 @@ function SuportePage() {
       <div className="bg-bone text-ink">
         {hero}
         <div className="mx-auto max-w-7xl px-4 sm:px-10 py-20 md:py-24 flex flex-col lg:flex-row gap-12 lg:gap-20">
-          <form onSubmit={handleOpenTicket} className="lg:w-110 shrink-0 flex flex-col gap-5 bg-paper border border-ink/20 p-6 sm:p-9">
+          <Reveal x={-48} y={0} className="lg:w-110 shrink-0">
+          <form onSubmit={handleOpenTicket} className="flex flex-col gap-5 bg-paper border border-ink/20 p-6 sm:p-9">
             <h2 className="font-display text-[28px] font-medium">Novo chamado</h2>
             <label className="block">
               <FieldLabel>NOME DO TICKET *</FieldLabel>
@@ -232,22 +235,23 @@ function SuportePage() {
             </button>
             <p className="font-mono text-xs text-mute">O chamado fica salvo por 7 dias neste navegador.</p>
           </form>
-          <ol className="flex-1">
-            <li className="font-mono text-xs tracking-[0.2em] text-(--color-olive)">COMO FUNCIONA</li>
+          </Reveal>
+          <Stagger as="ol" className="flex-1">
+            <StaggerItem as="li" className="font-mono text-xs tracking-[0.2em] text-(--color-olive)">COMO FUNCIONA</StaggerItem>
             {[
               ["Dê um título ao chamado", "Um assunto curto, como “Dúvida sobre prova física”."],
               ["Converse em tempo real", "O Alto Comando responde aqui mesmo, assim que abrir o atendimento."],
               ["Volte quando quiser", "O chamado fica salvo neste navegador por 7 dias."],
             ].map(([t, d], i) => (
-              <li key={t} className="flex gap-5 py-6 border-b border-ink/20">
+              <StaggerItem as="li" key={t} className="flex gap-5 py-6 border-b border-ink/20">
                 <span className="font-display text-[28px] text-field">{String(i + 1).padStart(2, "0")}</span>
                 <div className="flex flex-col gap-1.5">
                   <span className="font-display text-[21px] font-medium">{t}</span>
                   <span className="text-[15px] text-mute">{d}</span>
                 </div>
-              </li>
+              </StaggerItem>
             ))}
-          </ol>
+          </Stagger>
         </div>
       </div>
     );
@@ -262,7 +266,12 @@ function SuportePage() {
     <div className="bg-bone text-ink">
       {hero}
       <div className="mx-auto max-w-5xl px-4 sm:px-10 py-14 md:py-20">
-        <div className="bg-ink text-bone flex flex-col h-[70vh] min-h-120">
+        <motion.div
+          className="bg-ink text-bone flex flex-col h-[70vh] min-h-120"
+          initial={{ opacity: 0, y: 40, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, ease: EASE }}
+        >
           <header className="flex flex-wrap items-center justify-between gap-3 px-5 sm:px-7 py-5 border-b border-sand/15">
             <div className="min-w-0 flex flex-col gap-1">
               <p className="font-mono text-[11px] tracking-widest text-field truncate uppercase">CHAMADO · {tituloDisplay}</p>
@@ -283,7 +292,13 @@ function SuportePage() {
 
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 sm:px-7 py-6 flex flex-col gap-4">
             {mensagens.length === 0 && (
-              <p className="font-mono text-xs text-sand/50 text-center mt-8">Aguardando primeira mensagem…</p>
+              <motion.p
+                className="font-mono text-xs text-sand/50 text-center mt-8"
+                animate={{ opacity: [0.3, 1, 0.3] }}
+                transition={{ duration: 2.2, repeat: Infinity }}
+              >
+                Aguardando primeira mensagem…
+              </motion.p>
             )}
             {mensagens.map((m) => (
               <ChatBubble key={m.id} mensagem={m} />
@@ -318,7 +333,7 @@ function SuportePage() {
               <Send className="h-5 w-5" />
             </button>
           </footer>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
@@ -337,13 +352,18 @@ function ChatBubble({ mensagem }: { mensagem: SuporteMensagem }) {
   }
 
   return (
-    <div className={`flex ${isConscrito ? "justify-end" : "justify-start"}`}>
+    <motion.div
+      className={`flex ${isConscrito ? "justify-end" : "justify-start"}`}
+      initial={{ opacity: 0, x: isConscrito ? 40 : -40, scale: 0.9 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      transition={{ type: "spring", stiffness: 320, damping: 26 }}
+    >
       <div className={`max-w-[80%] sm:max-w-110 px-4.5 py-3.5 flex flex-col gap-1.5 ${isConscrito ? "bg-field text-night" : "bg-sand/12 text-bone"}`}>
         <p className={`font-mono text-[11px] ${isConscrito ? "text-night/70" : "text-sand/60"}`}>
           {mensagem.autor_nome ?? (isConscrito ? "Você" : "Militar")} · {hora}
         </p>
         <p className="whitespace-pre-wrap wrap-break-word leading-snug">{mensagem.mensagem}</p>
       </div>
-    </div>
+    </motion.div>
   );
 }

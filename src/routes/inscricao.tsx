@@ -4,7 +4,9 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ArrowRight, Check } from "lucide-react";
 import { Turnstile } from "@/components/Turnstile";
+import { motion } from "framer-motion";
 import { FieldLabel, PageHero, btnPrimary, inputClass } from "@/components/site-ui";
+import { EASE, Reveal, Stagger, StaggerItem } from "@/components/motion";
 import { criarInscricao } from "@/lib/inscricoes.functions";
 import { baixarComprovante } from "@/lib/inscricao-pdf";
 
@@ -87,16 +89,34 @@ function Inscricao() {
     return (
       <div className="bg-bone text-ink">
         <div className="mx-auto max-w-2xl px-4 sm:px-10 py-20 md:py-28">
-          <div className="bg-paper border border-ink/20 p-8 sm:p-12 text-center flex flex-col items-center gap-5 reveal">
+          <motion.div
+            className="bg-paper border border-ink/20 p-8 sm:p-12 text-center flex flex-col items-center gap-5"
+            initial={{ opacity: 0, scale: 0.9, y: 40 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: EASE }}
+          >
             <div className="font-mono text-xs tracking-[0.2em] text-(--color-olive)">FICHA DEFERIDA</div>
-            <div className="stamp text-ink">RECEBIDO</div>
+            {/* Carimbo batendo no papel */}
+            <motion.div
+              className="stamp text-ink"
+              initial={{ opacity: 0, scale: 3, rotate: -25 }}
+              animate={{ opacity: 1, scale: 1, rotate: -6 }}
+              transition={{ type: "spring", stiffness: 400, damping: 18, delay: 0.5 }}
+            >
+              RECEBIDO
+            </motion.div>
             <h1 className="font-display text-4xl font-semibold">Apresentação registrada</h1>
             <p className="text-mute max-w-md">
               Sua ficha foi encaminhada ao instrutor de plantão. Guarde seu protocolo e seu comprovante em PDF.
             </p>
-            <div className="font-mono text-2xl sm:text-3xl tracking-[0.2em] bg-ink text-field px-6 py-4">
+            <motion.div
+              className="font-mono text-2xl sm:text-3xl tracking-[0.2em] bg-ink text-field px-6 py-4"
+              initial={{ opacity: 0, clipPath: "inset(0 100% 0 0)" }}
+              animate={{ opacity: 1, clipPath: "inset(0 0% 0 0)" }}
+              transition={{ duration: 0.8, delay: 0.9, ease: EASE }}
+            >
               {done.protocolo}
-            </div>
+            </motion.div>
             <p className="text-sm text-mute">
               O comprovante foi baixado automaticamente. Caso não tenha baixado, clique abaixo.
             </p>
@@ -110,7 +130,7 @@ function Inscricao() {
                 ACOMPANHAR STATUS
               </Link>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     );
@@ -125,10 +145,10 @@ function Inscricao() {
         img="/galeria/123156.webp"
       />
       <div className="mx-auto max-w-7xl px-4 sm:px-10 py-20 md:py-24 flex flex-col lg:flex-row gap-12 lg:gap-20">
-        <ol className="lg:w-95 shrink-0">
-          <li className="font-mono text-xs tracking-[0.2em] text-(--color-olive)">COMO FUNCIONA</li>
+        <Stagger as="ol" className="lg:w-95 shrink-0">
+          <StaggerItem as="li" className="font-mono text-xs tracking-[0.2em] text-(--color-olive)">COMO FUNCIONA</StaggerItem>
           {etapas.map(([t, d], i) => (
-            <li key={t} className="flex gap-5 py-6 border-b border-ink/20">
+            <StaggerItem as="li" key={t} className="flex gap-5 py-6 border-b border-ink/20">
               <span className={`font-display text-[28px] ${i === 0 ? "text-field" : "text-mute/40"}`}>
                 {String(i + 1).padStart(2, "0")}
               </span>
@@ -136,11 +156,12 @@ function Inscricao() {
                 <span className="font-display text-[21px] font-medium">{t}</span>
                 <span className="text-[15px] text-mute">{d}</span>
               </div>
-            </li>
+            </StaggerItem>
           ))}
-        </ol>
+        </Stagger>
 
-        <form onSubmit={onSubmit} className="flex-1 flex flex-col gap-6 bg-paper border border-ink/20 p-6 sm:p-12">
+        <Reveal x={48} y={0} delay={0.2} className="flex-1">
+        <form onSubmit={onSubmit} className="flex flex-col gap-6 bg-paper border border-ink/20 p-6 sm:p-12">
           <div className="flex flex-wrap items-center justify-between gap-3 pb-5 border-b border-ink/20">
             <h2 className="font-display text-[28px] font-medium">Ficha do conscrito</h2>
             <span className="bg-ink px-2.5 py-1.5 font-mono text-[11px] tracking-widest text-sand">RESTRITO · CONSCRITO</span>
@@ -176,6 +197,7 @@ function Inscricao() {
             </button>
           </div>
         </form>
+        </Reveal>
       </div>
     </div>
   );

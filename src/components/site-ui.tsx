@@ -1,4 +1,6 @@
+import { motion } from "framer-motion";
 import type { ReactNode } from "react";
+import { EASE, Parallax, Reveal, SplitTitle } from "@/components/motion";
 
 /** Rótulo de seção: traço + texto mono em caixa alta. */
 export function Eyebrow({ children, dark = false }: { children: ReactNode; dark?: boolean }) {
@@ -12,25 +14,36 @@ export function Eyebrow({ children, dark = false }: { children: ReactNode; dark?
 
 /** Faixa verde → dourado entre o topo e o conteúdo. */
 export function Tape({ thick = false }: { thick?: boolean }) {
-  return <div className={`${thick ? "h-2.5" : "h-1.5"} bg-linear-to-r from-field to-brass`} />;
+  return (
+    <motion.div
+      className={`${thick ? "h-2.5" : "h-1.5"} bg-linear-to-r from-field to-brass origin-left`}
+      initial={{ scaleX: 0 }}
+      whileInView={{ scaleX: 1 }}
+      viewport={{ once: true }}
+      transition={{ duration: 1, delay: 0.2, ease: EASE }}
+    />
+  );
 }
 
 /** Topo escuro das páginas internas, com foto de fundo. */
 export function PageHero(props: { eyebrow: string; title: string; sub: string; img: string }) {
   return (
     <>
-      <section
-        className="relative bg-night bg-cover bg-center"
-        style={{ backgroundImage: `linear-gradient(90deg, #0d120af2, #0d120ab3), url(${props.img})` }}
-      >
+      <Parallax img={props.img} overlay="linear-gradient(90deg, #0d120af2, #0d120ab3)">
         <div className="mx-auto max-w-7xl px-4 sm:px-10 pt-20 pb-16 md:pt-24 md:pb-18 flex flex-col gap-5">
-          <Eyebrow dark>{props.eyebrow}</Eyebrow>
-          <h1 className="font-display font-semibold text-5xl md:text-7xl leading-none text-bone max-w-4xl">
-            {props.title}
-          </h1>
-          <p className="text-lg md:text-xl leading-relaxed text-sand/90 max-w-2xl">{props.sub}</p>
+          <Reveal x={-24} y={0}>
+            <Eyebrow dark>{props.eyebrow}</Eyebrow>
+          </Reveal>
+          <SplitTitle
+            text={props.title}
+            delay={0.1}
+            className="font-display font-semibold text-5xl md:text-7xl leading-none text-bone max-w-4xl"
+          />
+          <Reveal delay={0.45}>
+            <p className="text-lg md:text-xl leading-relaxed text-sand/90 max-w-2xl">{props.sub}</p>
+          </Reveal>
         </div>
-      </section>
+      </Parallax>
       <Tape />
     </>
   );

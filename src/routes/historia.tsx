@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { motion } from "framer-motion";
 import { PageHero } from "@/components/site-ui";
+import { Reveal, Stagger, StaggerItem } from "@/components/motion";
 
 export const Route = createFileRoute("/historia")({
   head: () => ({
@@ -53,27 +55,45 @@ function Historia() {
       <div className="mx-auto max-w-7xl px-4 sm:px-10 py-20 md:py-25 flex flex-col lg:flex-row gap-12 lg:gap-20">
         <nav className="lg:w-75 shrink-0 lg:sticky lg:top-28 self-start w-full">
           <div className="font-mono text-[11px] tracking-[0.2em] text-(--color-olive)">CAPÍTULOS</div>
-          {cap.map((c, i) => (
-            <a key={c.titulo} href={`#cap-${i + 1}`} className="flex gap-3.5 py-3.5 border-b border-ink/20 group">
-              <span className="font-mono text-[13px] text-field">{num(i)}</span>
-              <span className="font-display text-[17px] text-mute group-hover:text-ink">{c.titulo}</span>
-            </a>
-          ))}
+          <Stagger>
+            {cap.map((c, i) => (
+              <StaggerItem key={c.titulo}>
+                <motion.a
+                  href={`#cap-${i + 1}`}
+                  className="flex gap-3.5 py-3.5 border-b border-ink/20 group"
+                  whileHover={{ x: 8 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <span className="font-mono text-[13px] text-field">{num(i)}</span>
+                  <span className="font-display text-[17px] text-mute group-hover:text-ink">{c.titulo}</span>
+                </motion.a>
+              </StaggerItem>
+            ))}
+          </Stagger>
         </nav>
         <article className="flex-1">
           {cap.map((c, i) => (
-            <section
+            <Reveal
+              as="section"
               key={c.titulo}
               id={`cap-${i + 1}`}
-              className="flex gap-6 md:gap-10 py-9 border-t border-ink/20 first:border-t-0 first:pt-0 scroll-mt-28 reveal"
+              className="flex gap-6 md:gap-10 py-9 border-t border-ink/20 first:border-t-0 first:pt-0 scroll-mt-28"
             >
-              <div className="font-display text-5xl md:text-[64px] font-light leading-none text-field">{num(i)}</div>
+              <motion.div
+                className="font-display text-5xl md:text-[64px] font-light leading-none text-field"
+                initial={{ opacity: 0, scale: 0.4, rotate: -20 }}
+                whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
+                viewport={{ once: true }}
+                transition={{ type: "spring", stiffness: 160, damping: 12, delay: 0.15 }}
+              >
+                {num(i)}
+              </motion.div>
               <div className="flex flex-col gap-2.5">
                 <div className="font-mono text-xs tracking-[0.15em] text-(--color-olive)">{c.data}</div>
                 <h2 className="font-display text-3xl md:text-[34px] font-medium">{c.titulo}</h2>
                 <p className="text-lg leading-relaxed text-mute">{c.txt}</p>
               </div>
-            </section>
+            </Reveal>
           ))}
         </article>
       </div>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 import {
   montarIdentidade,
   gerarQrDataUrl,
@@ -101,12 +102,22 @@ export function IdentidadeMilitarDigital({ dados, aprovado = true, discordProfil
 
       {id && qrUrl && (
         <div className="flex flex-col lg:flex-row gap-6 items-start">
-          <CarteiraMilitarVisual
-            id={id}
-            qrUrl={qrUrl}
-            discordProfile={discordProfile}
-            onUpload={() => fileRef.current?.click()}
-          />
+          {/* Carteira vira como um cartão ao ser emitida e inclina no hover */}
+          <motion.div
+            key={id.matricula}
+            style={{ transformPerspective: 1200 }}
+            initial={{ opacity: 0, rotateY: -90, scale: 0.85 }}
+            animate={{ opacity: 1, rotateY: 0, scale: 1 }}
+            whileHover={{ rotateY: 6, rotateX: -4, scale: 1.02 }}
+            transition={{ type: "spring", stiffness: 120, damping: 16 }}
+          >
+            <CarteiraMilitarVisual
+              id={id}
+              qrUrl={qrUrl}
+              discordProfile={discordProfile}
+              onUpload={() => fileRef.current?.click()}
+            />
+          </motion.div>
           <input
             ref={fileRef}
             type="file"

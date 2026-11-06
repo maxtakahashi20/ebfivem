@@ -3,7 +3,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Search } from "lucide-react";
+import { motion } from "framer-motion";
 import { FieldLabel, PageHero, btnPrimary, inputClass } from "@/components/site-ui";
+import { EASE, Reveal, Stagger, StaggerItem } from "@/components/motion";
 import { z } from "zod";
 import { consultarFicha } from "@/lib/inscricoes.functions";
 import { IdentidadeMilitarDigital } from "@/components/military/IdentidadeMilitarDigital";
@@ -100,6 +102,7 @@ function Acompanhar() {
         img="/galeria/12.webp"
       />
       <div className="mx-auto max-w-5xl px-4 sm:px-10 py-20 md:py-24 flex flex-col gap-12">
+        <Reveal>
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -140,33 +143,66 @@ function Acompanhar() {
             {loading ? "CONSULTANDO…" : "CONSULTAR"} <Search className="h-4.5 w-4.5" />
           </button>
         </form>
+        </Reveal>
 
         <div className="flex flex-col gap-6">
           {rows === null && (
-            <div className="py-6 text-center font-mono text-xs tracking-[0.2em] text-mute">AGUARDANDO CONSULTA</div>
+            <motion.div
+              className="py-6 text-center font-mono text-xs tracking-[0.2em] text-mute"
+              animate={{ opacity: [0.35, 1, 0.35] }}
+              transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+            >
+              AGUARDANDO CONSULTA
+            </motion.div>
           )}
           {rows && rows.length === 0 && (
-            <div className="bg-paper border border-ink/20 p-8 text-center reveal">
-              <div className="stamp text-(--color-destructive) mb-3">SEM REGISTRO</div>
+            <motion.div
+              className="bg-paper border border-ink/20 p-8 text-center"
+              initial={{ opacity: 0, x: 0 }}
+              animate={{ opacity: 1, x: [0, -14, 12, -8, 6, 0] }}
+              transition={{ duration: 0.5 }}
+            >
+              <motion.div
+                className="stamp text-(--color-destructive) mb-3"
+                initial={{ scale: 2.5, rotate: -20, opacity: 0 }}
+                animate={{ scale: 1, rotate: -6, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 380, damping: 18, delay: 0.15 }}
+              >
+                SEM REGISTRO
+              </motion.div>
               <p>Nenhuma ficha localizada com este protocolo e RG.</p>
-            </div>
+            </motion.div>
           )}
           {rows && rows.map((r, i) => {
             const s = STATUS_LABEL[r.status];
             return (
-              <div key={r.protocolo} className="bg-ink text-bone reveal" style={{ animationDelay: `${i * 0.05}s` }}>
+              <motion.div
+                key={r.protocolo}
+                className="bg-ink text-bone"
+                initial={{ opacity: 0, y: 50, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.6, delay: i * 0.1, ease: EASE }}
+              >
                 <div className="flex flex-wrap items-center justify-between gap-4 px-6 sm:px-9 py-7 border-b border-sand/15">
                   <div className="flex flex-col gap-1.5">
                     <div className="font-mono text-[11px] tracking-[0.15em] text-sand/60">PROTOCOLO</div>
                     <div className="font-mono text-2xl sm:text-3xl tracking-[0.15em] text-field">{r.protocolo}</div>
                   </div>
-                  <div
+                  <motion.div
                     className="inline-flex items-center gap-2.5 px-4 py-2.5 border font-mono text-xs tracking-widest uppercase"
                     style={{ borderColor: s.color, background: `${s.color}26`, color: s.color }}
+                    initial={{ opacity: 0, scale: 0.6 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 16, delay: 0.35 }}
                   >
-                    <span className="h-2 w-2 rounded-full" style={{ background: s.color }} />
+                    <motion.span
+                      className="h-2 w-2 rounded-full"
+                      style={{ background: s.color }}
+                      animate={{ scale: [1, 1.6, 1], opacity: [1, 0.5, 1] }}
+                      transition={{ duration: 1.6, repeat: Infinity }}
+                    />
                     {s.txt}
-                  </div>
+                  </motion.div>
                 </div>
                 <ol className="grid grid-cols-2 md:grid-cols-4 gap-3 px-6 sm:px-9 py-8">
                   {ETAPAS.map(([t, d], idx) => {
@@ -174,10 +210,18 @@ function Acompanhar() {
                     const atual = idx === s.etapa;
                     return (
                       <li key={t} className="flex flex-col gap-3">
-                        <span
-                          className="h-1 w-full"
-                          style={{ background: atual ? s.color : feito ? "var(--color-field)" : "#d9d2b526" }}
-                        />
+                        {/* Barra da etapa enche da esquerda, uma depois da outra */}
+                        <span className="h-1 w-full bg-[#d9d2b526]">
+                          {(feito || atual) && (
+                            <motion.span
+                              className="block h-full origin-left"
+                              style={{ background: atual ? s.color : "var(--color-field)" }}
+                              initial={{ scaleX: 0 }}
+                              animate={{ scaleX: 1 }}
+                              transition={{ duration: 0.5, delay: 0.5 + idx * 0.3, ease: EASE }}
+                            />
+                          )}
+                        </span>
                         <span className={`font-display text-xl ${feito || atual ? "text-bone" : "text-sand/50"}`}>{t}</span>
                         <span className="text-sm text-sand/60">{d}</span>
                       </li>
@@ -227,19 +271,19 @@ function Acompanhar() {
                     </p>
                   </div>
                 )}
-              </div>
+              </motion.div>
             );
           })}
         </div>
 
-        <ul className="flex flex-wrap gap-x-6 gap-y-3">
+        <Stagger as="ul" className="flex flex-wrap gap-x-6 gap-y-3">
           {Object.values(STATUS_LABEL).map((s) => (
-            <li key={s.txt} className="flex items-center gap-2.5 text-sm text-mute">
+            <StaggerItem as="li" key={s.txt} className="flex items-center gap-2.5 text-sm text-mute">
               <span className="h-2.5 w-2.5 rounded-full" style={{ background: s.color }} />
               {s.txt}
-            </li>
+            </StaggerItem>
           ))}
-        </ul>
+        </Stagger>
       </div>
     </div>
   );

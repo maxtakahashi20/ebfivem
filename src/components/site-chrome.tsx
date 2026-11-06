@@ -1,6 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { MessageSquare } from "lucide-react";
 import logo from "@/assets/logo-2de.png";
+import { Reveal, Stagger, StaggerItem } from "@/components/motion";
 
 const DISCORD_URL = "https://discord.gg/2TETa9Z4Fu";
 
@@ -8,6 +9,7 @@ const links = [
   { to: "/", label: "Informativo" },
   { to: "/historia", label: "História" },
   { to: "/organograma", label: "Organograma" },
+  { to: "/hierarquia", label: "Hierarquia" },
   { to: "/inscricao", label: "Alistamento" },
   { to: "/acompanhar", label: "Acompanhar" },
   { to: "/suporte", label: "Suporte" },
@@ -72,8 +74,8 @@ export function Header() {
 }
 
 const footerCols = [
-  { h: "PORTAL", items: links.slice(0, 3) },
-  { h: "CONSCRITO", items: links.slice(3, 6) },
+  { h: "PORTAL", items: links.slice(0, 4) },
+  { h: "CONSCRITO", items: links.slice(4, 7) },
 ];
 
 export function Footer({ pathname }: { pathname: string }) {
@@ -83,27 +85,27 @@ export function Footer({ pathname }: { pathname: string }) {
     <footer className="bg-night text-sand">
       <div className="mx-auto max-w-7xl px-4 sm:px-10 pt-14 pb-8 flex flex-col gap-10">
         <div className="flex flex-col md:flex-row md:justify-between gap-10">
-          <div className="max-w-sm flex flex-col gap-4">
+          <Reveal className="max-w-sm flex flex-col gap-4">
             <img src={logo} alt="2ª DE" className="h-14 w-14 object-contain" />
             <p className="text-sm leading-relaxed text-sand/70">
               Comunidade milsim no FiveM. Hierarquia, disciplina e imersão desde 8 de outubro de 2023.
             </p>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-10 md:gap-16">
+          </Reveal>
+          <Stagger className="grid grid-cols-2 sm:grid-cols-3 gap-10 md:gap-16">
             {footerCols.map((c) => (
-              <div key={c.h} className="flex flex-col gap-3">
+              <StaggerItem key={c.h} className="flex flex-col gap-3">
                 <div className="font-mono text-[11px] tracking-[0.2em] text-field">{c.h}</div>
                 {c.items.map((l) => (
                   <Link key={l.to} to={l.to} className="text-[15px] hover:text-bone">{l.label}</Link>
                 ))}
-              </div>
+              </StaggerItem>
             ))}
-            <div className="flex flex-col gap-3">
+            <StaggerItem className="flex flex-col gap-3">
               <div className="font-mono text-[11px] tracking-[0.2em] text-field">OFICIAL</div>
               <a href={DISCORD_URL} target="_blank" rel="noreferrer" className="text-[15px] hover:text-bone">Discord</a>
               <Link to="/autoria" className="text-[15px] hover:text-bone">Autoria</Link>
-            </div>
-          </div>
+            </StaggerItem>
+          </Stagger>
         </div>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 pt-5 border-t border-(--color-olive)/50 font-mono text-[11px] tracking-wider text-sand/50">
           <span>© {new Date().getFullYear()} 2ª DE · TODOS OS DIREITOS RESERVADOS</span>

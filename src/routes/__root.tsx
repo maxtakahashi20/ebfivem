@@ -8,6 +8,8 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/sonner";
+import { MotionConfig, motion } from "framer-motion";
+import { EASE } from "@/components/motion";
 import {
   Header,
   Footer,
@@ -110,22 +112,30 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {painel ? (
-        <AdminThemeProvider>
-          <main className="min-h-screen">
-            <Outlet />
-          </main>
-        </AdminThemeProvider>
-      ) : (
-        <div className="site-public min-h-screen flex flex-col bg-bone">
-          <Header />
-          <main className="flex-1">
-            <Outlet />
-          </main>
-          <Footer pathname={pathname} />
-        </div>
-      )}
-      <Toaster richColors position="top-right" />
+      <MotionConfig reducedMotion="user">
+        {painel ? (
+          <AdminThemeProvider>
+            <main className="min-h-screen">
+              <Outlet />
+            </main>
+          </AdminThemeProvider>
+        ) : (
+          <div className="site-public min-h-screen flex flex-col bg-bone">
+            <Header />
+            <motion.main
+              key={pathname}
+              className="flex-1"
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: EASE }}
+            >
+              <Outlet />
+            </motion.main>
+            <Footer pathname={pathname} />
+          </div>
+        )}
+        <Toaster richColors position="top-right" />
+      </MotionConfig>
     </QueryClientProvider>
   );
 }
