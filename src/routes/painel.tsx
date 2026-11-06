@@ -23,6 +23,7 @@ import { UltimoProtocolo } from "@/components/admin/UltimoProtocolo";
 import { DocumentosPainel } from "@/components/admin/DocumentosPainel";
 import { SuporteAdmin } from "@/components/admin/SuporteAdmin";
 import { PatrulhaPE } from "@/components/admin/PatrulhaPE";
+import { HierarquiaAdmin } from "@/components/admin/HierarquiaAdmin";
 import { PerfilMilitar } from "@/components/military/PerfilMilitar";
 import { PENDING_VIEW_KEY } from "@/lib/painel-nav";
 import { useDiscordSession } from "@/hooks/useDiscordSession";
@@ -344,6 +345,8 @@ function PanelContent({
       return <SuporteAdmin />;
     case "pe-patrulha":
       return <PatrulhaPE />;
+    case "sys-hierarquia":
+      return <HierarquiaAdmin />;
     default:
       return <AdminModuleView view={view} />;
   }

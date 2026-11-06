@@ -61,6 +61,7 @@ export const IMPLEMENTED_VIEWS = new Set<AdminView>([
   "documentos",
   "suporte-admin",
   "pe-patrulha",
+  "sys-hierarquia",
 ]);
 
 const VIEWS_MEMBRO = new Set<AdminView>(["dashboard", "perfil", "documentos"]);
@@ -281,6 +282,7 @@ export const NAV_ENTRIES: NavEntry[] = [
       label: "Desenvolvimento",
       icon: Code2,
       children: [
+        { id: "sys-hierarquia", label: "Hierarquia" },
         { id: "sys-db", label: "Banco de dados" },
         { id: "sys-api", label: "Requisições e API" },
         { id: "sys-seguranca", label: "Segurança" },

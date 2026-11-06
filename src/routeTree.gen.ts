@@ -14,6 +14,7 @@ import { Route as ADM2DERouteImport } from './routes/ADM2DE'
 import { Route as AcompanharRouteImport } from './routes/acompanhar'
 import { Route as AutoriaRouteImport } from './routes/autoria'
 import { Route as DocumentosRouteImport } from './routes/documentos'
+import { Route as HierarquiaRouteImport } from './routes/hierarquia'
 import { Route as HistoriaRouteImport } from './routes/historia'
 import { Route as IdentidadeRouteImport } from './routes/identidade'
 import { Route as InscricaoRouteImport } from './routes/inscricao'
@@ -46,6 +47,11 @@ const AutoriaRoute = AutoriaRouteImport.update({
 const DocumentosRoute = DocumentosRouteImport.update({
   id: '/documentos',
   path: '/documentos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HierarquiaRoute = HierarquiaRouteImport.update({
+  id: '/hierarquia',
+  path: '/hierarquia',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HistoriaRoute = HistoriaRouteImport.update({
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/acompanhar': typeof AcompanharRoute
   '/autoria': typeof AutoriaRoute
   '/documentos': typeof DocumentosRoute
+  '/hierarquia': typeof HierarquiaRoute
   '/historia': typeof HistoriaRoute
   '/identidade': typeof IdentidadeRoute
   '/inscricao': typeof InscricaoRoute
@@ -110,6 +117,7 @@ export interface FileRoutesByTo {
   '/acompanhar': typeof AcompanharRoute
   '/autoria': typeof AutoriaRoute
   '/documentos': typeof DocumentosRoute
+  '/hierarquia': typeof HierarquiaRoute
   '/historia': typeof HistoriaRoute
   '/identidade': typeof IdentidadeRoute
   '/inscricao': typeof InscricaoRoute
@@ -126,6 +134,7 @@ export interface FileRoutesById {
   '/acompanhar': typeof AcompanharRoute
   '/autoria': typeof AutoriaRoute
   '/documentos': typeof DocumentosRoute
+  '/hierarquia': typeof HierarquiaRoute
   '/historia': typeof HistoriaRoute
   '/identidade': typeof IdentidadeRoute
   '/inscricao': typeof InscricaoRoute
@@ -143,6 +152,7 @@ export interface FileRouteTypes {
     | '/acompanhar'
     | '/autoria'
     | '/documentos'
+    | '/hierarquia'
     | '/historia'
     | '/identidade'
     | '/inscricao'
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
     | '/acompanhar'
     | '/autoria'
     | '/documentos'
+    | '/hierarquia'
     | '/historia'
     | '/identidade'
     | '/inscricao'
@@ -173,6 +184,7 @@ export interface FileRouteTypes {
     | '/acompanhar'
     | '/autoria'
     | '/documentos'
+    | '/hierarquia'
     | '/historia'
     | '/identidade'
     | '/inscricao'
@@ -189,6 +201,7 @@ export interface RootRouteChildren {
   AcompanharRoute: typeof AcompanharRoute
   AutoriaRoute: typeof AutoriaRoute
   DocumentosRoute: typeof DocumentosRoute
+  HierarquiaRoute: typeof HierarquiaRoute
   HistoriaRoute: typeof HistoriaRoute
   IdentidadeRoute: typeof IdentidadeRoute
   InscricaoRoute: typeof InscricaoRoute
@@ -234,6 +247,13 @@ declare module '@tanstack/react-router' {
       path: '/documentos'
       fullPath: '/documentos'
       preLoaderRoute: typeof DocumentosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hierarquia': {
+      id: '/hierarquia'
+      path: '/hierarquia'
+      fullPath: '/hierarquia'
+      preLoaderRoute: typeof HierarquiaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/historia': {
@@ -301,6 +321,7 @@ const rootRouteChildren: RootRouteChildren = {
   AcompanharRoute: AcompanharRoute,
   AutoriaRoute: AutoriaRoute,
   DocumentosRoute: DocumentosRoute,
+  HierarquiaRoute: HierarquiaRoute,
   HistoriaRoute: HistoriaRoute,
   IdentidadeRoute: IdentidadeRoute,
   InscricaoRoute: InscricaoRoute,
