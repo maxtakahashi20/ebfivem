@@ -12,11 +12,17 @@ const MENSAGEM: Record<Papel, string> = {
   desenvolvedor: "Acesso restrito ao desenvolvedor.",
 };
 
-/** Porta de toda função do painel: sessão assinada + cargos atuais no servidor Discord. */
-export async function exigirPapel(session: string, exigido: Papel): Promise<DiscordProfile> {
+/** Sessão assinada + cargos atuais no Discord + papel (inclui a tag de Alto Comando do efetivo). */
+export async function perfilEPapel(session: string): Promise<{ profile: DiscordProfile; papel: Papel }> {
   const assinado = await verifyDiscordSession(session);
   if (!assinado) throw new Error("Sessão Discord inválida ou expirada.");
   const profile = { ...assinado, roles: await cargosAtuais(assinado) };
-  if (!papelAlcanca(await papelAtual(profile), exigido)) throw new Error(MENSAGEM[exigido]);
+  return { profile, papel: await papelAtual(profile) };
+}
+
+/** Porta de toda função do painel: recusa quem não alcança o papel exigido. */
+export async function exigirPapel(session: string, exigido: Papel): Promise<DiscordProfile> {
+  const { profile, papel } = await perfilEPapel(session);
+  if (!papelAlcanca(papel, exigido)) throw new Error(MENSAGEM[exigido]);
   return profile;
 }

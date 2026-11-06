@@ -3,8 +3,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { registrarAuditoria } from "@/lib/auditoria.server";
 import { notificarPatrulha } from "@/lib/discord.functions";
-import { exigirPapel } from "@/lib/painel-auth.server";
-import { papelAtual } from "@/lib/papel.server";
+import { perfilEPapel } from "@/lib/painel-auth.server";
 import { acessoPE } from "@/lib/pe.server";
 
 export type RelatorioPatrulha = {
@@ -32,8 +31,9 @@ export type RelatorioPatrulha = {
 const tabela = () => supabaseAdmin.from("relatorios_patrulha" as never);
 
 async function exigirPE(session: string) {
-  const profile = await exigirPapel(session, "membro");
-  const acesso = acessoPE(profile, await papelAtual(profile));
+  // Uma consulta só: o papel já vem calculado junto com o perfil.
+  const { profile, papel } = await perfilEPapel(session);
+  const acesso = acessoPE(profile, papel);
   if (!acesso.pe) throw new Error("Acesso restrito à Polícia do Exército.");
   return { profile, comando: acesso.comando };
 }
@@ -61,8 +61,8 @@ const RelatorioSchema = z.object({
 export const acessoPatrulha = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ session: z.string() }).parse(input))
   .handler(async ({ data }) => {
-    const profile = await exigirPapel(data.session, "membro");
-    return acessoPE(profile, await papelAtual(profile));
+    const { profile, papel } = await perfilEPapel(data.session);
+    return acessoPE(profile, papel);
   });
 
 export const enviarRelatorioPatrulha = createServerFn({ method: "POST" })
@@ -143,15 +143,30 @@ export const decidirRelatorioPatrulha = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { profile, comando } = await exigirPE(data.session);
     if (!comando) throw new Error("Só o comando da PE aprova ou devolve relatórios.");
-    const { error } = await tabela()
+    const { data: atual, error: erroBusca } = await tabela()
+      .select("status, autor_discord_id")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (erroBusca) throw new Error(erroBusca.message);
+    const rel = atual as { status: string; autor_discord_id: string } | null;
+    if (!rel) throw new Error("Relatório não encontrado.");
+    if (rel.autor_discord_id === profile.id) {
+      throw new Error("Outro membro do comando precisa revisar o seu próprio relatório.");
+    }
+    if (rel.status !== "enviado") throw new Error("Este relatório já foi decidido.");
+    // O filtro por status evita que duas decisões ao mesmo tempo se sobrescrevam.
+    const { data: alterado, error } = await tabela()
       .update({
         status: data.status,
         parecer: data.parecer || null,
         revisado_por: `${profile.displayName} (${profile.id})`,
         updated_at: new Date().toISOString(),
       } as never)
-      .eq("id", data.id);
+      .eq("id", data.id)
+      .eq("status", "enviado")
+      .select("id");
     if (error) throw new Error(error.message);
+    if (!(alterado as unknown[] | null)?.length) throw new Error("Este relatório já foi decidido.");
     await registrarAuditoria(profile, `Relatório de patrulha ${data.status}`, data.id);
     return { ok: true };
   });

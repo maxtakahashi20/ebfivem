@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -54,7 +54,10 @@ export function PatrulhaPE() {
   const [relatorios, setRelatorios] = useState<RelatorioPatrulha[]>([]);
   const [filtro, setFiltro] = useState({ busca: "", desde: "", ate: "", status: "" });
 
+  // Numera as consultas: resposta de uma busca antiga que chega depois é descartada.
+  const ultimaConsulta = useRef(0);
   const carregar = useCallback(async () => {
+    const n = ++ultimaConsulta.current;
     try {
       const r = await listar({
         data: {
@@ -65,9 +68,11 @@ export function PatrulhaPE() {
           status: (filtro.status || undefined) as RelatorioPatrulha["status"] | undefined,
         },
       });
-      setRelatorios(r.relatorios);
+      if (n === ultimaConsulta.current) setRelatorios(r.relatorios);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Falha ao carregar relatórios");
+      if (n === ultimaConsulta.current) {
+        toast.error(e instanceof Error ? e.message : "Falha ao carregar relatórios");
+      }
     }
   }, [listar, filtro]);
 
@@ -77,8 +82,11 @@ export function PatrulhaPE() {
       .catch(() => setPermissao({ pe: false, comando: false }));
   }, [acesso]);
 
+  // Espera a digitação parar (300 ms) antes de consultar o servidor.
   useEffect(() => {
-    if (permissao?.pe) void carregar();
+    if (!permissao?.pe) return;
+    const t = setTimeout(() => void carregar(), 300);
+    return () => clearTimeout(t);
   }, [permissao, carregar]);
 
   const campo = (k: keyof typeof VAZIO) => ({
